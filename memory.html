@@ -1,0 +1,42 @@
+---
+layout: default
+title: Memory
+---
+<h1 id="memory">Memory</h1>
+<p class="lead">Ashyo keeps long-term memory in a local SQLite database with embeddings computed on your machine. The model can recall, retain, reflect, and edit; the harness consolidates each turn in the background.</p>
+
+<h2 id="database">Database</h2>
+<p>The store is <code>memory.dbPath</code>, default <code>~/.local/share/ashyo/memories.db</code>. It is a SQLite file in WAL mode with full-text indexes and a table of vectors. The file carries an application id of <code>1095977049</code>; a database with any other id is refused before anything is written, so pointing <code>dbPath</code> at some other tool's database is an error, not a migration.</p>
+
+<h2 id="embeddings">Embeddings</h2>
+<p>Text is turned into 384-dimensional vectors by <code>BAAI/bge-small-en-v1.5</code>, run by an ONNX interpreter built into Ashyo. There is no ONNX Runtime, no Python, no sidecar, and no network call at query time. The model files are downloaded once from Hugging Face into <code>~/.local/share/ashyo/models/BAAI_bge-small-en-v1.5/</code> on first start; the download is retried five times and can take several minutes.</p>
+<p>If the model cannot be downloaded or loaded, Ashyo still starts. Recall runs on full-text search only and a notice in the transcript says so. When the embedding model changes, memories written under the old one are re-embedded in the background and a startup notice reports it; until that finishes, recall results carry a warning.</p>
+
+<h2 id="banks">Banks</h2>
+<p>Memories are grouped into banks. The <code>default</code> bank is shared across everything. Each project gets its own bank named from the directory's basename and a hash of its absolute path, so two projects with the same name do not collide. The <code>recall</code>, <code>reflect</code>, and <code>retain</code> tools take an optional <code>bank</code> and <code>project</code>.</p>
+
+<h2 id="kinds">Kinds</h2>
+<table>
+<tr><th>Kind</th><th>Meaning</th></tr>
+<tr><td><code>working</code></td><td>Short-lived. Eligible for consolidation after 12 hours, expires after 24.</td></tr>
+<tr><td><code>episodic</code></td><td>What happened: a consolidated account of a turn, or a retained note.</td></tr>
+<tr><td><code>fact</code></td><td>A durable statement extracted from an episode. Fact ids are read-only.</td></tr>
+</table>
+
+<h2 id="tools">Tools</h2>
+<h3 id="recall">recall</h3>
+<p>Hybrid search: full-text and vector similarity, ranked together with recency and confidence. Returns up to 40 memories with their content previewed to 500 characters and a <code>truncated</code> flag with the full length. A <code>warnings</code> list names any degradation: the query could not be embedded, some vectors came from another model, or re-embedding is in progress.</p>
+<h3 id="retain">retain</h3>
+<p>Stores one or more facts with optional context. A stored memory whose embedding failed is a success with a warning, not a failure; it is found by full-text search until it is re-embedded.</p>
+<h3 id="reflect">reflect</h3>
+<p>Recalls, then asks the <code>smol</code> or <code>tiny</code> role to synthesize an answer from what it found. Without one of those roles the tool reports itself unavailable. With nothing relevant it says so rather than inventing.</p>
+<h3 id="memory-edit">memory_edit</h3>
+<p><code>update</code> rewrites a memory's content or importance, reading the full row first so a concurrent change is not lost, and re-embeds what changed. <code>forget</code> deletes. <code>invalidate</code> marks a memory superseded by <code>replacement_id</code>. The reply is <code>memory_&lt;op&gt;: &lt;id&gt;</code>.</p>
+
+<h2 id="consolidation">Consolidation</h2>
+<p>When a <code>smol</code> or <code>tiny</code> role is configured, every completed turn is queued for a background worker that asks that model for one JSON object: an episode, facts, gists, graph edges, triples, and annotations. The episode and facts are stored and embedded. Without a utility role, print mode stores the exchange as a plain episode.</p>
+<p>The queue is drained before Ashyo exits, and the embedding model is released only after that. A drain that degraded, because an embedding failed, is a warning on stderr and exit 0; a store failure is exit 5.</p>
+
+<h2 id="inspect">Inspecting</h2>
+<pre class="terminal"><span class="prompt">$ </span>ashyo memory inspect &lt;memory-id&gt;</pre>
+<p>Prints the record as JSON. Ids appear in <code>recall</code> results.</p>

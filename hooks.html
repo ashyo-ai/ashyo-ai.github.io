@@ -1,0 +1,81 @@
+---
+layout: default
+title: Hooks
+---
+<h1 id="hooks">Hooks</h1>
+<p class="lead">A hook is an executable you list in the config. Ashyo runs it before or after every tool call with the call as JSON on stdin. A hook can veto, annotate, or log. It cannot allow what policy denied, and it cannot change what runs.</p>
+
+<h2 id="configuring">Configuring</h2>
+<div class="file-label">~/.config/ashyo/config.json</div>
+<pre>{
+  "hooks": {
+    "before": ["/home/you/.config/ashyo/hooks/guard"],
+    "after":  ["/home/you/.config/ashyo/hooks/audit"]
+  }
+}</pre>
+<p>Paths are executables. Global hooks run first, then project hooks, each list in order. Hooks apply live like the rest of the config.</p>
+
+<h2 id="order">Where hooks run</h2>
+<ol>
+<li>Policy decides the call: allow, ask, or deny. A deny stops here; no hook sees it.</li>
+<li><strong>Before-hooks</strong> run against the exact arguments a dispatch would use. A deny from any of them resolves the call as denied and the approval pane never opens.</li>
+<li>If the decision was ask, the approval pane docks, showing what the before-hooks said.</li>
+<li>The tool runs.</li>
+<li><strong>After-hooks</strong> run with the result attached. They can annotate; a deny at this stage has no effect.</li>
+</ol>
+<p>If you edit the arguments in the approval pane, the before-hooks run again over the edited call.</p>
+
+<h2 id="input">What a hook receives</h2>
+<p>One JSON object on stdin:</p>
+<pre>{
+  "stage":     "before",
+  "tool":      "shell",
+  "arguments": { "command": "go test ./..." },
+  "sessionId": "6f1c2a0e-3b7d-4c1e-9a2f-0d8e5b4c7a11",
+  "workerId":  "…"
+}</pre>
+<ul>
+<li><code>stage</code> is <code>before</code> or <code>after</code>.</li>
+<li><code>result</code> is present only at <code>after</code>: <code>{ "content", "metadata", "isError" }</code> as the tool returned it.</li>
+<li><code>workerId</code> is present only when the call comes from a subagent.</li>
+</ul>
+
+<h2 id="output">What a hook may say</h2>
+<p>One JSON object on stdout. Three fields are honored; anything else is ignored and reported as an annotation naming the ignored field.</p>
+<pre>{ "deny": true, "reason": "sudo is not allowed here", "annotations": ["guard: checked"] }</pre>
+<ul>
+<li><code>deny</code> vetoes the call at <code>before</code>. The model sees <code>hook_denied: &lt;reason&gt;</code>.</li>
+<li><code>annotations</code> are strings shown in the approval pane and recorded beside the unmodified result.</li>
+<li>Empty stdout and <code>{}</code> both mean no objection.</li>
+</ul>
+<p>A hook that exits non-zero, prints something that is not JSON, or prints more than one JSON value is an error, and the error ends the turn. Nothing executes. Write hooks defensively.</p>
+
+<h2 id="record">What is recorded</h2>
+<p>Every hook execution becomes a <code>hook_event</code> in the session log with its outcome: <code>ok</code>, <code>deny</code>, or <code>error</code>. Hook lines also appear in the transcript live and on replay.</p>
+
+<h2 id="example">Example</h2>
+<p>A before-hook that refuses <code>sudo</code> in shell commands and annotates everything else. Any language works; this one needs <code>jq</code>.</p>
+<div class="file-label">~/.config/ashyo/hooks/guard</div>
+<pre>#!/bin/sh
+input=$(cat)
+tool=$(printf '%s' "$input" | jq -r '.tool')
+stage=$(printf '%s' "$input" | jq -r '.stage')
+
+if [ "$stage" = before ] &amp;&amp; [ "$tool" = shell ]; then
+  command=$(printf '%s' "$input" | jq -r '.arguments.command // ""')
+  case "$command" in
+    *sudo*) printf '{"deny":true,"reason":"sudo is not allowed here"}\n'; exit 0 ;;
+  esac
+fi
+
+printf '{"annotations":["guard: ok"]}\n'</pre>
+<pre class="terminal"><span class="prompt">$ </span>chmod +x ~/.config/ashyo/hooks/guard</pre>
+
+<h2 id="limits">What hooks cannot do</h2>
+<ul>
+<li>Allow a call that policy denied.</li>
+<li>Change the command, paths, environment, or arguments of a call.</li>
+<li>Change the result the model sees.</li>
+<li>Deny at <code>after</code>.</li>
+</ul>
+<p>Hooks are a second veto and a record, deliberately. Anything that reshapes a call belongs in the model's instructions or in your rules.</p>

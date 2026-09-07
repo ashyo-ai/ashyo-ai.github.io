@@ -1,0 +1,56 @@
+---
+layout: default
+title: Agents
+---
+<h1 id="agents">Agents</h1>
+<p class="lead">Ashyo gives each job its own model list, called a role, and lets the main conversation delegate to subagents that work in their own git worktree. An optional advisor watches the conversation and comments, but never acts.</p>
+
+<h2 id="roles">Roles</h2>
+<table>
+<tr><th>Role</th><th>Used for</th></tr>
+<tr><td><code>default</code></td><td>The main conversation. Required.</td></tr>
+<tr><td><code>plan</code></td><td>Plan mode.</td></tr>
+<tr><td><code>task</code></td><td>Subagents.</td></tr>
+<tr><td><code>advisor</code></td><td>The observer described below.</td></tr>
+<tr><td><code>smol</code>, <code>tiny</code></td><td>Utility work: memory consolidation and <code>reflect</code>. <code>smol</code> is preferred when both exist.</td></tr>
+<tr><td><code>vision</code></td><td>The <code>image</code> tool.</td></tr>
+</table>
+<p>Each role is a list; the first model is tried first and the rest are fallbacks. See <a href="config.html#roles">Config</a>.</p>
+
+<h2 id="advisor">Advisor</h2>
+<p>Configure <code>roles.advisor</code> and a second model follows the main session: your submissions, completed model turns, tool and policy results, and subagent results are summarized to it as they become durable. It has no tools. What it says is recorded in the session as an <code>advisor</code> event and rendered in the transcript where it landed, but it is never appended to the main model's input and nothing it says is executed.</p>
+<p>Three kinds of output are recorded: a <strong>comment</strong>, a <strong>suggestion</strong>, which is one line prefixed <code>SUGGESTION:</code>, and a <strong>violation</strong>, which is a tool call the advisor tried to make. The call is recorded and ignored. The status line shows the advisor's state and its token usage.</p>
+<p>The advisor is a second opinion you can see, not a second driver. If a suggestion is good, you type it.</p>
+
+<h2 id="subagents">Subagents</h2>
+<p>The <code>agent</code> tool lets the model delegate. It needs <code>roles.task</code>; without it the tool reports that the role is not configured.</p>
+<table>
+<tr><th>Action</th><th>Does</th></tr>
+<tr><td><code>create</code></td><td>Start a child with a <code>prompt</code> and an <code>access</code> level. Returns the agent id, status, access, and the child's session id.</td></tr>
+<tr><td><code>wait</code></td><td>Block until the child finishes and return its result.</td></tr>
+<tr><td><code>inspect</code></td><td>Report the child's status.</td></tr>
+<tr><td><code>cleanup</code></td><td>Remove the child's worktree and metadata. Refused for dirty or unintegrated work unless <code>abandon</code> is set.</td></tr>
+</table>
+
+<h3 id="access">Read-only and mutable</h3>
+<ul>
+<li>A <strong>read-only</strong> child shares the parent's working directory. <code>shell</code> is denied outright and <code>edit</code> and <code>write</code> are denied everywhere. It can read, search, fetch, and use memory.</li>
+<li>A <strong>mutable</strong> child gets its own git worktree on its own branch, placed at the same repository-relative directory the parent was in. Its writable root is that worktree and nothing else. When it finishes, its branch is left committed and clean for you or the parent to integrate with ordinary git.</li>
+</ul>
+<p>A mutable child needs a clean parent: a checked-out branch with no uncommitted changes. Otherwise creation is refused with <code>mutable_agent_requires_clean_git</code> and no branch or worktree is made. A read-only parent, including one in plan mode, cannot spawn a mutable child.</p>
+
+<h3 id="containment">What crosses back</h3>
+<p>A child's session is its own log with its own tool calls, model events, and reasoning. None of it enters the parent's context. What the parent receives is a compact result: a summary, the branch name, the base and head commits, a validation status, and the child's status. A grandchild is contained in the same way at its own level, so each level of delegation sees only the summaries of the level below.</p>
+<p>The rules that decide a child's calls are the same live rules as the parent's, and an interactive approval that edits an <code>agent</code> call can narrow the child's access but never widen it.</p>
+
+<h3 id="steer">Steering</h3>
+<p><code>steer</code> sends a message to a running child, queued on the child's branch, or to the parent when <code>target</code> is empty or <code>parent</code>. A steer to a preserved dirty child restarts it.</p>
+
+<h3 id="statuses">Statuses</h3>
+<p>A child reports <code>running</code>, <code>finishing</code>, <code>clean</code>, <code>policy_error</code>, <code>interrupted</code>, <code>failed</code>, <code>cleaning</code>, or <code>cleaned_up</code>. Worktrees themselves are tracked as <code>creating</code>, <code>ready</code>, <code>failed</code>, <code>orphaned</code>, <code>dirty_child</code>, <code>clean</code>, <code>removed</code>, or <code>abandoned</code>, and <code>ashyo diagnostics</code> counts them.</p>
+
+<h2 id="cleanup">Cleanup</h2>
+<p>Worktrees are not removed automatically. Once a child's branch is merged, clean it up from the model with <code>agent cleanup</code> or from the shell:</p>
+<pre class="terminal"><span class="prompt">$ </span>ashyo agent cleanup &lt;agent-id&gt;
+<span class="prompt">$ </span>ashyo agent cleanup &lt;agent-id&gt; --abandon</pre>
+<p>A child with uncommitted changes is always refused. A child whose branch was never integrated is refused unless you pass <code>--abandon</code>, which discards it. Metadata for each worktree lives under <code>~/.local/share/ashyo/worktrees/</code>.</p>

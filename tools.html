@@ -1,0 +1,57 @@
+---
+layout: default
+title: Tools
+---
+<h1 id="tools">Tools</h1>
+<p class="lead">Ashyo ships a fixed set of seventeen tools and no way to add more. Every call goes through the same policy and hook path, and the model is told when a result was cut short.</p>
+
+<h2 id="registry">Registry</h2>
+<table>
+<tr><th>Tool</th><th>Does</th><th>Arguments</th></tr>
+<tr><td><code>read</code></td><td>Read UTF-8 text, a directory listing, or a local image.</td><td><code>path</code>, <code>offset</code>, <code>limit</code></td></tr>
+<tr><td><code>write</code></td><td>Create a new file. Existing files go through <code>edit</code>.</td><td><code>path</code>, <code>content</code></td></tr>
+<tr><td><code>edit</code></td><td>Replace line ranges in an existing file, atomically, anchored by content hashes so a stale view cannot clobber the file.</td><td><code>path</code>, <code>operations[]</code> of <code>hash</code>, <code>startLine</code>, <code>endLine</code>, <code>content</code></td></tr>
+<tr><td><code>glob</code></td><td>Find paths by glob pattern, deterministically ordered.</td><td><code>patterns[]</code>, <code>hidden</code>, <code>gitignore</code>, <code>limit</code></td></tr>
+<tr><td><code>grep</code></td><td>Search file contents with a Go regular expression.</td><td><code>pattern</code>, <code>path</code>, <code>case</code>, <code>gitignore</code>, <code>skip</code></td></tr>
+<tr><td><code>shell</code></td><td>Run the exact command through <code>bash -lc</code> as you.</td><td><code>command</code>, <code>timeout</code>, <code>cwd</code></td></tr>
+<tr><td><code>web_fetch</code></td><td>Fetch a public URL as read-only text.</td><td><code>url</code></td></tr>
+<tr><td><code>web_search</code></td><td>Search DuckDuckGo; returns title, URL, snippet.</td><td><code>query</code>, <code>limit</code></td></tr>
+<tr><td><code>recall</code></td><td>Find relevant long-term memories.</td><td><code>query</code>, <code>bank</code>, <code>project</code>, <code>limit</code></td></tr>
+<tr><td><code>retain</code></td><td>Store durable facts.</td><td><code>items[]</code> of <code>content</code>, <code>context</code></td></tr>
+<tr><td><code>reflect</code></td><td>Recall and synthesize an answer with a utility model.</td><td><code>query</code>, <code>context</code>, <code>bank</code>, <code>project</code>, <code>limit</code></td></tr>
+<tr><td><code>memory_edit</code></td><td>Update, forget, or invalidate a memory by id.</td><td><code>op</code>, <code>id</code>, <code>content</code>, <code>importance</code>, <code>replacement_id</code></td></tr>
+<tr><td><code>todo</code></td><td>Keep the session's task list.</td><td><code>op</code> of <code>set</code>, <code>add</code>, <code>update</code>, <code>view</code>, <code>clear</code>; <code>items[]</code>, <code>index</code>, <code>status</code></td></tr>
+<tr><td><code>agent</code></td><td>Create, wait for, inspect, or clean up a subagent.</td><td><code>action</code>, <code>prompt</code>, <code>access</code>, <code>agentId</code>, <code>abandon</code></td></tr>
+<tr><td><code>steer</code></td><td>Send a message to a running child, or to the parent.</td><td><code>target</code>, <code>message</code></td></tr>
+<tr><td><code>image</code></td><td>Describe a local image with the <code>vision</code> role.</td><td><code>path</code></td></tr>
+<tr><td><code>ask_user</code></td><td>Ask you one question, optionally with choices. Interactive only.</td><td><code>question</code>, <code>options[]</code></td></tr>
+</table>
+<p>Tool definitions are sent to the provider in strict mode. A required argument that is missing or null comes back to the model as <code>tool_error</code> naming the argument, and the tool does not run.</p>
+
+<h2 id="paths">Paths</h2>
+<p>File tools resolve paths against the workspace root and your home directory. A path outside both is refused with <code>path_outside_workspace</code>. Named pipes, sockets, and devices are refused by <code>read</code>, <code>edit</code>, and <code>grep</code>, so a tool cannot be parked forever on a FIFO.</p>
+
+<h2 id="limits">Limits</h2>
+<p>Every limit that cuts a result short is announced to the model in the result itself, so a partial file never reads as the whole file.</p>
+<table>
+<tr><th>Tool</th><th>Limit</th><th>Notice</th></tr>
+<tr><td><code>read</code></td><td>400 lines or 400 entries per call; images up to 20 MiB</td><td><code>read_truncated: showing lines A–B of N</code></td></tr>
+<tr><td><code>glob</code></td><td>1000 paths</td><td><code>glob_truncated</code>, and <code>glob_incomplete</code> for directories it could not walk</td></tr>
+<tr><td><code>grep</code></td><td>1000 matches; lines up to 4 MiB</td><td><code>grep_truncated</code> with the <code>skip</code> value for the next page, and <code>grep_incomplete</code> for paths it could not read</td></tr>
+<tr><td><code>shell</code></td><td>120 s default timeout; last 16 KiB of each stream</td><td><code>shell_truncated</code></td></tr>
+<tr><td><code>web_fetch</code></td><td>5 MiB body, 30 s</td><td></td></tr>
+<tr><td><code>web_search</code></td><td>10 results at most, 5 by default</td><td></td></tr>
+<tr><td><code>recall</code></td><td>40 memories by default; content previewed to 500 characters</td><td><code>truncated</code> flag with the full length</td></tr>
+</table>
+
+<h2 id="shell">shell</h2>
+<p>The command string is passed to <code>bash -lc</code> unchanged, in the session's working directory unless <code>cwd</code> is given, as your user, with your environment. There is no allow-list and no argument parsing; the rule engine sees the whole string at <code>/command</code>, which is what makes a regex rule meaningful. Output is the tail of stdout and stderr with the exit code. A timeout ends the command and says so.</p>
+
+<h2 id="web">Web tools</h2>
+<p><code>web_search</code> queries DuckDuckGo's HTML endpoint and parses the results; a CAPTCHA page or a non-2xx response is a visible tool error, not an empty result. With <code>webSearch.backend</code> set to <code>auto</code>, the provider's own search is offered to the model when the provider supports one, and Ashyo falls back to the local tool if the provider rejects it. Set <code>duckduckgo</code> to always use the local tool. <code>web_fetch</code> reads a page as text and is the way to open a search result.</p>
+
+<h2 id="memory-tools">Memory tools</h2>
+<p><code>recall</code>, <code>retain</code>, <code>reflect</code>, and <code>memory_edit</code> are described on the <a href="memory.html">Memory</a> page. <code>reflect</code> needs a <code>smol</code> or <code>tiny</code> role.</p>
+
+<h2 id="agent-tools">Agent tools</h2>
+<p><code>agent</code> and <code>steer</code> are described on the <a href="agents.html">Agents</a> page. <code>agent</code> needs a <code>task</code> role.</p>

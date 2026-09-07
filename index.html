@@ -1,0 +1,90 @@
+---
+layout: default
+title: Intro
+---
+<h1 id="intro">Intro</h1>
+<p class="lead">Ashyo is a terminal coding harness for OpenAI Codex and OpenRouter models. It is one Linux binary with no plugins, no MCP, and no sidecar processes. You watch it work, approve what it does, and every conversation is an append-only log you can branch, replay, and resume.</p>
+
+<h2 id="overview">Overview</h2>
+<p>Ashyo runs a model against your working tree through a fixed set of tools. What separates it from a chat window is oversight:</p>
+<ul>
+<li><strong>Sessions are logs.</strong> Each conversation is one JSONL file. Events are never rewritten, so you can branch from any earlier turn and both branches survive a restart. See <a href="sessions.html">Sessions</a>.</li>
+<li><strong>Policy is the sandbox.</strong> Every tool call is decided by allow, ask, or deny rules you write, and an interactive approval shows you the exact arguments before anything runs. Hooks can veto or annotate, never widen. See <a href="permissions.html">Permissions</a> and <a href="hooks.html">Hooks</a>.</li>
+<li><strong>Models are roles.</strong> The main conversation, planning, subagents, an advisor that only comments, and small utility models each get their own model list with fallbacks. See <a href="agents.html">Agents</a>.</li>
+<li><strong>Memory is local.</strong> Facts and episodes go into a SQLite database with embeddings computed on your machine. See <a href="memory.html">Memory</a>.</li>
+<li><strong>Print mode shares the runtime.</strong> <code>ashyo -p</code> runs one prompt uninterrupted with the same policy, tools, and memory as the TUI. See <a href="cli.html">CLI</a>.</li>
+</ul>
+
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Go 1.27 and a C toolchain. The SQLite driver uses cgo.</li>
+<li><code>bash</code> for the shell tool, <code>git</code> for mutable subagents, and <code>xdg-open</code> for browser login.</li>
+<li>An OpenAI Codex account, an OpenRouter API key, or both.</li>
+</ul>
+
+<h2 id="install">Install</h2>
+<p>Build from the module root. The SQLite build tags are required; without them the session index and the memory store fail to open.</p>
+<pre class="terminal"><span class="prompt">$ </span>go build -tags "sqlite_fts5 sqlite_omit_load_extension" -o bin/ashyo ./cmd/ashyo</pre>
+<p>Put <code>bin/ashyo</code> somewhere on your <code>PATH</code>. There is nothing else to install: no runtime, no model server, no background daemon.</p>
+
+<h2 id="authenticate">Authenticate</h2>
+<p>Credentials live in one sidecar file, separate from configuration. Log in to whichever providers you use.</p>
+<pre class="terminal"><span class="prompt">$ </span>ashyo login openai-codex
+<span class="prompt">$ </span>ashyo login openrouter</pre>
+<p>Codex opens a browser for OAuth, or pass <code>--device</code> to get a code you can enter from another machine. OpenRouter prompts for an API key with echo off. Details in <a href="providers.html">Providers</a>.</p>
+
+<h2 id="configure">Configure</h2>
+<p>Create <code>~/.config/ashyo/config.json</code>. The only required part is a <code>default</code> role with at least one model. Everything else has a default. With no permission rules every tool call asks you first, so a few allows for read-only tools keep the prompts meaningful.</p>
+<div class="file-label">~/.config/ashyo/config.json</div>
+<pre>{
+  "roles": {
+    "default": [
+      { "model": "openai-codex/gpt-5.6-luna", "reasoningEffort": "medium" },
+      { "model": "openrouter/~z-ai/glm-flash-latest" }
+    ]
+  },
+  "permissions": [
+    { "action": "allow", "tool": "read" },
+    { "action": "allow", "tool": "grep" },
+    { "action": "allow", "tool": "glob" }
+  ]
+}</pre>
+<p>A project can add its own <code>.ashyo/config.json</code> in the working directory. Project roles replace global roles of the same name; project rules are consulted before global rules. Both files are watched, and a saved change applies within a second. See <a href="config.html">Config</a>.</p>
+
+<h2 id="first-run">First run</h2>
+<p>Start Ashyo in a project directory.</p>
+<pre class="terminal"><span class="prompt">$ </span>cd ~/code/myproject
+<span class="prompt">$ </span>ashyo</pre>
+<p>The first start downloads the embedding model <code>BAAI/bge-small-en-v1.5</code> into <code>~/.local/share/ashyo/models/</code>. This happens once and can take several minutes. If the download fails, Ashyo still starts; memory recall falls back to full-text search and the transcript says so.</p>
+<p>Type a prompt and press <kbd>Enter</kbd>. When the model wants to run a tool that your rules do not already allow, an approval pane docks above the composer showing the tool, its arguments, and the rule that matched. Choose <strong>allow once</strong>, <strong>deny once</strong>, or press <kbd>e</kbd> to edit the arguments first. Press <kbd>F1</kbd> for every key. See <a href="tui.html">TUI</a>.</p>
+
+<h2 id="print-mode">Print mode</h2>
+<p>For scripts and one-off questions, run a single prompt without the TUI. The answer goes to stdout; notices go to stderr.</p>
+<pre class="terminal"><span class="prompt">$ </span>ashyo -p 'Summarize what internal/session does'
+<span class="prompt">$ </span>ashyo -p --model openrouter/~z-ai/glm-flash-latest 'Reply with exactly OK'</pre>
+<p>Print mode never prompts. Rules that would ask are treated as allow, so give it a rule set you trust. Exit codes distinguish policy denial, provider failure, and interruption. See <a href="cli.html">CLI</a>.</p>
+
+<h2 id="check">Check the installation</h2>
+<pre class="terminal"><span class="prompt">$ </span>ashyo diagnostics
+config ok
+auth ok openai-codex=present openrouter=present
+sessions ok count=3
+memory ok application_id=1095977049 schema=3
+worktrees ok creating=0 ready=0 failed=0 orphaned=0 dirty_child=0 clean=0 removed=0 abandoned=0</pre>
+
+<h2 id="where-things-live">Where things live</h2>
+<p>Ashyo follows the XDG base directories. The defaults below apply when the variables are unset.</p>
+<table>
+<tr><th>What</th><th>Path</th></tr>
+<tr><td>Global config</td><td><code>~/.config/ashyo/config.json</code></td></tr>
+<tr><td>Project config</td><td><code>&lt;project&gt;/.ashyo/config.json</code></td></tr>
+<tr><td>Credentials</td><td><code>~/.local/share/ashyo/auth.json</code></td></tr>
+<tr><td>Sessions</td><td><code>~/.local/share/ashyo/sessions/</code></td></tr>
+<tr><td>Memory database</td><td><code>~/.local/share/ashyo/memories.db</code></td></tr>
+<tr><td>Embedding model</td><td><code>~/.local/share/ashyo/models/</code></td></tr>
+<tr><td>Subagent worktree metadata</td><td><code>~/.local/share/ashyo/worktrees/</code></td></tr>
+<tr><td>Log file</td><td><code>~/.local/state/ashyo/ashyo.log</code></td></tr>
+</table>
+
+<h2 id="boundaries">What Ashyo leaves out</h2>
+<p>These are decisions, not gaps. Ashyo has no plugin system, no MCP or ACP server, no LSP or DAP integration, no remote session sharing, no alternate shells, and no pluggable memory backend. The tool registry is fixed. Sandboxing is policy only: filesystem snapshots, network controls, and wrappers stay under your control outside the harness.</p>

@@ -1,0 +1,99 @@
+---
+layout: default
+title: Config
+---
+<h1 id="config">Config</h1>
+<p class="lead">Ashyo reads two JSON files: a global one in your config directory and an optional one in the project. Both are decoded strictly, watched while Ashyo runs, and applied live.</p>
+
+<h2 id="files">Files</h2>
+<table>
+<tr><th>Scope</th><th>Path</th></tr>
+<tr><td>Global</td><td><code>$XDG_CONFIG_HOME/ashyo/config.json</code>, default <code>~/.config/ashyo/config.json</code></td></tr>
+<tr><td>Project</td><td><code>&lt;working directory&gt;/.ashyo/config.json</code></td></tr>
+</table>
+<p>A missing file is fine and means no configuration at that scope. A file that does not parse is not: at startup Ashyo refuses to run and names the error. Unknown fields are rejected, trailing content after the JSON object is rejected, and the project file must be valid UTF-8.</p>
+
+<h2 id="live-reload">Live reload</h2>
+<p>Both files are checked once a second while Ashyo runs. A saved change that parses applies at once and in full: permissions, roles, hooks, and web search, to the bound session, to every running subagent, and to the advisor. A call already decided keeps its decision; the next call anyone makes is decided under the new rules. A docked approval is answered under the rules its pane opened with. A change that does not parse changes nothing: the previous configuration stays in force and the status line shows a <code>config:</code> field naming the file and the error until it parses again. Deleting a file is the same as saving an empty one.</p>
+<p>There is no reload command and no restart needed.</p>
+
+<h2 id="schema">Schema</h2>
+<table>
+<tr><th>Field</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+<tr><td><code>roles</code></td><td>object</td><td>none</td><td>Keys are role names; values are lists of model entries. See <a href="#roles">Roles</a>.</td></tr>
+<tr><td><code>permissions</code></td><td>array</td><td><code>[]</code></td><td>Allow, ask, and deny rules. See <a href="permissions.html">Permissions</a>.</td></tr>
+<tr><td><code>hooks.before</code></td><td>array of strings</td><td><code>[]</code></td><td>Executables run before a tool call. See <a href="hooks.html">Hooks</a>.</td></tr>
+<tr><td><code>hooks.after</code></td><td>array of strings</td><td><code>[]</code></td><td>Executables run after a tool call.</td></tr>
+<tr><td><code>memory.dbPath</code></td><td>string</td><td><code>$XDG_DATA_HOME/ashyo/memories.db</code></td><td>Absolute path to the memory database.</td></tr>
+<tr><td><code>memory.embeddingModel</code></td><td>string</td><td><code>BAAI/bge-small-en-v1.5</code></td><td>Hugging Face repository id.</td></tr>
+<tr><td><code>webSearch.backend</code></td><td>string</td><td><code>auto</code></td><td><code>auto</code> or <code>duckduckgo</code>.</td></tr>
+<tr><td><code>webSearch.maxResults</code></td><td>integer</td><td><code>5</code></td><td>1 to 10.</td></tr>
+</table>
+
+<h2 id="roles">Roles</h2>
+<p>A role names a job and lists the models allowed to do it, in order of preference. The first entry is tried first; the rest are fallbacks. Each entry is an object with a <code>model</code> reference written as <code>provider/model</code>, and an optional <code>reasoningEffort</code> string passed to the provider.</p>
+<table>
+<tr><th>Role</th><th>Used for</th></tr>
+<tr><td><code>default</code></td><td>The main conversation. Required.</td></tr>
+<tr><td><code>plan</code></td><td>Plan mode. Required before <code>/plan</code> works.</td></tr>
+<tr><td><code>task</code></td><td>Subagents. Required before the <code>agent</code> tool can create one.</td></tr>
+<tr><td><code>advisor</code></td><td>An observer that comments on the conversation and never acts. Off unless configured.</td></tr>
+<tr><td><code>smol</code>, <code>tiny</code></td><td>Utility work: memory consolidation and the <code>reflect</code> tool. <code>smol</code> is used when both exist.</td></tr>
+<tr><td><code>vision</code></td><td>The <code>image</code> tool.</td></tr>
+</table>
+<p>A project role replaces the global role of the same name entirely, not entry by entry. <code>--model</code> on the command line and <code>/model</code> in the TUI collapse the list to that one model, so no fallback is attempted.</p>
+
+<h2 id="merging">How the two files combine</h2>
+<ul>
+<li><strong>Roles:</strong> project replaces global, per role.</li>
+<li><strong>Permissions:</strong> both sets are kept; project rules are consulted before global ones. See <a href="permissions.html#scopes">scopes</a>.</li>
+<li><strong>Hooks:</strong> appended, global first, then project, and run in that order.</li>
+<li><strong>Web search:</strong> merged field by field; a project value wins where set.</li>
+</ul>
+
+<h2 id="example">Complete example</h2>
+<div class="file-label">~/.config/ashyo/config.json</div>
+<pre>{
+  "roles": {
+    "default": [
+      { "model": "openai-codex/gpt-5.6-luna", "reasoningEffort": "medium" },
+      { "model": "openrouter/~z-ai/glm-flash-latest" }
+    ],
+    "plan":    [{ "model": "openai-codex/gpt-5.6-luna", "reasoningEffort": "high" }],
+    "task":    [{ "model": "openrouter/~z-ai/glm-flash-latest" }],
+    "advisor": [{ "model": "openrouter/~z-ai/glm-flash-latest" }],
+    "smol":    [{ "model": "openrouter/~z-ai/glm-flash-latest" }]
+  },
+  "permissions": [
+    { "action": "allow", "tool": "read" },
+    { "action": "allow", "tool": "grep" },
+    { "action": "allow", "tool": "glob" },
+    { "action": "allow", "tool": "recall" },
+    { "action": "deny",  "tool": "shell",
+      "when": [{ "pointer": "/command", "regex": "^rm\\b" }] },
+    { "action": "allow", "tool": "edit",
+      "when": [{ "pointer": "/path", "glob": "*.go" }] }
+  ],
+  "hooks": {
+    "before": ["/home/you/.config/ashyo/hooks/guard"],
+    "after":  ["/home/you/.config/ashyo/hooks/audit"]
+  },
+  "memory": {
+    "dbPath": "/home/you/.local/share/ashyo/memories.db"
+  },
+  "webSearch": { "backend": "auto", "maxResults": 5 }
+}</pre>
+<p>Anything not matched by a rule asks. Do not add a wildcard <code>ask</code> to make that explicit: within one file the strongest matching action wins, so a wildcard ask would override every allow beside it.</p>
+
+<h2 id="project-example">Project example</h2>
+<div class="file-label">.ashyo/config.json</div>
+<pre>{
+  "roles": {
+    "default": [{ "model": "openai-codex/gpt-5.6-luna", "reasoningEffort": "high" }]
+  },
+  "permissions": [
+    { "action": "allow", "tool": "shell",
+      "when": [{ "pointer": "/command", "regex": "^go (build|test|vet)\\b" }] }
+  ]
+}</pre>
+<p>Opening Ashyo in a repository is the act of trust: the project file is applied from the first turn, and nothing reviews it first. Since the model can edit this file with its own tools, a deny rule on writes to it is the way to keep the model out of its own permissions. See <a href="permissions.html#config-files">Permissions</a>.</p>

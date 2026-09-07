@@ -1,0 +1,72 @@
+---
+layout: default
+title: Permissions
+---
+<h1 id="permissions">Permissions</h1>
+<p class="lead">Policy is Ashyo's only sandbox. Every tool call is decided by rules you wrote, and the decision is recorded in the session. There is no other enforcement layer, on purpose: filesystem snapshots, network controls, and wrappers stay under your control outside the harness.</p>
+
+<h2 id="rules">Rules</h2>
+<p>A rule is an object in the <code>permissions</code> array of either config file.</p>
+<pre>{ "action": "allow" | "ask" | "deny",
+  "tool":   "&lt;tool name&gt;" | "*",
+  "when":   [ matcher, … ] }</pre>
+<ul>
+<li><code>action</code> is required.</li>
+<li><code>tool</code> is required. <code>*</code> matches every tool.</li>
+<li><code>when</code> is optional. When present, every matcher must match.</li>
+</ul>
+
+<h3 id="matchers">Matchers</h3>
+<p>A matcher points into the tool's arguments and tests the value there.</p>
+<pre>{ "pointer": "/command", "regex":    "^rm\\b" }
+{ "pointer": "/path",    "glob":     "*.go" }
+{ "pointer": "/path",    "contains": "/vendor/" }
+{ "pointer": "/access",  "equals":   "read_only" }</pre>
+<ul>
+<li><code>pointer</code> is an RFC 6901 JSON pointer into the arguments and must start with <code>/</code>. Argument names are on the <a href="tools.html">Tools</a> page.</li>
+<li>Exactly one of <code>equals</code>, <code>contains</code>, <code>regex</code>, <code>glob</code>.</li>
+<li><code>equals</code> compares a JSON scalar. The other three apply to string values only; a non-string at the pointer does not match.</li>
+<li><code>regex</code> is Go RE2 syntax and is compiled when the config loads, so a bad pattern is a config error, not a silent non-match.</li>
+<li><code>glob</code> is matched against the whole value and <code>*</code> does not cross <code>/</code>. For a path deep in a tree, <code>contains</code> or <code>regex</code> is usually what you want.</li>
+</ul>
+
+<h2 id="scopes">Scopes and precedence</h2>
+<p>Rules come from three scopes: <code>global</code> from your config directory, <code>project</code> from <code>.ashyo/config.json</code>, and <code>session</code> for rules recorded in an older session log. A call is decided like this:</p>
+<ol>
+<li>Denies imposed by the execution context are checked first. See <a href="#context">below</a>.</li>
+<li>Then session, project, and global scope, in that order. The first scope with any matching rule decides; later scopes are not consulted.</li>
+<li>Within that scope, if several rules match, the strongest action wins: deny over ask over allow.</li>
+<li>If nothing matches anywhere, the answer is <strong>ask</strong>.</li>
+</ol>
+<p>Two consequences worth knowing:</p>
+<ul>
+<li>A wildcard <code>ask</code> in the same file as your allows makes every one of them ineffective, since ask beats allow within a scope. No match already means ask, so leave the wildcard out.</li>
+<li>A project <code>allow</code> shadows a global <code>deny</code> for any call that matches both, because project scope is decided first. Put denies you want to survive project overrides in the project file too, or keep project allows narrow.</li>
+</ul>
+
+<h2 id="modes">Interactive and uninterrupted</h2>
+<p>In the TUI, <code>ask</code> docks an approval pane and waits. In print mode nothing can wait, so <code>ask</code> is treated as <code>allow</code>, with the reason recorded, and the <code>ask_user</code> tool is withdrawn. <code>deny</code> is a deny in both.</p>
+
+<h2 id="approval">The approval pane</h2>
+<p>It shows the tool, the full arguments, the rule that matched or <code>(no rule matched)</code>, the mode and profile, and any annotations from before-hooks. The two actions are <strong>allow once</strong> and <strong>deny once</strong>. Neither creates a rule; a decision you want to keep goes in a config file and applies on the next call. Press <kbd>e</kbd> to edit the arguments before allowing. The log keeps the model's intended call, your edited call, and the executed call as separate fields.</p>
+<p>What the model sees on a deny is one line: <code>policy_denied: &lt;tool&gt;: &lt;reason&gt;</code>. The turn continues; the model can try something else or stop.</p>
+
+<h2 id="context">Execution context</h2>
+<p>Some limits are not rules and cannot be overridden by rules. They are applied before the engine runs:</p>
+<ul>
+<li>In plan mode and in a read-only subagent, <code>shell</code> is denied outright, and <code>edit</code> and <code>write</code> are limited to that context's writable roots: the session scratch directory for plan mode, nothing for a read-only child, its own worktree for a mutable child.</li>
+<li>In print mode, <code>ask_user</code> does not exist.</li>
+<li>File tools resolve paths against the workspace root and your home directory. Anything outside both is refused with <code>path_outside_workspace</code>.</li>
+</ul>
+
+<h2 id="config-files">Keeping the model out of the config files</h2>
+<p>The project file is applied from the first turn. Opening Ashyo in a repository is the act of trust, and nothing reviews the file first. Both config files are ordinary files under paths the model's tools can reach, and a change the model writes takes effect on the next call exactly as yours would. The harness adds no special protection; the rule set is the protection. Global denies on writes to both files close the loop:</p>
+<pre>{ "action": "deny", "tool": "edit",
+  "when": [{ "pointer": "/path", "contains": "/.ashyo/config.json" }] },
+{ "action": "deny", "tool": "write",
+  "when": [{ "pointer": "/path", "contains": "/.ashyo/config.json" }] },
+{ "action": "deny", "tool": "edit",
+  "when": [{ "pointer": "/path", "contains": "/.config/ashyo/" }] },
+{ "action": "deny", "tool": "write",
+  "when": [{ "pointer": "/path", "contains": "/.config/ashyo/" }] }</pre>
+<p>Cover <code>shell</code> with a pattern on the command as well if you allow shell broadly. Remember the shadowing rule above: a project allow for <code>edit</code> that also matches the config path would win over these, so keep project allows on specific paths.</p>

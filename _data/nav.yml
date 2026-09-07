@@ -1,0 +1,28 @@
+- group: Main
+  pages:
+    - title: Intro
+      file: index.html
+    - title: Config
+      file: config.html
+    - title: Providers
+      file: providers.html
+- group: Usage
+  pages:
+    - title: TUI
+      file: tui.html
+    - title: CLI
+      file: cli.html
+    - title: Sessions
+      file: sessions.html
+- group: Configure
+  pages:
+    - title: Permissions
+      file: permissions.html
+    - title: Hooks
+      file: hooks.html
+    - title: Tools
+      file: tools.html
+    - title: Agents
+      file: agents.html
+    - title: Memory
+      file: memory.html

@@ -1,0 +1,41 @@
+---
+layout: default
+title: Providers
+---
+<h1 id="providers">Providers</h1>
+<p class="lead">Ashyo talks to exactly two providers: OpenAI Codex over OAuth, and OpenRouter with an API key. Models are named <code>provider/model</code>, and both providers are driven through the same stateless request shape, so a session can move between them without being rewritten.</p>
+
+<h2 id="model-references">Model references</h2>
+<p>Every model reference is <code>openai-codex/&lt;model&gt;</code> or <code>openrouter/&lt;model&gt;</code>. Anything else is rejected when the config is decoded. OpenRouter ids contain their own slashes, so <code>openrouter/~z-ai/glm-flash-latest</code> is the provider segment followed by the OpenRouter id as OpenRouter spells it.</p>
+
+<h2 id="credentials">Credentials</h2>
+<p>Credentials live in <code>$XDG_DATA_HOME/ashyo/auth.json</code>, default <code>~/.local/share/ashyo/auth.json</code>, apart from configuration so the config file can be shared. The file must be a regular file, not a symlink, with mode <code>0600</code>; anything looser is refused with an error naming the permissions. Absent providers are omitted from the file.</p>
+<p>Ashyo reads no API key from the environment. The sidecar is the only source.</p>
+
+<h2 id="openai-codex">OpenAI Codex</h2>
+<pre class="terminal"><span class="prompt">$ </span>ashyo login openai-codex</pre>
+<p>The browser flow opens your default browser with <code>xdg-open</code> and listens for the callback on <code>localhost:1455</code>, falling back to port <code>1457</code> if that is taken. If the browser cannot be launched, Ashyo prints the URL to open by hand and keeps waiting. Interrupt with <kbd>Ctrl-C</kbd> if this machine has no browser at all and use the device flow instead:</p>
+<pre class="terminal"><span class="prompt">$ </span>ashyo login --device openai-codex
+Open https://auth.openai.com/codex/device and enter code XXXX-XXXX</pre>
+<p>Tokens are refreshed before they expire and the file is rewritten atomically. Logging out revokes the token with OpenAI and removes the entry.</p>
+
+<h2 id="openrouter">OpenRouter</h2>
+<pre class="terminal"><span class="prompt">$ </span>ashyo login openrouter
+OpenRouter API key: </pre>
+<p>The key is read from the terminal with echo off and saved. <code>--device</code> has no meaning here and is reported as such. Logging out removes the entry; nothing is revoked remotely.</p>
+
+<h2 id="in-the-tui">From inside the TUI</h2>
+<p><code>/login</code> and <code>/logout</code> take the same arguments and run without leaving the session. A pending login waits for the browser or device code; press <kbd>Esc</kbd> to cancel it. One credential command runs at a time.</p>
+
+<h2 id="fallback">Fallback and retries</h2>
+<p>A role lists models in order. When the first model's request fails before any output has streamed, the next entry is tried:</p>
+<ul>
+<li>A retryable status is retried at most twice before the stream starts. A <code>Retry-After</code> header of up to 30 seconds is honored; a longer one makes that model terminal for the turn without sleeping.</li>
+<li>A 404 advances to the next entry immediately.</li>
+<li>Once output has started streaming, a failure ends the turn. There is no mid-stream retry or fallback, so you never get a spliced answer.</li>
+<li><code>--model</code> and <code>/model</code> select one model with no fallback list.</li>
+</ul>
+
+<h2 id="stateless-replay">Stateless replay</h2>
+<p>Every request carries the whole conversation. Ashyo sends <code>store: false</code> and never uses a server-side previous response id, so nothing about your session lives on the provider. Each completed output item is written to the session log exactly as received, tagged with the provider that produced it. When a later turn goes to a different provider, items from the other provider are projected into a shape it accepts: reasoning, provider ids, and encrypted content are dropped, and tool call pairs are rebuilt. The log itself is never rewritten. Switch back and the original items replay verbatim, including Codex encrypted reasoning.</p>
+<p>The transcript labels each turn with the provider and model that produced it, so a session that crossed providers still reads honestly.</p>

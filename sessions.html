@@ -1,0 +1,57 @@
+---
+layout: default
+title: Sessions
+---
+<h1 id="sessions">Sessions</h1>
+<p class="lead">A session is an append-only log of events. Nothing in it is ever rewritten, which is what makes branching, resuming, and switching models safe.</p>
+
+<h2 id="on-disk">On disk</h2>
+<table>
+<tr><th>What</th><th>Path</th></tr>
+<tr><td>Session log</td><td><code>~/.local/share/ashyo/sessions/&lt;uuid&gt;.jsonl</code></td></tr>
+<tr><td>Index</td><td><code>~/.local/share/ashyo/sessions/index.db</code></td></tr>
+<tr><td>Scratch directory</td><td><code>~/.local/share/ashyo/sessions/&lt;uuid&gt;.scratch/</code></td></tr>
+</table>
+<p>The log is one JSON object per line, one event each, in the order they happened. The index is a SQLite database with full-text search over the logs; it is reconciled against the logs when Ashyo opens the store, so the logs are the truth. The scratch directory holds the plan document and per-run markers. Session ids are UUIDs; the store rejects anything else before composing a path.</p>
+
+<h2 id="events">Events</h2>
+<p>Every event has an id and a parent id. The event types are:</p>
+<table>
+<tr><th>Type</th><th>Meaning</th></tr>
+<tr><td><code>session</code></td><td>The root: creation time, directory, surface.</td></tr>
+<tr><td><code>message</code></td><td>A user or model message, or a tool call and its result, stored as the provider produced it.</td></tr>
+<tr><td><code>custom</code></td><td>A harness record on the path, such as a tool call's lifecycle.</td></tr>
+<tr><td><code>session_title</code></td><td>A rename.</td></tr>
+<tr><td><code>model_change</code>, <code>thinking_level_change</code>, <code>mode_change</code></td><td><code>/model</code>, <code>/thinking</code>, and <code>/plan</code>.</td></tr>
+<tr><td><code>permission_decision</code></td><td>An interactive allow or deny, with the intended, approved, and executed call.</td></tr>
+<tr><td><code>hook_event</code></td><td>What each hook said.</td></tr>
+<tr><td><code>subagent_start</code>, <code>subagent_result</code></td><td>A child's beginning and its compact result.</td></tr>
+<tr><td><code>advisor</code></td><td>What the advisor said, and when.</td></tr>
+<tr><td><code>approved_plan</code></td><td>The plan you approved, with its hash.</td></tr>
+<tr><td><code>session_exit</code></td><td>How the run ended: <code>normal</code>, <code>interrupt</code>, or <code>crash</code>.</td></tr>
+</table>
+
+<h2 id="branching">Branching</h2>
+<p>Because every event names its parent, a session is a tree, and what you see in the transcript is one path from the root to a leaf. Open the tree with <kbd>Ctrl-T</kbd>, pick an earlier node, and send a message: the new event's parent is that node, so you now have two leaves. The old branch is untouched. Switch between them any time; both are there after a restart.</p>
+<p>The model, the reasoning effort, and plan mode are all events on the path, so switching branches restores exactly the state that branch had. Resuming does the same.</p>
+<p>Messages typed while a turn is running are queued on the branch you typed them into and sent together as the next turn. They stay with that branch across a switch.</p>
+
+<h2 id="titles">Titles</h2>
+<p>A new session is titled from its first prompt, cut to 80 characters. <code>/title</code> renames it; the rename is an event, and the picker reflects it at once.</p>
+
+<h2 id="picker">Finding a session</h2>
+<p>In the TUI, <kbd>Ctrl-S</kbd> shows sessions created in the current directory, and <kbd>Tab</kbd> widens to all. From the shell:</p>
+<pre class="terminal"><span class="prompt">$ </span>ashyo session list
+<span class="prompt">$ </span>ashyo session search 'sqlite wal'
+<span class="prompt">$ </span>ashyo session resume 6f1c2a0e-3b7d-4c1e-9a2f-0d8e5b4c7a11</pre>
+
+<h2 id="resume">Resuming</h2>
+<p><code>ashyo session resume &lt;id&gt;</code> opens the TUI on that session's current leaf. If the session cannot be opened, because it is missing, corrupt, or already open in another Ashyo, the surface starts with no session bound and the picker as the way out; press <kbd>Ctrl-S</kbd>.</p>
+
+<h2 id="one-per-session">One Ashyo per session</h2>
+<p>A running surface leaves a marker in the session's scratch directory. A second Ashyo refuses to open the same session while the marker is live. If a run dies without exiting, the next start finds the stale marker and writes a <code>session_exit</code> with reason <code>crash</code>, so the transcript says what happened instead of ending mid-sentence.</p>
+
+<h2 id="export">Export and delete</h2>
+<pre class="terminal"><span class="prompt">$ </span>ashyo session export 6f1c2a0e-3b7d-4c1e-9a2f-0d8e5b4c7a11 &gt; session.json
+<span class="prompt">$ </span>ashyo session delete 6f1c2a0e-3b7d-4c1e-9a2f-0d8e5b4c7a11</pre>
+<p>Export writes the session as JSON to stdout. Delete removes the log, its scratch directory, and its index rows.</p>

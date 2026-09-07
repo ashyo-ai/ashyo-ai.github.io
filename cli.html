@@ -1,0 +1,82 @@
+---
+layout: default
+title: CLI
+---
+<h1 id="cli">CLI</h1>
+<p class="lead">One binary, a handful of subcommands, and a print mode for running a single prompt without the TUI.</p>
+
+<h2 id="synopsis">Synopsis</h2>
+<pre>ashyo                                     open the TUI
+ashyo -p PROMPT [--model provider/model]  run one prompt, print the answer
+ashyo login [--device] openrouter|openai-codex
+ashyo logout openrouter|openai-codex
+ashyo session list [--limit N]
+ashyo session search QUERY [--limit N]
+ashyo session resume SESSION_ID
+ashyo session export SESSION_ID
+ashyo session delete SESSION_ID
+ashyo agent cleanup AGENT_ID [--abandon]
+ashyo memory inspect MEMORY_ID
+ashyo diagnostics</pre>
+
+<h2 id="print-mode">Print mode</h2>
+<pre class="terminal"><span class="prompt">$ </span>ashyo -p 'What does internal/policy export?'
+<span class="prompt">$ </span>ashyo -p --model openrouter/~z-ai/glm-flash-latest 'Reply with exactly OK'
+<span class="prompt">$ </span>ashyo -p -- '--this prompt starts with dashes'</pre>
+<dl>
+<dt><code>-p</code>, <code>--print</code></dt><dd>Run the next argument as the prompt. <code>-p=PROMPT</code> and <code>--print=PROMPT</code> work too. Given once only.</dd>
+<dt><code>--model provider/model</code></dt><dd>Use one model with no fallback list.</dd>
+<dt><code>--</code></dt><dd>Everything after it is prompt text.</dd>
+</dl>
+<p>Print mode runs on the same runtime as the TUI: same session store, same rules, same tools, same memory. It differs in one way. It is <strong>uninterrupted</strong>: nothing can prompt you, so an <code>ask</code> decision is treated as <code>allow</code> and the <code>ask_user</code> tool is withdrawn from the model. A <code>deny</code> still denies. Give print mode a rule set you would be comfortable running unattended.</p>
+<p>The final answer goes to stdout. Notices, including a degraded memory drain, go to stderr and do not change the exit code. The run is recorded as a session like any other.</p>
+
+<h2 id="exit-codes">Exit codes</h2>
+<table>
+<tr><th>Code</th><th>Meaning</th></tr>
+<tr><td><code>0</code></td><td>Completed.</td></tr>
+<tr><td><code>2</code></td><td>A policy denial ended the run.</td></tr>
+<tr><td><code>3</code></td><td>Provider failure, including a model reference that could not be resolved and a credential command that failed.</td></tr>
+<tr><td><code>4</code></td><td>Interrupted by SIGINT or SIGTERM, or a login cancelled with Ctrl-C.</td></tr>
+<tr><td><code>5</code></td><td>Internal error, including every usage error.</td></tr>
+</table>
+<p>The TUI exits 0 on a normal or Ctrl-C quit, 4 on a signal, and 5 on an internal failure.</p>
+
+<h2 id="login">login and logout</h2>
+<pre class="terminal"><span class="prompt">$ </span>ashyo login openai-codex
+<span class="prompt">$ </span>ashyo login --device openai-codex
+<span class="prompt">$ </span>ashyo login openrouter
+<span class="prompt">$ </span>ashyo logout openai-codex</pre>
+<p>Flags may go before or after the provider. <code>-h</code> prints usage and exits 0. See <a href="providers.html">Providers</a> for what each flow does.</p>
+
+<h2 id="session">session</h2>
+<p><code>list</code> and <code>search</code> print one session per line as tab-separated id, creation time in UTC, title, and directory, up to <code>--limit</code> (default 20). <code>search</code> is full-text over the session index.</p>
+<pre class="terminal"><span class="prompt">$ </span>ashyo session search 'migration' --limit 5</pre>
+<p><code>resume</code> opens the TUI bound to the session. <code>export</code> writes the session as JSON to stdout. <code>delete</code> removes it. See <a href="sessions.html">Sessions</a>.</p>
+
+<h2 id="agent">agent cleanup</h2>
+<p>Removes a subagent's worktree and metadata once its work has been integrated. A child with uncommitted changes is always refused. A child whose branch has not been merged is refused unless <code>--abandon</code> is given, which discards the work. See <a href="agents.html#cleanup">Agents</a>.</p>
+
+<h2 id="memory">memory inspect</h2>
+<p>Prints one memory record as JSON by id. Ids appear in <code>recall</code> results.</p>
+
+<h2 id="diagnostics">diagnostics</h2>
+<p>Checks each subsystem and prints one line per subsystem. Exits 5 if any is unhealthy.</p>
+<pre class="terminal"><span class="prompt">$ </span>ashyo diagnostics
+config ok
+auth ok openai-codex=present openrouter=absent
+sessions ok count=12
+memory ok application_id=1095977049 schema=3
+worktrees ok creating=0 ready=1 failed=0 orphaned=0 dirty_child=0 clean=0 removed=3 abandoned=0</pre>
+
+<h2 id="environment">Environment</h2>
+<table>
+<tr><th>Variable</th><th>Effect</th></tr>
+<tr><td><code>XDG_CONFIG_HOME</code></td><td>Location of the global config. Default <code>~/.config</code>.</td></tr>
+<tr><td><code>XDG_DATA_HOME</code></td><td>Location of credentials, sessions, memory, models, and worktree metadata. Default <code>~/.local/share</code>.</td></tr>
+<tr><td><code>XDG_STATE_HOME</code></td><td>Location of the log file. Default <code>~/.local/state</code>.</td></tr>
+<tr><td><code>ASHYO_LOG=debug</code></td><td>Raise the log level from <code>warn</code> to <code>debug</code>.</td></tr>
+</table>
+
+<h2 id="log">Log file</h2>
+<p>Warnings that would otherwise be lost, such as a provider stream that ended with a truncated body, are appended to <code>~/.local/state/ashyo/ashyo.log</code>. The file is created <code>0600</code> in a <code>0700</code> directory and is never truncated. Credentials are redacted before a line is written. A log file that cannot be opened is silently discarded; logging never fails a turn.</p>

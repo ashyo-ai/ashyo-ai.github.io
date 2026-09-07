@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page.title }} · {{ site.title }}</title>
+<meta name="description" content="{{ site.description }}">
+<link rel="stylesheet" href="{{ '/assets/style.css' | relative_url }}">
+</head>
+<body>
+{%- assign found = false -%}
+{%- assign prev = "" -%}
+{%- assign next = "" -%}
+{%- assign section = 0 -%}
+{%- assign group = "" -%}
+{%- for g in site.data.nav -%}
+{%- for p in g.pages -%}
+{%- if found and next == "" -%}{%- assign next = p -%}{%- endif -%}
+{%- if p.file == page.path -%}{%- assign found = true -%}{%- assign section = forloop.parentloop.index -%}{%- assign group = g.group -%}{%- endif -%}
+{%- if found == false -%}{%- assign prev = p -%}{%- endif -%}
+{%- endfor -%}
+{%- endfor -%}
+<header class="site-header">
+<a class="brand" href="{{ '/' | relative_url }}"><span class="mark" aria-hidden="true">◆</span><span class="name">ashyo</span></a>
+<nav class="site-nav">
+<a href="{{ '/' | relative_url }}">Docs</a>
+<a href="https://github.com/ashyo-ai/ashyo">GitHub <span aria-hidden="true">↗</span></a>
+</nav>
+</header>
+<div class="page">
+{% include sidebar.html %}
+<main id="content">
+<div class="crumb">
+<span class="crumb-section"><span class="num">§ {{ section | prepend: "0" | slice: -2, 2 }}</span><span class="grp">{{ group }}</span></span>
+<span class="crumb-rule"></span>
+<span class="crumb-links">
+{%- if prev != "" %}<a href="{{ prev.file | relative_url }}"><span aria-hidden="true">← </span>{{ prev.title }}</a>{% endif -%}
+{%- if next != "" %}<a href="{{ next.file | relative_url }}">{{ next.title }}<span aria-hidden="true"> →</span></a>{% endif %}
+</span>
+</div>
+<article class="content">
+{{ content }}
+</article>
+<nav class="pager">
+{%- if prev != "" %}<a class="prev" href="{{ prev.file | relative_url }}"><span class="dir">Previous</span><span class="t">{{ prev.title }}</span></a>{% endif -%}
+{%- if next != "" %}<a class="next" href="{{ next.file | relative_url }}"><span class="dir">Next</span><span class="t">{{ next.title }}</span></a>{% endif %}
+</nav>
+</main>
+</div>
+<footer class="site-footer">
+<span>{{ site.title }} documentation</span>
+<span>Plain HTML and CSS. No scripts.</span>
+</footer>
+</body>
+</html>
