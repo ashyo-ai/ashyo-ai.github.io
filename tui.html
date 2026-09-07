@@ -39,8 +39,8 @@ title: TUI
 <tr><th>Command</th><th>Effect</th></tr>
 <tr><td><code>/model</code></td><td>Show the active model, how it was chosen, and the role's configured list.</td></tr>
 <tr><td><code>/model &lt;provider&gt;/&lt;model&gt;</code></td><td>Switch this conversation to one model with no fallback. Recorded in the log. Refused while a turn is running.</td></tr>
-<tr><td><code>/thinking</code></td><td>Show the reasoning effort and where it came from.</td></tr>
-<tr><td><code>/thinking low|medium|high</code></td><td>Set the reasoning effort. Recorded, survives later model switches, refused mid-turn.</td></tr>
+<tr><td><code>/thinking</code></td><td>Show the chosen reasoning effort, the level the next request would actually carry, and the levels the active model offers.</td></tr>
+<tr><td><code>/thinking &lt;level&gt;</code></td><td>Set the reasoning effort to one of the active model's levels. Recorded, survives later model switches, refused mid-turn. A level the model does not offer is refused with the ones it does. See <a href="#reasoning-effort">Reasoning effort</a>.</td></tr>
 <tr><td><code>/title</code></td><td>Show the session title.</td></tr>
 <tr><td><code>/title &lt;text&gt;</code></td><td>Rename the session. The picker updates at once.</td></tr>
 <tr><td><code>/plan</code></td><td>Toggle plan mode. See below.</td></tr>
@@ -49,6 +49,11 @@ title: TUI
 <tr><td><code>/logout openrouter|openai-codex</code></td><td>Remove a credential.</td></tr>
 <tr><td><code>/keys</code></td><td>Open the key help.</td></tr>
 </table>
+
+<h2 id="reasoning-effort">Reasoning effort</h2>
+<p>Reasoning effort is model-specific. Every model offers an ordered set of levels drawn from <code>none</code>, <code>minimal</code>, <code>low</code>, <code>medium</code>, <code>high</code>, <code>xhigh</code>, <code>max</code>: Ashyo ships the sets for the models it knows, a model it does not know offers <code>low</code>, <code>medium</code>, <code>high</code>, and a config entry can declare or replace a set with <a href="config.html#reasoning-effort"><code>reasoningEfforts</code></a>.</p>
+<p><code>/thinking</code> accepts only a level the active model offers, and what it records is that choice. What a request carries is the choice mapped into the set of whichever model runs: the nearest level that model offers, and on a tie the weaker one, so a mapping never spends more than you asked for. The same mapping applies to a fallback model that takes a turn after the first one fails.</p>
+<p>So a chosen <code>xhigh</code> on a model whose levels stop at <code>high</code> sends <code>high</code> and the status line reads <code>thinking:high (xhigh)</code>; switching back to a model that offers <code>xhigh</code> sends <code>xhigh</code> again, with nothing new recorded. A model declared with no reasoning control is sent no effort at all, shows no <code>thinking</code> field, and answers <code>/thinking</code> by saying so.</p>
 
 <h2 id="approvals">Approvals</h2>
 <p>When a tool call matches an <code>ask</code> rule, or no rule at all, the interaction pane docks with the tool name, the full arguments, the rule that matched, the mode and profile, and anything your before-hooks said about the call. Nothing is truncated; the pane scrolls.</p>
@@ -73,7 +78,7 @@ title: TUI
 <table>
 <tr><th>Field</th><th>Meaning</th></tr>
 <tr><td><code>model</code></td><td>Active model reference.</td></tr>
-<tr><td><code>thinking</code></td><td>Reasoning effort.</td></tr>
+<tr><td><code>thinking</code></td><td>The reasoning effort the next request carries, with the level you chose in parentheses when the active model cannot be asked for it, as in <code>thinking:high (xhigh)</code>. Absent on a model with no reasoning control.</td></tr>
 <tr><td><code>role</code></td><td>Role driving the conversation.</td></tr>
 <tr><td><code>mode</code></td><td><code>interactive</code> or <code>uninterrupted</code>.</td></tr>
 <tr><td><code>profile</code></td><td><code>normal</code> or <code>plan</code>.</td></tr>

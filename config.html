@@ -25,6 +25,8 @@ title: Config
 <tr><td><code>advisor.lookBack</code></td><td>integer</td><td>unlimited</td><td>How many of the advisor's own recent turns each of its requests carries. See <a href="#look-back">Look-back</a>.</td></tr>
 <tr><td><code>advisor.syncTurns</code></td><td>integer</td><td><code>0</code></td><td>How far behind the advisor may fall before a turn waits for it.</td></tr>
 <tr><td><code>advisor.immuneTurns</code></td><td>integer</td><td><code>3</code></td><td>How many turns the main model is left alone after the advisor cuts in. See <a href="#immune-turns">Immunity</a>.</td></tr>
+<tr><td><code>roles.&lt;role&gt;[].reasoningEffort</code></td><td>string</td><td>none</td><td>How hard this model is asked to think. Must be one of the model's levels when they are known. See <a href="#reasoning-effort">Reasoning effort</a>.</td></tr>
+<tr><td><code>roles.&lt;role&gt;[].reasoningEfforts</code></td><td>array of strings</td><td>what Ashyo ships</td><td>The levels this model offers, ascending. <code>[]</code> declares a model with no reasoning control. See <a href="#reasoning-effort">Reasoning effort</a>.</td></tr>
 <tr><td><code>permissions</code></td><td>array</td><td><code>[]</code></td><td>Allow, ask, and deny rules. See <a href="permissions.html">Permissions</a>.</td></tr>
 <tr><td><code>hooks.before</code></td><td>array of strings</td><td><code>[]</code></td><td>Executables run before a tool call. See <a href="hooks.html">Hooks</a>.</td></tr>
 <tr><td><code>hooks.after</code></td><td>array of strings</td><td><code>[]</code></td><td>Executables run after a tool call.</td></tr>
@@ -35,7 +37,7 @@ title: Config
 </table>
 
 <h2 id="roles">Roles</h2>
-<p>A role names a job and lists the models allowed to do it, in order of preference. The first entry is tried first; the rest are fallbacks. Each entry is an object with a <code>model</code> reference written as <code>provider/model</code>, and an optional <code>reasoningEffort</code> string passed to the provider.</p>
+<p>A role names a job and lists the models allowed to do it, in order of preference. The first entry is tried first; the rest are fallbacks. Each entry is an object with a <code>model</code> reference written as <code>provider/model</code>, an optional <code>reasoningEffort</code> passed to the provider, and an optional <code>reasoningEfforts</code> naming the levels that model offers. See <a href="#reasoning-effort">Reasoning effort</a>.</p>
 <table>
 <tr><th>Role</th><th>Used for</th></tr>
 <tr><td><code>default</code></td><td>The main conversation. Required.</td></tr>
@@ -80,6 +82,21 @@ title: Config
 <li><strong>Hooks:</strong> appended, global first, then project, and run in that order.</li>
 <li><strong>Web search:</strong> merged field by field; a project value wins where set.</li>
 </ul>
+
+<h2 id="reasoning-effort">Reasoning effort</h2>
+<p>Reasoning effort is model-specific: every model offers an ordered set of levels drawn from <code>none</code>, <code>minimal</code>, <code>low</code>, <code>medium</code>, <code>high</code>, <code>xhigh</code>, <code>max</code>. Ashyo ships the sets for the models it knows, read from each provider's documentation. A model it does not know offers <code>low</code>, <code>medium</code>, <code>high</code>, and takes whatever <code>reasoningEffort</code> you write for it, because only its provider knows better.</p>
+<p><code>reasoningEfforts</code> on an entry declares that model's set and replaces whatever Ashyo ships for it — for a model newer than your Ashyo, or one whose shipped set is wrong. The list must be drawn from the scale above, in ascending order. An empty list declares a model with no reasoning control at all: it is sent no effort, shows no <code>thinking</code> field, and <code>/thinking</code> says so.</p>
+<pre>{
+  "roles": {
+    "default": [
+      { "model": "openai-codex/gpt-5.2-codex", "reasoningEffort": "xhigh" },
+      { "model": "openrouter/house-model", "reasoningEfforts": ["none", "low", "high"] },
+      { "model": "openrouter/no-thinking", "reasoningEfforts": [] }
+    ]
+  }
+}</pre>
+<p>A <code>reasoningEffort</code> outside the model's known set is a configuration error naming the field, as is a <code>reasoningEfforts</code> that names a word off the scale or lists levels out of order.</p>
+<p>What a request carries is the level chosen with <a href="tui.html#reasoning-effort"><code>/thinking</code></a> mapped into the set of whichever model runs, fallbacks included; <code>reasoningEffort</code> here is what runs when nothing has been chosen in session.</p>
 
 <h2 id="example">Complete example</h2>
 <div class="file-label">~/.config/ashyo/config.json</div>
