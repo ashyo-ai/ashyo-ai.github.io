@@ -12,6 +12,7 @@ title: TUI
 
 <h2 id="layout">Layout</h2>
 <p>Top to bottom: the <strong>transcript</strong>, an <strong>interaction pane</strong> that docks only when something needs you, the <strong>composer</strong>, and a one-line <strong>status line</strong>. The interaction pane takes at most 40% of the rows and the transcript always keeps at least five, so a long approval scrolls inside its box rather than pushing the conversation off screen. The composer grows to five rows.</p>
+<p>The interaction pane takes focus as it docks, so an approval never sits waiting for you to notice it. Whatever you were typing is left in the composer untouched, and when the pane closes focus goes back where it came from — the composer, or the transcript if that is what you were reading. A question with no options is the exception: it is answered by typing, so it leaves the composer focused.</p>
 
 <p>Every line in the transcript is labeled with who produced it: <code>you</code>, the provider and model that answered, <code>tool: &lt;name&gt;</code> for a call, <code>ashyo</code> for the harness's own reports, and <code>advisor (note)</code>, <code>advisor (concern)</code>, or <code>advisor (blocker)</code> for the <a href="agents.html#advisor-kinds">advisor</a>. A note the harness dropped is labeled <code>— dropped</code>: it is shown, and the model never read it. A concern or blocker that <a href="config.html#immune-turns"><code>advisor.immuneTurns</code></a> held back is labeled <code>— held</code>: it keeps its kind, interrupts nothing, and reaches the model with your next message. A call a blocker cut short says so where the call is, and a turn the advisor started opens with a line saying so. The transcript is a projection of the branch you are on, so a resume or a branch switch shows the same lines in the same places.</p>
 
@@ -27,7 +28,8 @@ title: TUI
 <dt><kbd>Ctrl-T</kbd></dt><dd>Step the reasoning effort up through the active model's levels, wrapping. See <a href="#reasoning-effort">Reasoning effort</a>.</dd>
 <dt><kbd>Ctrl-S</kbd></dt><dd>Open the session picker.</dd>
 <dt><kbd>F1</kbd></dt><dd>Toggle key help. <code>/keys</code> does the same.</dd>
-<dt><kbd>1</kbd>–<kbd>9</kbd>, <kbd>←</kbd> / <kbd>→</kbd>, <kbd>Enter</kbd></dt><dd>Choose an option in the interaction pane.</dd>
+<dt><kbd>←</kbd> / <kbd>→</kbd></dt><dd>Move the highlighted option in the interaction pane.</dd>
+<dt><kbd>Alt-Enter</kbd></dt><dd>Answer the interaction pane with the highlighted option. Nothing else answers it: <kbd>Enter</kbd> and the digit keys do nothing there, because the pane takes focus the moment it docks and a key already on its way to the composer must not be able to allow a tool call.</dd>
 <dt><kbd>e</kbd></dt><dd>Edit a tool call's arguments before allowing it.</dd>
 <dt><kbd>Esc</kbd></dt><dd>Close an overlay or search; otherwise interrupt the running turn, or cancel a pending login.</dd>
 <dt><kbd>Esc</kbd> <kbd>Esc</kbd></dt><dd>Open the session tree, when the first press had nothing to close, interrupt, or cancel. Two presses within half a second.</dd>
@@ -61,11 +63,12 @@ title: TUI
 <h2 id="approvals">Approvals</h2>
 <p>When a tool call matches an <code>ask</code> rule, or no rule at all, the interaction pane docks with the tool name, the full arguments, the rule that matched, the mode and profile, and anything your before-hooks said about the call. Nothing is truncated; the pane scrolls.</p>
 <p>There are two answers, <strong>Allow</strong> and <strong>Deny</strong>. Each covers the one call in front of you, and neither writes a rule. If you want the decision to stick, put it in the config file; it applies on the next call without a restart.</p>
+<p>The pane takes focus as it docks and opens with <strong>Deny</strong> highlighted. <kbd>←</kbd> and <kbd>→</kbd> move the highlight and <kbd>Alt-Enter</kbd> confirms it. <kbd>Enter</kbd> and the digit keys answer nothing at all: the key you were about to press to send a message must never be the key that allows a call you have not read.</p>
 <p>Press <kbd>e</kbd> to load the arguments into the composer as JSON. <kbd>Enter</kbd> sends the edited call as an Allow; <kbd>Esc</kbd> returns to the prompt. JSON that does not parse is refused in place and your text is kept. The log records the call the model intended, the call you approved, and the call that ran, as three separate fields. An edit to an <code>agent</code> call may narrow the child's access but never widen it.</p>
 
 <h2 id="plan-mode">Plan mode</h2>
 <p><code>/plan</code> switches the current conversation, on the current branch, to the <code>plan</code> role and a read-only profile: <code>shell</code> is unavailable, and <code>edit</code> and <code>write</code> work only beneath the session's scratch directory. The model is told to investigate without changing the working tree and to write a decision-complete plan to <code>plan.md</code> in that scratch directory. The status line shows the path and whether the file exists yet.</p>
-<p>When a turn ends and <code>plan.md</code> is non-empty, a review docks with three choices: <strong>approve and execute</strong>, <strong>refine</strong>, and <strong>stop planning</strong>. Approving records the plan and its SHA-256 in the log as an immutable event, switches back to the normal profile, and sends the plan as the next user turn with the instruction to execute it exactly as written. Nothing forks: the plan and its execution are one branch.</p>
+<p>When a turn ends and <code>plan.md</code> is non-empty, a review docks with three choices: <strong>approve and execute</strong>, <strong>refine</strong>, and <strong>stop planning</strong>. It takes focus and opens on the first of them, and <kbd>Alt-Enter</kbd> answers it. Approving records the plan and its SHA-256 in the log as an immutable event, switches back to the normal profile, and sends the plan as the next user turn with the instruction to execute it exactly as written. Nothing forks: the plan and its execution are one branch.</p>
 <p>Plan mode needs a configured <code>plan</code> role and cannot be toggled while a turn is running.</p>
 
 <h2 id="overlays">Overlays</h2>
