@@ -3,7 +3,7 @@ layout: default
 title: Agents
 ---
 <h1 id="agents">Agents</h1>
-<p class="lead">Ashyo gives each job its own model list, called a role, and lets the main conversation delegate to subagents that work in their own git worktree. An optional advisor watches the conversation and comments, but never acts.</p>
+<p class="lead">Ashyo gives each job its own model list, called a role, and lets the main conversation delegate to subagents that work in their own git worktree. An optional advisor watches the conversation and speaks to the model, but never acts.</p>
 
 <h2 id="roles">Roles</h2>
 <table>
@@ -11,18 +11,28 @@ title: Agents
 <tr><td><code>default</code></td><td>The main conversation. Required.</td></tr>
 <tr><td><code>plan</code></td><td>Plan mode.</td></tr>
 <tr><td><code>task</code></td><td>Subagents.</td></tr>
-<tr><td><code>advisor</code></td><td>The observer described below.</td></tr>
+<tr><td><code>advisor</code></td><td>The second opinion described below.</td></tr>
 <tr><td><code>smol</code>, <code>tiny</code></td><td>Utility work: memory consolidation and <code>reflect</code>. <code>smol</code> is preferred when both exist.</td></tr>
 <tr><td><code>vision</code></td><td>The <code>image</code> tool.</td></tr>
 </table>
 <p>Each role is a list; the first model is tried first and the rest are fallbacks. See <a href="config.html#roles">Config</a>.</p>
 
 <h2 id="advisor">Advisor</h2>
-<p>Configure <code>roles.advisor</code> and a second model follows the main session: your submissions, completed model turns, tool and policy results, and subagent results are summarized to it as they become durable. It has no tools. What it says is recorded in the session as an <code>advisor</code> event and rendered in the transcript where it landed, but it is never appended to the main model's input and nothing it says is executed.</p>
-<p>Three kinds of output are recorded: a <strong>comment</strong>, a <strong>suggestion</strong>, which is one line prefixed <code>SUGGESTION:</code>, and a <strong>violation</strong>, which is a tool call the advisor tried to make. The call is recorded and ignored. The status line shows the advisor's state and its token usage.</p>
-<p>By default the advisor carries everything it has seen since the conversation was opened into every request, so its comments cost more the longer the session runs. Set <code>advisor.lookBack</code> to a count of its own recent turns to cap that, and <code>advisor.enable</code> to <code>false</code> to turn the advisor off without losing the model list; see <a href="config.html#advisor">Config</a>.</p>
+<p>Configure <code>roles.advisor</code> and a second model follows the main session: your submissions, completed model turns, tool and policy results, and subagent results are summarized to it as they become durable. It has no tools, and nothing it says is executed. Everything it says is recorded in the session as an <code>advisor</code> event and rendered in the transcript where it landed, and the main model reads it too, as a message marked as the advisor's rather than as yours.</p>
+
+<h3 id="advisor-kinds">Note, concern, blocker</h3>
+<p>Each update the advisor is shown carries a short label, and everything it says names one of those labels and one of three kinds. The kind decides when the main model reads it.</p>
+<table>
+<tr><th>Kind</th><th>Reaches the model</th></tr>
+<tr><td><strong>note</strong></td><td>With your next message, ahead of it. It never touches a turn already running.</td></tr>
+<tr><td><strong>concern</strong></td><td>Between two steps of the turn it is about — after the current tool results, before the next model call. Nothing running is cancelled.</td></tr>
+<tr><td><strong>blocker</strong></td><td>At once. If it flags the model output whose tool calls are still running, the running call is cancelled and the rest are skipped, and the model answers the blocker in the same turn. If that turn has already finished, the blocker starts a new one, which you stop with Esc like any other.</td></tr>
+</table>
+<p>A note that names no label, or repeats a note the model has already read, is shown in the transcript marked <em>dropped</em> and never delivered. A tool call the advisor tried to make is a <strong>violation</strong>: recorded, shown, never executed, and never delivered. The status line shows the advisor's state and its token usage.</p>
+<p>A blocker that cut a turn short leaves its mark in the transcript: the call it interrupted and the calls it skipped both say so, and a turn the advisor started says who started it. Nothing the advisor said is lost to Esc — anything it had not yet delivered goes out with your next message, and a blocker arriving just after you pressed Esc starts nothing.</p>
+<p>By default the advisor carries everything it has seen since the conversation was opened into every request, so it costs more the longer the session runs. Set <code>advisor.lookBack</code> to a count of its own recent turns to cap that, and <code>advisor.enable</code> to <code>false</code> to turn the advisor off without losing the model list; see <a href="config.html#advisor">Config</a>.</p>
 <p>The advisor answers in the background and your turns do not wait for it, so on a fast conversation its notes can arrive a turn or two late. Set <code>advisor.syncTurns</code> to the number of turns it may fall behind and a turn pauses at its start until it catches up, for at most 30 seconds; see <a href="config.html#sync-turns">Config</a>.</p>
-<p>The advisor is a second opinion you can see, not a second driver. If a suggestion is good, you type it.</p>
+<p>The advisor is a second opinion, not a second driver: it can steer the model and stop it, and it can never run anything.</p>
 
 <h2 id="subagents">Subagents</h2>
 <p>The <code>agent</code> tool lets the model delegate. It needs <code>roles.task</code>; without it the tool reports that the role is not configured.</p>

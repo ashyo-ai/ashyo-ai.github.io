@@ -41,7 +41,7 @@ title: Config
 <tr><td><code>default</code></td><td>The main conversation. Required.</td></tr>
 <tr><td><code>plan</code></td><td>Plan mode. Required before <code>/plan</code> works.</td></tr>
 <tr><td><code>task</code></td><td>Subagents. Required before the <code>agent</code> tool can create one.</td></tr>
-<tr><td><code>advisor</code></td><td>An observer that comments on the conversation and never acts. Off unless configured.</td></tr>
+<tr><td><code>advisor</code></td><td>A second opinion that watches the conversation and speaks to the model, and never acts. Off unless configured.</td></tr>
 <tr><td><code>smol</code>, <code>tiny</code></td><td>Utility work: memory consolidation and the <code>reflect</code> tool. <code>smol</code> is used when both exist.</td></tr>
 <tr><td><code>vision</code></td><td>The <code>image</code> tool.</td></tr>
 </table>
@@ -63,7 +63,7 @@ title: Config
 
 <h2 id="look-back">The advisor's look-back window</h2>
 <p><code>advisor.lookBack</code> is how much of its own history the advisor carries into each request, counted in its own turns: one turn is one batch of session updates and the answer it gave to that batch. With <code>8</code>, a request carries the last eight whole turns plus the update being answered, and everything older is dropped. Whole turns drop, so the advisor never sees an update without the answer it gave to it.</p>
-<p>Leave it out and the advisor carries everything it has seen since the conversation was opened, which is what it has always done and what it still does unless you set the window. Setting it keeps a long session's advisor comments from growing more expensive as the session goes on; the price of a short window is that the advisor can lose track of something it was told early. <code>0</code> is a window too: the advisor sees only the update it is answering.</p>
+<p>Leave it out and the advisor carries everything it has seen since the conversation was opened, which is what it has always done and what it still does unless you set the window. Setting it keeps a long session's advisor turns from growing more expensive as the session goes on; the price of a short window is that the advisor can lose track of something it was told early. <code>0</code> is a window too: the advisor sees only the update it is answering.</p>
 <p>The advisor keeps its whole context in memory regardless, so widening the window while the conversation is open brings the earlier turns back. A negative value, or one that is not a whole number, is a configuration error like any other.</p>
 
 <h2 id="merging">How the two files combine</h2>
