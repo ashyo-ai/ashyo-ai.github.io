@@ -32,7 +32,7 @@ title: Sessions
 </table>
 
 <h2 id="branching">Branching</h2>
-<p>Because every event names its parent, a session is a tree, and what you see in the transcript is one path from the root to a leaf. Open the tree with <kbd>Ctrl-T</kbd>, pick an earlier node, and send a message: the new event's parent is that node, so you now have two leaves. The old branch is untouched. Switch between them any time; both are there after a restart.</p>
+<p>Because every event names its parent, a session is a tree, and what you see in the transcript is one path from the root to a leaf. Open the tree with <code>/tree</code> or two <kbd>Esc</kbd> presses, pick an earlier node, and send a message: the new event's parent is that node, so you now have two leaves. The old branch is untouched. Switch between them any time; both are there after a restart.</p>
 <p>The model, the reasoning effort, and plan mode are all events on the path, so switching branches restores exactly the state that branch had. Resuming does the same.</p>
 <p>Messages typed while a turn is running are queued on the branch you typed them into and sent together as the next turn. They stay with that branch across a switch.</p>
 

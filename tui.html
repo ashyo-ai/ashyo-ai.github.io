@@ -24,12 +24,13 @@ title: TUI
 <dt><kbd>Ctrl-Up</kbd> / <kbd>Ctrl-Down</kbd></dt><dd>Scroll by a line.</dd>
 <dt><kbd>g</kbd> / <kbd>G</kbd></dt><dd>Jump to the top or bottom of the transcript.</dd>
 <dt><kbd>/</kbd></dt><dd>Search the transcript; <kbd>n</kbd> and <kbd>N</kbd> step through matches.</dd>
-<dt><kbd>Ctrl-T</kbd></dt><dd>Open the session tree.</dd>
+<dt><kbd>Ctrl-T</kbd></dt><dd>Step the reasoning effort up through the active model's levels, wrapping. See <a href="#reasoning-effort">Reasoning effort</a>.</dd>
 <dt><kbd>Ctrl-S</kbd></dt><dd>Open the session picker.</dd>
 <dt><kbd>F1</kbd></dt><dd>Toggle key help. <code>/keys</code> does the same.</dd>
 <dt><kbd>1</kbd>–<kbd>9</kbd>, <kbd>←</kbd> / <kbd>→</kbd>, <kbd>Enter</kbd></dt><dd>Choose an option in the interaction pane.</dd>
 <dt><kbd>e</kbd></dt><dd>Edit a tool call's arguments before allowing it.</dd>
 <dt><kbd>Esc</kbd></dt><dd>Close an overlay or search; otherwise interrupt the running turn, or cancel a pending login.</dd>
+<dt><kbd>Esc</kbd> <kbd>Esc</kbd></dt><dd>Open the session tree, when the first press had nothing to close, interrupt, or cancel. Two presses within half a second.</dd>
 <dt><kbd>Ctrl-C</kbd></dt><dd>Quit. The session records an interrupt exit.</dd>
 </dl>
 
@@ -48,10 +49,12 @@ title: TUI
 <tr><td><code>/login openrouter|openai-codex [--device]</code></td><td>Log in without leaving the session. <kbd>Esc</kbd> cancels.</td></tr>
 <tr><td><code>/logout openrouter|openai-codex</code></td><td>Remove a credential.</td></tr>
 <tr><td><code>/keys</code></td><td>Open the key help.</td></tr>
+<tr><td><code>/tree</code></td><td>Open the session tree. <kbd>Esc</kbd> <kbd>Esc</kbd> does the same.</td></tr>
 </table>
 
 <h2 id="reasoning-effort">Reasoning effort</h2>
 <p>Reasoning effort is model-specific. Every model offers an ordered set of levels drawn from <code>none</code>, <code>minimal</code>, <code>low</code>, <code>medium</code>, <code>high</code>, <code>xhigh</code>, <code>max</code>: Ashyo ships the sets for the models it knows, a model it does not know offers <code>low</code>, <code>medium</code>, <code>high</code>, and a config entry can declare or replace a set with <a href="config.html#reasoning-effort"><code>reasoningEfforts</code></a>.</p>
+<p><kbd>Ctrl-T</kbd> steps the effort one level up the active model's set and wraps past the strongest back to the weakest, recording and refusing exactly as <code>/thinking</code> does. It starts from the level in effect, and from nothing at all it takes the weakest level above <code>none</code>. On a model with no reasoning control it says so and records nothing.</p>
 <p><code>/thinking</code> accepts only a level the active model offers, and what it records is that choice. What a request carries is the choice mapped into the set of whichever model runs: the nearest level that model offers, and on a tie the weaker one, so a mapping never spends more than you asked for. The same mapping applies to a fallback model that takes a turn after the first one fails.</p>
 <p>So a chosen <code>xhigh</code> on a model whose levels stop at <code>high</code> sends <code>high</code> and the status line reads <code>thinking:high (xhigh)</code>; switching back to a model that offers <code>xhigh</code> sends <code>xhigh</code> again, with nothing new recorded. A model declared with no reasoning control is sent no effort at all, shows no <code>thinking</code> field, and answers <code>/thinking</code> by saying so.</p>
 
@@ -67,11 +70,11 @@ title: TUI
 
 <h2 id="overlays">Overlays</h2>
 <h3 id="session-tree">Session tree</h3>
-<p><kbd>Ctrl-T</kbd> draws the branch structure of the current session, roots first. <code>●</code> marks the current leaf, <code>○</code> a node you can switch to. <kbd>Enter</kbd> switches; the transcript re-projects onto the chosen path. Send a message from an earlier node and you have a new branch; the old one is untouched and both survive a restart. See <a href="sessions.html#branching">Sessions</a>.</p>
+<p><code>/tree</code>, or two <kbd>Esc</kbd> presses with nothing to close or interrupt, draws the branch structure of the current session, roots first. <code>●</code> marks the current leaf, <code>○</code> a node you can switch to. <kbd>Enter</kbd> switches; the transcript re-projects onto the chosen path. Send a message from an earlier node and you have a new branch; the old one is untouched and both survive a restart. See <a href="sessions.html#branching">Sessions</a>.</p>
 <h3 id="session-picker">Session picker</h3>
 <p><kbd>Ctrl-S</kbd> lists sessions created in this project directory. <kbd>Tab</kbd> widens to every session and back. Rows show the title, or the id for an untitled session, and mark empty sessions. Opening a session from another project is allowed; the workspace follows the session.</p>
 <h3 id="keys-help">Keys</h3>
-<p><kbd>F1</kbd> lists every binding. Any overlay closes with <kbd>Esc</kbd>, <kbd>q</kbd>, or the key that opened it.</p>
+<p><kbd>F1</kbd> lists every binding. Every overlay closes with <kbd>Esc</kbd> or <kbd>q</kbd>; the picker and this help also close with the key that opened them.</p>
 
 <h2 id="status-line">Status line</h2>
 <p>Fields appear as <code>name:value</code> and are omitted when empty:</p>
