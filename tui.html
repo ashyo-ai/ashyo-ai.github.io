@@ -33,8 +33,18 @@ title: TUI
 <dt><kbd>e</kbd></dt><dd>Edit a tool call's arguments before allowing it.</dd>
 <dt><kbd>Esc</kbd></dt><dd>Close the completion dock, an overlay, or the search; otherwise interrupt the running turn, or cancel a pending login. An <kbd>Esc</kbd> that closed the dock has acted: it interrupts nothing and starts no <kbd>Esc</kbd> <kbd>Esc</kbd> pair.</dd>
 <dt><kbd>Esc</kbd> <kbd>Esc</kbd></dt><dd>Open the session tree, when the first press had nothing to close, interrupt, or cancel. Two presses within half a second.</dd>
-<dt><kbd>Ctrl-C</kbd></dt><dd>Quit. The session records an interrupt exit.</dd>
+<dt><kbd>Ctrl-C</kbd> <kbd>Ctrl-C</kbd></dt><dd>Quit. Two presses within 150 ms; a single <kbd>Ctrl-C</kbd> does nothing at all — it stops no turn, quits nothing, and writes nothing. With no turn running Ashyo leaves at once and the session records a normal exit. With a turn running it asks first: see <a href="#quitting">Quitting</a>. <code>/quit</code> does the same.</dd>
 </dl>
+
+<h2 id="quitting">Quitting</h2>
+<p>Quitting an idle conversation needs no confirmation — nothing is lost — so <kbd>Ctrl-C</kbd> <kbd>Ctrl-C</kbd> and <code>/quit</code> both leave at once, and the session's last line records a normal exit. Quitting while a turn is running throws that turn away, so it asks first.</p>
+<p>The question docks where approvals dock, as <code>A turn is running. Quit anyway? [y/N]</code>, and takes focus as it opens. The turn keeps running while it waits: the answer keeps streaming into the transcript behind it, and a turn that finishes while the question is up does not dismiss it.</p>
+<dl>
+<dt><kbd>y</kbd></dt><dd>Quit. A turn still running is interrupted and the session records an interrupt exit; if it finished while the question was up there was nothing to interrupt, and the exit is a normal one.</dd>
+<dt><kbd>n</kbd> / <kbd>Esc</kbd></dt><dd>Dismiss the question. The turn keeps running, nothing is written, and focus goes back to the pane it came from — including an approval the question was covering, which is untouched and still waiting for you.</dd>
+<dt>everything else</dt><dd>Nothing. <kbd>Enter</kbd> above all, because <kbd>Enter</kbd> is the key already on its way to the composer when a question appears under it. The question owns every key while it is up, so <kbd>Tab</kbd>, <kbd>F1</kbd>, and a further <kbd>Ctrl-C</kbd> do nothing either.</dd>
+</dl>
+<p>Either way, leaving is a clean exit: Ashyo settles the turn, writes the session's exit line, drains memory consolidation, and exits <code>0</code>.</p>
 
 <h2 id="commands">Slash commands</h2>
 <p>A message beginning with <code>/</code> is a command. It is never sent to the model and never becomes a turn in the log.</p>
@@ -53,6 +63,7 @@ title: TUI
 <tr><td><code>/keys</code></td><td>Open the key help.</td></tr>
 <tr><td><code>/tree</code></td><td>Open the session tree. <kbd>Esc</kbd> <kbd>Esc</kbd> does the same.</td></tr>
 <tr><td><code>/settings</code></td><td>Open the settings screen. A placeholder: the frame and its navigation are there, the rows are not wired to anything yet, and every setting still lives in the <a href="config.html">config files</a>.</td></tr>
+<tr><td><code>/quit</code></td><td>Quit. Asks first while a turn is running; <kbd>Ctrl-C</kbd> <kbd>Ctrl-C</kbd> does the same. See <a href="#quitting">Quitting</a>.</td></tr>
 </table>
 
 <h2 id="completion">Command completion</h2>
