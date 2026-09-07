@@ -20,8 +20,11 @@ title: Config
 <h2 id="schema">Schema</h2>
 <table>
 <tr><th>Field</th><th>Type</th><th>Default</th><th>Notes</th></tr>
-<tr><td><code>roles</code></td><td>object</td><td>none</td><td>Keys are role names; values are lists of model entries, or an object naming that list beside the role's own settings. See <a href="#roles">Roles</a>.</td></tr>
-<tr><td><code>roles.advisor.lookBack</code></td><td>integer</td><td>unlimited</td><td>How many of the advisor's own recent turns each of its requests carries. See <a href="#look-back">Look-back</a>.</td></tr>
+<tr><td><code>roles</code></td><td>object</td><td>none</td><td>Keys are role names; values are lists of model entries. See <a href="#roles">Roles</a>.</td></tr>
+<tr><td><code>advisor.enable</code></td><td>boolean</td><td><code>true</code></td><td>Whether the advisor runs. See <a href="#advisor">Advisor</a>.</td></tr>
+<tr><td><code>advisor.lookBack</code></td><td>integer</td><td>unlimited</td><td>How many of the advisor's own recent turns each of its requests carries. See <a href="#look-back">Look-back</a>.</td></tr>
+<tr><td><code>advisor.syncTurns</code></td><td>integer</td><td><code>0</code></td><td>How far behind the advisor may fall before a turn waits for it.</td></tr>
+<tr><td><code>advisor.immuneTurns</code></td><td>integer</td><td><code>3</code></td><td>How many turns the main model is left alone after the advisor cuts in.</td></tr>
 <tr><td><code>permissions</code></td><td>array</td><td><code>[]</code></td><td>Allow, ask, and deny rules. See <a href="permissions.html">Permissions</a>.</td></tr>
 <tr><td><code>hooks.before</code></td><td>array of strings</td><td><code>[]</code></td><td>Executables run before a tool call. See <a href="hooks.html">Hooks</a>.</td></tr>
 <tr><td><code>hooks.after</code></td><td>array of strings</td><td><code>[]</code></td><td>Executables run after a tool call.</td></tr>
@@ -43,17 +46,24 @@ title: Config
 <tr><td><code>vision</code></td><td>The <code>image</code> tool.</td></tr>
 </table>
 <p>A project role replaces the global role of the same name entirely, not entry by entry. <code>--model</code> on the command line and <code>/model</code> in the TUI collapse the list to that one model, so no fallback is attempted.</p>
-<p>A role that has a setting of its own is written as an object instead, naming the same list under <code>models</code>. Only <code>advisor</code> has one today, and both shapes stay valid for every role.</p>
-<pre>"advisor": { "models": [{ "model": "openrouter/~z-ai/glm-flash-latest" }], "lookBack": 8 }</pre>
+<p>A role is a list of models and nothing else. Everything about the advisor except which model it runs on is set in the top-level <code>advisor</code> section below.</p>
+
+<h2 id="advisor">The advisor section</h2>
+<p>One optional top-level object holds every advisor setting. Keys you leave out take their defaults.</p>
+<pre>"advisor": { "enable": true, "lookBack": 8, "syncTurns": 0, "immuneTurns": 3 }</pre>
+<p><code>enable</code> is the switch. Set it to <code>false</code> and no advisor runs, the status line's advisor field reads <code>off</code>, and <code>roles.advisor</code> stays where it is — turning the advisor off does not cost you the model list. Leaving it on with no <code>roles.advisor</code> configured also means no advisor, and is not an error: the role is what says which model would run. Saving either way applies at once; an advisor started by a save begins with an empty context, having seen nothing of the session so far.</p>
+<p><code>syncTurns</code> and <code>immuneTurns</code> are counts of main-session turns, whole and non-negative. Ashyo reads and checks them today; what they steer — the pause when the advisor falls behind, and the quiet turns after it cuts in — arrives with the settings built on them.</p>
+<p>Unlike roles and web search, a project's <code>advisor</code> section replaces the global one whole rather than key by key: a project that writes the section gets its own keys and the defaults for the rest, never a global value for a key it left out.</p>
 
 <h2 id="look-back">The advisor's look-back window</h2>
-<p><code>roles.advisor.lookBack</code> is how much of its own history the advisor carries into each request, counted in its own turns: one turn is one batch of session updates and the answer it gave to that batch. With <code>8</code>, a request carries the last eight whole turns plus the update being answered, and everything older is dropped. Whole turns drop, so the advisor never sees an update without the answer it gave to it.</p>
+<p><code>advisor.lookBack</code> is how much of its own history the advisor carries into each request, counted in its own turns: one turn is one batch of session updates and the answer it gave to that batch. With <code>8</code>, a request carries the last eight whole turns plus the update being answered, and everything older is dropped. Whole turns drop, so the advisor never sees an update without the answer it gave to it.</p>
 <p>Leave it out and the advisor carries everything it has seen since the conversation was opened, which is what it has always done and what it still does unless you set the window. Setting it keeps a long session's advisor comments from growing more expensive as the session goes on; the price of a short window is that the advisor can lose track of something it was told early. <code>0</code> is a window too: the advisor sees only the update it is answering.</p>
 <p>The advisor keeps its whole context in memory regardless, so widening the window while the conversation is open brings the earlier turns back. A negative value, or one that is not a whole number, is a configuration error like any other.</p>
 
 <h2 id="merging">How the two files combine</h2>
 <ul>
-<li><strong>Roles:</strong> project replaces global, per role, the role's own settings included.</li>
+<li><strong>Roles:</strong> project replaces global, per role.</li>
+<li><strong>Advisor:</strong> project replaces global as a whole section, not key by key.</li>
 <li><strong>Permissions:</strong> both sets are kept; project rules are consulted before global ones. See <a href="permissions.html#scopes">scopes</a>.</li>
 <li><strong>Hooks:</strong> appended, global first, then project, and run in that order.</li>
 <li><strong>Web search:</strong> merged field by field; a project value wins where set.</li>
@@ -69,9 +79,10 @@ title: Config
     ],
     "plan":    [{ "model": "openai-codex/gpt-5.6-luna", "reasoningEffort": "high" }],
     "task":    [{ "model": "openrouter/~z-ai/glm-flash-latest" }],
-    "advisor": { "models": [{ "model": "openrouter/~z-ai/glm-flash-latest" }], "lookBack": 8 },
+    "advisor": [{ "model": "openrouter/~z-ai/glm-flash-latest" }],
     "smol":    [{ "model": "openrouter/~z-ai/glm-flash-latest" }]
   },
+  "advisor": { "lookBack": 8 },
   "permissions": [
     { "action": "allow", "tool": "read" },
     { "action": "allow", "tool": "grep" },
