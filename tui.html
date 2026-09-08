@@ -59,6 +59,7 @@ title: TUI
 <tr><td><code>/title &lt;text&gt;</code></td><td>Rename the session. The picker updates at once.</td></tr>
 <tr><td><code>/plan</code></td><td>Toggle plan mode. See below.</td></tr>
 <tr><td><code>/plan &lt;request&gt;</code></td><td>Enter plan mode and send the request as the next turn.</td></tr>
+<tr><td><code>/clear</code></td><td>Clear the model's context. The session, its title, its model, its reasoning effort, its mode, and every turn in it are kept; only what the next request carries is emptied. Recorded in the log as a node in the tree. Refused while a turn is running, and refused when nothing has been recorded since the last clear. See <a href="sessions.html#branching">Sessions</a>.</td></tr>
 <tr><td><code>/login openrouter|openai-codex [--device]</code></td><td>Log in without leaving the session. <kbd>Esc</kbd> cancels.</td></tr>
 <tr><td><code>/logout openrouter|openai-codex</code></td><td>Remove a credential.</td></tr>
 <tr><td><code>/keys</code></td><td>Open the key help.</td></tr>
@@ -69,7 +70,7 @@ title: TUI
 </table>
 
 <h2 id="completion">Command completion</h2>
-<p>Type <kbd>/</kbd> into an empty composer and a dock opens directly beneath it, listing every command above alphabetically by name — <code>keys</code>, <code>login</code>, <code>logout</code>, <code>model</code>, and so on to <code>tree</code>, with no slash and no argument after it — beside what it does. The dock is the list you scan for a name while typing, so it is the one that is sorted; the <kbd>F1</kbd> key help keeps the order the commands are declared in, which is the order it reads in. The table above and the <kbd>F1</kbd> key help are where each command's argument is spelled out. Each further character keeps the commands whose name starts with what you have typed, in the same order, so <code>/t</code> leaves <code>thinking</code>, <code>title</code>, and <code>tree</code>. A slash after other text is an ordinary character, and a slash with the transcript focused still starts the transcript search.</p>
+<p>Type <kbd>/</kbd> into an empty composer and a dock opens directly beneath it, listing every command above alphabetically by name — <code>clear</code>, <code>keys</code>, <code>login</code>, <code>logout</code>, <code>model</code>, and so on to <code>tree</code>, with no slash and no argument after it — beside what it does. The dock is the list you scan for a name while typing, so it is the one that is sorted; the <kbd>F1</kbd> key help keeps the order the commands are declared in, which is the order it reads in. The table above and the <kbd>F1</kbd> key help are where each command's argument is spelled out. Each further character keeps the commands whose name starts with what you have typed, in the same order, so <code>/t</code> leaves <code>thinking</code>, <code>title</code>, and <code>tree</code>. A slash after other text is an ordinary character, and a slash with the transcript focused still starts the transcript search.</p>
 <dl>
 <dt><kbd>↑</kbd> / <kbd>↓</kbd></dt><dd>Move the highlight, scrolling the list when it reaches the edge.</dd>
 <dt>mouse wheel</dt><dd>Scroll the dock. The transcript stays where you left it.</dd>
