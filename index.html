@@ -17,14 +17,15 @@ title: Intro
 
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
-<li>Go 1.27 and a C toolchain. The SQLite driver uses cgo.</li>
+<li>Go 1.27. There is no C toolchain to install: SQLite is a pure Go dependency.</li>
 <li><code>bash</code> for the shell tool, <code>git</code> for mutable subagents, and <code>xdg-open</code> for browser login.</li>
 <li>An OpenAI Codex account, an OpenRouter API key, or both.</li>
 </ul>
 
 <h2 id="install">Install</h2>
-<p>The Go module lives under <code>src/</code>, so build from the project root with <code>go -C src</code>. The output path is relative to <code>src/</code>, which puts the binary in <code>bin/</code> at the root. The SQLite build tags are required; without them the session index and the memory store fail to open.</p>
-<pre class="terminal"><span class="prompt">$ </span>go -C src build -tags "sqlite_fts5 sqlite_omit_load_extension" -o ../bin/ashyo ./cmd/ashyo</pre>
+<p>The Go module lives under <code>src/</code>, so build from the project root with <code>go -C src</code>. The output path is relative to <code>src/</code>, which puts the binary in <code>bin/</code> at the root. No build tags are needed. With cgo disabled the result is one statically linked file that runs on any Linux machine of the same architecture; without that variable the binary still works but borrows the system C library for DNS lookups.</p>
+<pre class="terminal"><span class="prompt">$ </span>CGO_ENABLED=0 go -C src build -trimpath -ldflags='-s -w' -o ../bin/ashyo ./cmd/ashyo</pre>
+<p>The linker flags drop the symbol table and debug data, about a third of the file; panics still print full stack traces. <code>-trimpath</code> keeps your local paths out of the binary. Running <code>strip</code> on the result saves a few hundred bytes and is not worth a step.</p>
 <p>Put <code>bin/ashyo</code> somewhere on your <code>PATH</code>. There is nothing else to install: no runtime, no model server, no background daemon.</p>
 
 <h2 id="authenticate">Authenticate</h2>
