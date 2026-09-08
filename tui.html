@@ -109,6 +109,39 @@ title: TUI
 <h3 id="keys-help">Keys</h3>
 <p><kbd>F1</kbd> lists every binding. Overlays close with <kbd>Esc</kbd> or <kbd>q</kbd>, and the picker also closes with <kbd>Ctrl-S</kbd> however it was opened, this help with <kbd>F1</kbd>; the settings screen closes with <kbd>Esc</kbd> alone, because its rows are to take typed text and <kbd>q</kbd> is a character.</p>
 
+<h2 id="themes">Themes</h2>
+<p>Every color on the screen is one of nine roles, and a theme is the one place they are given values. Two are built in: <code>graphite</code> for a terminal with a dark background and <code>paper</code> for one with a light background. Ashyo draws its first frame in the dark theme and asks the terminal what color its background is; a light answer moves it to the light theme. A terminal that does not answer — a multiplexer that swallows the query, for one — stays dark, and <code><a href="config.html#schema">tui.theme.dark</a></code> is then the theme in use on a light screen too.</p>
+<p>Your own themes live in <code>$XDG_CONFIG_HOME/ashyo/themes/</code>, beside the global config file, one <code>&lt;name&gt;.json</code> per theme. The file name is the theme's name; there is no <code>name</code> field. A file named after a built-in replaces it. Name the one you want with <code>tui.theme.dark</code> and <code>tui.theme.light</code> in either config file, the project value winning over the global one.</p>
+<p>A theme file has two objects. <code>vars</code> names colors you want to reuse; <code>colors</code> fills in the roles. A value is a <code>#rrggbb</code> triplet, the name of a var, or <code>""</code> for the terminal's own color — nothing else, and a 256-color index in particular is an error: Ashyo names colors in 24 bits and lets the terminal's renderer lower them. A role you leave out keeps the value the built-in theme of the same kind gives it, so a short theme keeps working when a role is added. A key that is not a role is an error, because it is almost always a role misspelled.</p>
+<div class="file-label">~/.config/ashyo/themes/rust.json</div>
+<pre>{
+  "vars": { "rust": "#d07020", "sand": "#e0c090" },
+  "colors": {
+    "text":         "",
+    "muted":        "#a08060",
+    "dim":          "#c09070",
+    "accent":       "rust",
+    "border":       "#804020",
+    "borderAccent": "sand",
+    "success":      "#70a040",
+    "error":        "#e05050",
+    "selectedBg":   "#402010"
+  }
+}</pre>
+<table>
+<tr><th>Role</th><th>Drawn in</th></tr>
+<tr><td><code>text</code></td><td>Body text, the composer, command names in the dock, overlay titles, the highlighted row's text.</td></tr>
+<tr><td><code>muted</code></td><td>Dock descriptions, the dock scrollbar, assistant and system turn headers.</td></tr>
+<tr><td><code>dim</code></td><td>The status line.</td></tr>
+<tr><td><code>accent</code></td><td>Pane titles, the dock's highlight marker, the search prompt.</td></tr>
+<tr><td><code>border</code></td><td>Pane borders, and the composer's edge and settings frame while unfocused.</td></tr>
+<tr><td><code>borderAccent</code></td><td>The composer's edge, the settings frame, and the overlay box while focused.</td></tr>
+<tr><td><code>success</code></td><td>Your own turn headers.</td></tr>
+<tr><td><code>error</code></td><td>Error text.</td></tr>
+<tr><td><code>selectedBg</code></td><td>The background of the highlighted row in pickers and the help.</td></tr>
+</table>
+<p>Both config files and the file of the theme in use are checked once a second. Naming another theme, or saving the one you are running, recolors the screen within a second. A theme that cannot be used — missing, unparseable, holding a bad value or an unknown key — changes nothing: the theme in force stays and the <code>config:</code> field of the status line names the theme file and the error until you fix it. That is also what happens at startup, where Ashyo runs in the built-in theme for the terminal's kind and shows the error; a broken theme never keeps Ashyo from starting.</p>
+
 <h2 id="status-line">Status line</h2>
 <p>Fields appear as <code>name:value</code> and are omitted when empty:</p>
 <table>
@@ -124,6 +157,6 @@ title: TUI
 <tr><td><code>advisor</code></td><td><code>ready</code>, <code>running</code>, <code>catching up</code> while a turn waits for the advisor under <a href="config.html#sync-turns"><code>advisor.syncTurns</code></a>, <code>off</code>, or an error.</td></tr>
 <tr><td><code>usage</code></td><td>Advisor token counts.</td></tr>
 <tr><td><code>scratch</code></td><td>Plan mode only: the <code>plan.md</code> path and whether it is written yet.</td></tr>
-<tr><td><code>config</code></td><td>Present only when a config file fails to parse; names the file and the error.</td></tr>
+<tr><td><code>config</code></td><td>Present only when a config file, or the file of the theme in use, fails to parse; names the file and the error.</td></tr>
 </table>
 <p>While searching, the status line becomes the search prompt.</p>
