@@ -33,7 +33,7 @@ title: TUI
 <dt><kbd>e</kbd></dt><dd>Edit a tool call's arguments before allowing it.</dd>
 <dt><kbd>Esc</kbd></dt><dd>Close the completion dock, an overlay, or the search; otherwise interrupt the running turn, or cancel a pending login. An <kbd>Esc</kbd> that closed the dock has acted: it interrupts nothing and starts no <kbd>Esc</kbd> <kbd>Esc</kbd> pair.</dd>
 <dt><kbd>Esc</kbd> <kbd>Esc</kbd></dt><dd>Open the session tree, when the first press had nothing to close, interrupt, or cancel. Two presses within half a second.</dd>
-<dt><kbd>Ctrl-C</kbd> <kbd>Ctrl-C</kbd></dt><dd>Quit. Two presses within 150 ms; a single <kbd>Ctrl-C</kbd> does nothing at all — it stops no turn, quits nothing, and writes nothing. With no turn running Ashyo leaves at once and the session records a normal exit. With a turn running it asks first: see <a href="#quitting">Quitting</a>. <code>/quit</code> does the same.</dd>
+<dt><kbd>Ctrl-C</kbd> <kbd>Ctrl-C</kbd></dt><dd>Quit. Two presses within 500 ms, the same window <kbd>Esc</kbd> <kbd>Esc</kbd> uses; a single <kbd>Ctrl-C</kbd> does nothing at all — it stops no turn, quits nothing, and writes nothing. With no turn running Ashyo leaves at once and the session records a normal exit. With a turn running it asks first: see <a href="#quitting">Quitting</a>. <code>/quit</code> does the same.</dd>
 </dl>
 
 <h2 id="quitting">Quitting</h2>
