@@ -89,7 +89,7 @@ title: Config
 
 <h2 id="reasoning-effort">Reasoning effort</h2>
 <p>Reasoning effort is model-specific: every model offers an ordered set of levels drawn from <code>none</code>, <code>minimal</code>, <code>low</code>, <code>medium</code>, <code>high</code>, <code>xhigh</code>, <code>max</code>. Ashyo ships the sets for the models it knows, read from each provider's documentation. A model it does not know offers <code>low</code>, <code>medium</code>, <code>high</code>, and takes whatever <code>reasoningEffort</code> you write for it, because only its provider knows better.</p>
-<p><code>reasoningEfforts</code> on an entry declares that model's set and replaces whatever Ashyo ships for it — for a model newer than your Ashyo, or one whose shipped set is wrong. The list must be drawn from the scale above, in ascending order. An empty list declares a model with no reasoning control at all: it is sent no effort, shows no <code>thinking</code> field, and <code>/thinking</code> says so.</p>
+<p><code>reasoningEfforts</code> on an entry declares that model's set and replaces whatever Ashyo ships for it — for a model newer than your Ashyo, or one whose shipped set is wrong. The list must be drawn from the scale above, in ascending order. An empty list declares a model with no reasoning control at all: it is sent no effort, shows no <code>thinking</code> field, and <code>/thinking &lt;level&gt;</code> says so.</p>
 <pre>{
   "roles": {
     "default": [
