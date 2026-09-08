@@ -63,6 +63,7 @@ title: TUI
 <tr><td><code>/logout openrouter|openai-codex</code></td><td>Remove a credential.</td></tr>
 <tr><td><code>/keys</code></td><td>Open the key help.</td></tr>
 <tr><td><code>/tree</code></td><td>Open the session tree. <kbd>Esc</kbd> <kbd>Esc</kbd> does the same.</td></tr>
+<tr><td><code>/resume</code></td><td>Open the <a href="#session-picker">session picker</a>. <kbd>Ctrl-S</kbd> does the same.</td></tr>
 <tr><td><code>/settings</code></td><td>Open the settings screen. A placeholder: the frame and its navigation are there, the rows are not wired to anything yet, and every setting still lives in the <a href="config.html">config files</a>.</td></tr>
 <tr><td><code>/quit</code></td><td>Quit. Asks first while a turn is running; <kbd>Ctrl-C</kbd> <kbd>Ctrl-C</kbd> does the same. See <a href="#quitting">Quitting</a>.</td></tr>
 </table>
@@ -100,12 +101,12 @@ title: TUI
 <h3 id="session-tree">Session tree</h3>
 <p><code>/tree</code>, or two <kbd>Esc</kbd> presses with nothing to close or interrupt, draws the branch structure of the current session, roots first. <code>●</code> marks the current leaf, <code>○</code> a node you can switch to. <kbd>Enter</kbd> switches; the transcript re-projects onto the chosen path. Send a message from an earlier node and you have a new branch; the old one is untouched and both survive a restart. See <a href="sessions.html#branching">Sessions</a>.</p>
 <h3 id="session-picker">Session picker</h3>
-<p><kbd>Ctrl-S</kbd> lists sessions created in this project directory. <kbd>Tab</kbd> widens to every session and back. Rows show the title, or the id for an untitled session, and mark empty sessions. Opening a session from another project is allowed; the workspace follows the session.</p>
+<p><kbd>Ctrl-S</kbd>, or <code>/resume</code>, lists sessions created in this project directory. <kbd>Tab</kbd> widens to every session and back. Rows show the title, or the id for an untitled session, and mark empty sessions. Opening a session from another project is allowed; the workspace follows the session.</p>
 <h3 id="settings">Settings</h3>
 <p><code>/settings</code> covers the whole terminal with one box: the categories on the left, the selected category's rows on the right, two rows describing the highlighted row below them, and the keys you have across the bottom. <kbd>←</kbd> and <kbd>→</kbd> move between the two lists, <kbd>↑</kbd> and <kbd>↓</kbd> move within the one that has the highlight and scroll it at the edges, and the wheel scrolls whichever list the pointer is over. Moving to another category puts the highlight on its first row. <kbd>Esc</kbd> closes it and gives back the transcript, the composer, and the status line exactly as they were.</p>
 <p>It is a placeholder for now. The categories are <code>Appearance</code> and <code>Model</code>, the rows under them are inert, and nothing on the screen writes anything: every setting still lives in the <a href="config.html">config files</a>.</p>
 <h3 id="keys-help">Keys</h3>
-<p><kbd>F1</kbd> lists every binding. Overlays close with <kbd>Esc</kbd> or <kbd>q</kbd>, and the picker and this help also close with the key that opened them; the settings screen closes with <kbd>Esc</kbd> alone, because its rows are to take typed text and <kbd>q</kbd> is a character.</p>
+<p><kbd>F1</kbd> lists every binding. Overlays close with <kbd>Esc</kbd> or <kbd>q</kbd>, and the picker also closes with <kbd>Ctrl-S</kbd> however it was opened, this help with <kbd>F1</kbd>; the settings screen closes with <kbd>Esc</kbd> alone, because its rows are to take typed text and <kbd>q</kbd> is a character.</p>
 
 <h2 id="status-line">Status line</h2>
 <p>Fields appear as <code>name:value</code> and are omitted when empty:</p>
