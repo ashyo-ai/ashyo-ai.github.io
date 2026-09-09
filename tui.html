@@ -126,7 +126,8 @@ title: TUI
 
 <h2 id="overlays">Overlays</h2>
 <h3 id="session-tree">Session tree</h3>
-<p><code>/tree</code>, or two <kbd>Esc</kbd> presses with nothing to close or interrupt, draws the branch structure of the current session, roots first. <code>●</code> marks the current leaf, <code>○</code> a node you can switch to. <kbd>Enter</kbd> switches; the transcript re-projects onto the chosen path. Send a message from an earlier node and you have a new branch; the old one is untouched and both survive a restart. See <a href="sessions.html#branching">Sessions</a>.</p>
+<p><code>/tree</code>, or two <kbd>Esc</kbd> presses with nothing to close or interrupt, draws the branch structure of the current session, roots first. Every row reads <code>•</code>, what the node is, a colon, and what it holds: <code>• user: It's done.</code>, <code>• assistant: Root cause confirmed from crash.txt…</code>, <code>• tool: shell</code>. A message is labelled by who said it and shows its text on one line, with a space where each break was and anything too long cut with <code>…</code> at the box's edge; a tool call shows the name of the tool; every other kind is named and shows nothing — <code>model</code>, <code>thinking</code>, <code>mode</code>, <code>title</code>, <code>clear</code>, <code>hook</code>, <code>decision</code>, <code>rule</code>, <code>approved plan</code>, <code>exit</code> — and the row the whole session hangs from says <code>session</code>.</p>
+<p>The <code>•</code> and the label are drawn in the <a href="#themes">user</a> color on what you said and the <a href="#themes">assistant</a> color on what the model said; every row nobody spoke is <a href="#themes">muted</a>, and so are the <code>│</code>, <code>├─</code> and <code>└─</code> lines that join each node to its parent and its siblings. Nothing marks the current leaf: the tree opens with the highlight on it. A row that cannot be switched to says <code>(not selectable)</code> — the session header, which is the empty root above the first turn, and anything below a node the session holds no event for. <kbd>Enter</kbd> switches; the transcript re-projects onto the chosen path. Send a message from an earlier node and you have a new branch; the old one is untouched and both survive a restart. See <a href="sessions.html#branching">Sessions</a>.</p>
 <h3 id="session-picker">Session picker</h3>
 <p><kbd>Ctrl-S</kbd>, or <code>/resume</code>, lists sessions created in this project directory. <kbd>Tab</kbd> widens to every session and back. Rows show the title, or the id for an untitled session, and mark empty sessions. Opening a session from another project is allowed; the workspace follows the session.</p>
 <h3 id="settings">Settings</h3>
@@ -161,7 +162,7 @@ title: TUI
 <table>
 <tr><th>Role</th><th>Drawn in</th></tr>
 <tr><td><code>text</code></td><td>Body text, the composer, the dock's unhighlighted command names, overlay titles, the highlighted row's text in the pickers and the help.</td></tr>
-<tr><td><code>muted</code></td><td>The dock's unhighlighted descriptions, the age column of the <a href="#history-dock">history dock</a> — on every row of it, the highlighted one included — the <a href="#completion">argument hint</a> drawn after the cursor, the track of every <a href="#scrolling">scrollbar</a>, assistant and system turn headers.</td></tr>
+<tr><td><code>muted</code></td><td>The dock's unhighlighted descriptions, the <a href="#session-tree">session tree</a>'s lines and every row of it nobody spoke, the age column of the <a href="#history-dock">history dock</a> — on every row of it, the highlighted one included — the <a href="#completion">argument hint</a> drawn after the cursor, the track of every <a href="#scrolling">scrollbar</a>, assistant and system turn headers.</td></tr>
 <tr><td><code>dim</code></td><td>The status line.</td></tr>
 <tr><td><code>accent</code></td><td>Pane titles, the dock's highlighted row — its marker, its name, and its description — the thumb of every <a href="#scrolling">scrollbar</a>, the search prompt.</td></tr>
 <tr><td><code>border</code></td><td>Pane borders, and the composer's edge and settings frame while unfocused.</td></tr>
@@ -169,8 +170,8 @@ title: TUI
 <tr><td><code>success</code></td><td>Your own turn headers.</td></tr>
 <tr><td><code>error</code></td><td>Error text.</td></tr>
 <tr><td><code>selectedBg</code></td><td>The background of the highlighted row in pickers and the help.</td></tr>
-<tr><td><code>user</code></td><td>What you said, wherever a surface colors a row by who spoke — nothing draws it yet.</td></tr>
-<tr><td><code>assistant</code></td><td>What the assistant said, in those same places — nothing draws it yet.</td></tr>
+<tr><td><code>user</code></td><td>What you said: the <code>•</code> and the label of your rows in the <a href="#session-tree">session tree</a>.</td></tr>
+<tr><td><code>assistant</code></td><td>What the assistant said, on its own rows in the same place.</td></tr>
 </table>
 <p>Both config files and the file of the theme in use are checked once a second. Naming another theme, or saving the one you are running, recolors the screen within a second. A theme that cannot be used — missing, unparseable, holding a bad value or an unknown key — changes nothing: the theme in force stays and the <code>config:</code> field of the status line names the theme file and the error until you fix it. That is also what happens at startup, where Ashyo runs in the built-in theme for the terminal's kind and shows the error; a broken theme never keeps Ashyo from starting.</p>
 
