@@ -49,7 +49,7 @@ title: Config
 <tr><td><code>plan</code></td><td>Plan mode. Required before <code>/plan</code> works.</td></tr>
 <tr><td><code>task</code></td><td>Subagents. Required before the <code>agent</code> tool can create one.</td></tr>
 <tr><td><code>advisor</code></td><td>A second opinion that watches the conversation and speaks to the model, and never acts. Off unless configured.</td></tr>
-<tr><td><code>smol</code>, <code>tiny</code></td><td>Utility work: memory consolidation and the <code>reflect</code> tool. <code>smol</code> is used when both exist.</td></tr>
+<tr><td><code>memory</code></td><td>Memory consolidation and the <code>reflect</code> tool. Off unless configured.</td></tr>
 <tr><td><code>vision</code></td><td>The <code>image</code> tool.</td></tr>
 </table>
 <p>A project role replaces the global role of the same name entirely, not entry by entry. <code>--model</code> on the command line and <code>/model</code> in the TUI collapse the list to that one model, so no fallback is attempted.</p>
@@ -114,7 +114,7 @@ title: Config
     "plan":    [{ "model": "openai-codex/gpt-5.6-luna", "reasoningEffort": "high" }],
     "task":    [{ "model": "openrouter/~z-ai/glm-flash-latest" }],
     "advisor": [{ "model": "openrouter/~z-ai/glm-flash-latest" }],
-    "smol":    [{ "model": "openrouter/~z-ai/glm-flash-latest" }]
+    "memory":  [{ "model": "openrouter/~z-ai/glm-flash-latest" }]
   },
   "advisor": { "lookBack": 8 },
   "permissions": [

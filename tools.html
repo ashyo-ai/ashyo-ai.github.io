@@ -18,7 +18,7 @@ title: Tools
 <tr><td><code>web_search</code></td><td>Search DuckDuckGo; returns title, URL, snippet.</td><td><code>query</code>, <code>limit</code></td></tr>
 <tr><td><code>recall</code></td><td>Find relevant long-term memories.</td><td><code>query</code>, <code>bank</code>, <code>project</code>, <code>limit</code></td></tr>
 <tr><td><code>retain</code></td><td>Store durable facts.</td><td><code>items[]</code> of <code>content</code>, <code>context</code></td></tr>
-<tr><td><code>reflect</code></td><td>Recall and synthesize an answer with a utility model.</td><td><code>query</code>, <code>context</code>, <code>bank</code>, <code>project</code>, <code>limit</code></td></tr>
+<tr><td><code>reflect</code></td><td>Recall and synthesize an answer with the memory model.</td><td><code>query</code>, <code>context</code>, <code>bank</code>, <code>project</code>, <code>limit</code></td></tr>
 <tr><td><code>memory_edit</code></td><td>Update, forget, or invalidate a memory by id.</td><td><code>op</code>, <code>id</code>, <code>content</code>, <code>importance</code>, <code>replacement_id</code></td></tr>
 <tr><td><code>todo</code></td><td>Keep the session's task list.</td><td><code>op</code> of <code>set</code>, <code>add</code>, <code>update</code>, <code>view</code>, <code>clear</code>; <code>items[]</code>, <code>index</code>, <code>status</code></td></tr>
 <tr><td><code>agent</code></td><td>Create, wait for, inspect, or clean up a subagent.</td><td><code>action</code>, <code>prompt</code>, <code>access</code>, <code>agentId</code>, <code>abandon</code></td></tr>
@@ -51,7 +51,7 @@ title: Tools
 <p><code>web_search</code> queries DuckDuckGo's HTML endpoint and parses the results; a CAPTCHA page or a non-2xx response is a visible tool error, not an empty result. With <code>webSearch.backend</code> set to <code>auto</code>, the provider's own search is offered to the model when the provider supports one, and Ashyo falls back to the local tool if the provider rejects it. Set <code>duckduckgo</code> to always use the local tool. <code>web_fetch</code> reads a page as text and is the way to open a search result.</p>
 
 <h2 id="memory-tools">Memory tools</h2>
-<p><code>recall</code>, <code>retain</code>, <code>reflect</code>, and <code>memory_edit</code> are described on the <a href="memory.html">Memory</a> page. <code>reflect</code> needs a <code>smol</code> or <code>tiny</code> role.</p>
+<p><code>recall</code>, <code>retain</code>, <code>reflect</code>, and <code>memory_edit</code> are described on the <a href="memory.html">Memory</a> page. <code>reflect</code> needs a <code>memory</code> role.</p>
 
 <h2 id="agent-tools">Agent tools</h2>
 <p><code>agent</code> and <code>steer</code> are described on the <a href="agents.html">Agents</a> page. <code>agent</code> needs a <code>task</code> role.</p>

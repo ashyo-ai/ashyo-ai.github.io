@@ -29,12 +29,12 @@ title: Memory
 <h3 id="retain">retain</h3>
 <p>Stores one or more facts with optional context. A stored memory whose embedding failed is a success with a warning, not a failure; it is found by full-text search until it is re-embedded.</p>
 <h3 id="reflect">reflect</h3>
-<p>Recalls, then asks the <code>smol</code> or <code>tiny</code> role to synthesize an answer from what it found. Without one of those roles the tool reports itself unavailable. With nothing relevant it says so rather than inventing.</p>
+<p>Recalls, then asks the <code>memory</code> role to synthesize an answer from what it found. Without <code>roles.memory</code> the tool reports itself unavailable and names the key. With nothing relevant it says so rather than inventing.</p>
 <h3 id="memory-edit">memory_edit</h3>
 <p><code>update</code> rewrites a memory's content or importance, reading the full row first so a concurrent change is not lost, and re-embeds what changed. <code>forget</code> deletes. <code>invalidate</code> marks a memory superseded by <code>replacement_id</code>. The reply is <code>memory_&lt;op&gt;: &lt;id&gt;</code>.</p>
 
 <h2 id="consolidation">Consolidation</h2>
-<p>When a <code>smol</code> or <code>tiny</code> role is configured, every completed turn is queued for a background worker that asks that model for one JSON object: an episode, facts, gists, graph edges, triples, and annotations. The episode and facts are stored and embedded. Without a utility role, print mode stores the exchange as a plain episode.</p>
+<p>When <code>roles.memory</code> is configured, every completed turn is queued for a background worker that asks that model for one JSON object: an episode, facts, gists, graph edges, triples, and annotations. The episode and facts are stored and embedded. The role is a list like any other, so an entry that fails before it answers hands the extraction to the next one. Without the role, print mode stores the exchange as a plain episode.</p>
 <p>The queue is drained before Ashyo exits, and the embedding model is released only after that. A drain that degraded, because an embedding failed, is a warning on stderr and exit 0; a store failure is exit 5.</p>
 
 <h2 id="inspect">Inspecting</h2>

@@ -10,7 +10,7 @@ title: Intro
 <ul>
 <li><strong>Sessions are logs.</strong> Each conversation is one JSONL file. Events are never rewritten, so you can branch from any earlier turn and both branches survive a restart. See <a href="sessions.html">Sessions</a>.</li>
 <li><strong>Policy is the sandbox.</strong> Every tool call is decided by allow, ask, or deny rules you write, and an interactive approval shows you the exact arguments before anything runs. Hooks can veto or annotate, never widen. See <a href="permissions.html">Permissions</a> and <a href="hooks.html">Hooks</a>.</li>
-<li><strong>Models are roles.</strong> The main conversation, planning, subagents, an advisor that watches and can stop the model, and small utility models each get their own model list with fallbacks. See <a href="agents.html">Agents</a>.</li>
+<li><strong>Models are roles.</strong> The main conversation, planning, subagents, an advisor that watches and can stop the model, memory work, and images each get their own model list with fallbacks. See <a href="agents.html">Agents</a>.</li>
 <li><strong>Memory is local.</strong> Facts and episodes go into a SQLite database with embeddings computed on your machine. See <a href="memory.html">Memory</a>.</li>
 <li><strong>Print mode shares the runtime.</strong> <code>ashyo -p</code> runs one prompt uninterrupted with the same policy, tools, and memory as the TUI. See <a href="cli.html">CLI</a>.</li>
 </ul>
