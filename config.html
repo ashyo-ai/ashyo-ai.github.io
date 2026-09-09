@@ -15,7 +15,7 @@ title: Config
 <p>A missing file is fine and means no configuration at that scope. A file that does not parse is not: at startup Ashyo refuses to run and names the error. Unknown fields are rejected, trailing content after the JSON object is rejected, and the project file must be valid UTF-8.</p>
 
 <h2 id="live-reload">Live reload</h2>
-<p>Both files are checked once a second while Ashyo runs. A saved change that parses applies at once and in full: permissions, roles, hooks, and web search, to the bound session, to every running subagent, and to the advisor. A call already decided keeps its decision; the next call anyone makes is decided under the new rules. A docked approval is answered under the rules its pane opened with. A change that does not parse changes nothing: the previous configuration stays in force and the status line shows a <code>config:</code> field naming the file and the error until it parses again. Deleting a file is the same as saving an empty one. A changed <code>tui.commandCompletionLimit</code> is in force the next time the completion dock opens. The file of the theme in use is checked the same way, so saving it recolors the screen within a second; a theme that cannot be read leaves the colors where they are and names the theme file in the <code>config:</code> field. See <a href="tui.html#themes">Themes</a>.</p>
+<p>Both files are checked once a second while Ashyo runs. A saved change that parses applies at once and in full: permissions, roles, hooks, and web search, to the bound session, to every running subagent, and to the advisor. A call already decided keeps its decision; the next call anyone makes is decided under the new rules. A docked approval is answered under the rules its pane opened with. A change that does not parse changes nothing: the previous configuration stays in force and the status line shows a <code>config:</code> field naming the file and the error until it parses again. Deleting a file is the same as saving an empty one. A changed <code>tui.commandCompletionLimit</code> is in force the next time the completion dock opens, and a changed <code>tui.inputHistoryLimit</code> the next time you send something: entries already recorded are left where they are, and a lowered limit trims them as new entries arrive. The file of the theme in use is checked the same way, so saving it recolors the screen within a second; a theme that cannot be read leaves the colors where they are and names the theme file in the <code>config:</code> field. See <a href="tui.html#themes">Themes</a>.</p>
 <p>There is no reload command and no restart needed.</p>
 
 <h2 id="schema">Schema</h2>
@@ -38,6 +38,7 @@ title: Config
 <tr><td><code>tui.theme.dark</code></td><td>string</td><td><code>graphite</code></td><td>The theme used on a terminal with a dark background. Names a file in the themes directory, or a built-in. See <a href="tui.html#themes">Themes</a>.</td></tr>
 <tr><td><code>tui.theme.light</code></td><td>string</td><td><code>paper</code></td><td>The theme used on a terminal with a light background. Ashyo asks the terminal which it is, so one config serves both.</td></tr>
 <tr><td><code>tui.commandCompletionLimit</code></td><td>integer</td><td><code>10</code></td><td>3 to 20. How many rows the <a href="tui.html#completion">completion dock</a> shows before it scrolls, for the commands and for a path alike. A short terminal shows fewer: the dock takes what is left after the status line, a docked pane, the composer, the transcript's five-row minimum, and its own border, and never takes the transcript below those five rows.</td></tr>
+<tr><td><code>tui.inputHistoryLimit</code></td><td>integer</td><td><code>1000</code></td><td>1 to 100000. How many entries this project's <a href="tui.html#input-history">input history</a> keeps before the oldest are dropped. The history is one file per project, so a project that sets this sets it for every Ashyo running there.</td></tr>
 </table>
 
 <h2 id="roles">Roles</h2>
@@ -136,6 +137,7 @@ title: Config
   "webSearch": { "backend": "auto", "maxResults": 5 },
   "tui": {
     "commandCompletionLimit": 10,
+    "inputHistoryLimit": 1000,
     "theme": { "dark": "graphite", "light": "paper" }
   }
 }</pre>
