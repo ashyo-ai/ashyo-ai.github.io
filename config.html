@@ -11,7 +11,9 @@ title: Config
 <tr><td>Global</td><td><code>$XDG_CONFIG_HOME/ashyo/config.json</code>, default <code>~/.config/ashyo/config.json</code></td></tr>
 <tr><td>Project</td><td><code>&lt;working directory&gt;/.ashyo/config.json</code></td></tr>
 <tr><td>Themes</td><td><code>$XDG_CONFIG_HOME/ashyo/themes/</code>, default <code>~/.config/ashyo/themes/</code>, one <code>&lt;name&gt;.json</code> per theme</td></tr>
+<tr><td>Model catalog</td><td><code>$XDG_CACHE_HOME/ashyo/models.json</code>, default <code>~/.cache/ashyo/models.json</code></td></tr>
 </table>
+<p>The model catalog is not configuration and nothing you edit: it is what the providers published about their models, fetched in the background and cached so the <a href="tui.html#model-picker">model picker</a> opens without waiting. Deleting it costs one fetch. See <a href="tui.html#model-catalog">Where the rows come from</a>.</p>
 <p>A missing file is fine and means no configuration at that scope. A file that does not parse is not: at startup Ashyo refuses to run and names the error. Unknown fields are rejected, trailing content after the JSON object is rejected, and the project file must be valid UTF-8.</p>
 
 <h2 id="live-reload">Live reload</h2>
