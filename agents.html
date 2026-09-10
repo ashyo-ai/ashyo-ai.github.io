@@ -53,7 +53,7 @@ title: Agents
 <p>A mutable child needs a clean parent: a checked-out branch with no uncommitted changes. Otherwise creation is refused with <code>mutable_agent_requires_clean_git</code> and no branch or worktree is made. A read-only parent, including one in plan mode, cannot spawn a mutable child.</p>
 
 <h3 id="containment">What crosses back</h3>
-<p>A child's session is its own log with its own tool calls, model events, and reasoning. None of it enters the parent's context. What the parent receives is a compact result: a summary, the branch name, the base and head commits, a validation status, and the child's status. A grandchild is contained in the same way at its own level, so each level of delegation sees only the summaries of the level below.</p>
+<p>A child's session is its own log with its own tool calls, model events, reasoning, and <a href="tools.html#task-list">task list</a>. None of it enters the parent's context. What the parent receives is a compact result: a summary, the branch name, the base and head commits, a validation status, and the child's status. A grandchild is contained in the same way at its own level, so each level of delegation sees only the summaries of the level below.</p>
 <p>The rules that decide a child's calls are the same live rules as the parent's, and an interactive approval that edits an <code>agent</code> call can narrow the child's access but never widen it.</p>
 
 <h3 id="steer">Steering</h3>

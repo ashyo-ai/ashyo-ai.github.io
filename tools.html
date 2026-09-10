@@ -20,7 +20,7 @@ title: Tools
 <tr><td><code>retain</code></td><td>Store durable facts.</td><td><code>items[]</code> of <code>content</code>, <code>context</code></td></tr>
 <tr><td><code>reflect</code></td><td>Recall and synthesize an answer with the memory model.</td><td><code>query</code>, <code>context</code>, <code>bank</code>, <code>project</code>, <code>limit</code></td></tr>
 <tr><td><code>memory_edit</code></td><td>Update, forget, or invalidate a memory by id.</td><td><code>op</code>, <code>id</code>, <code>content</code>, <code>importance</code>, <code>replacement_id</code></td></tr>
-<tr><td><code>todo</code></td><td>Keep the session's task list.</td><td><code>op</code> of <code>set</code>, <code>add</code>, <code>update</code>, <code>view</code>, <code>clear</code>; <code>items[]</code>, <code>index</code>, <code>status</code></td></tr>
+<tr><td><code>todo</code></td><td>Keep the conversation's task list. See <a href="#task-list">Task list</a>.</td><td><code>op</code> of <code>set</code>, <code>add</code>, <code>update</code>, <code>view</code>, <code>clear</code>; <code>items[]</code>, <code>index</code>, <code>status</code></td></tr>
 <tr><td><code>agent</code></td><td>Create, wait for, inspect, or clean up a subagent.</td><td><code>action</code>, <code>prompt</code>, <code>access</code>, <code>agentId</code>, <code>abandon</code></td></tr>
 <tr><td><code>steer</code></td><td>Send a message to a running child, or to the parent.</td><td><code>target</code>, <code>message</code></td></tr>
 <tr><td><code>image</code></td><td>Describe a local image with the <code>vision</code> role.</td><td><code>path</code></td></tr>
@@ -49,6 +49,12 @@ title: Tools
 
 <h2 id="web">Web tools</h2>
 <p><code>web_search</code> queries DuckDuckGo's HTML endpoint and parses the results; a CAPTCHA page or a non-2xx response is a visible tool error, not an empty result. With <code>webSearch.backend</code> set to <code>auto</code>, the provider's own search is offered to the model when the provider supports one, and Ashyo falls back to the local tool if the provider rejects it. Set <code>duckduckgo</code> to always use the local tool. <code>web_fetch</code> reads a page as text and is the way to open a search result.</p>
+
+<h2 id="task-list">Task list</h2>
+<p><code>todo</code> keeps a list of tasks the model works from: <code>set</code> replaces the list, <code>add</code> appends to it, <code>update</code> moves one task to <code>pending</code>, <code>in_progress</code>, <code>completed</code>, or <code>blocked</code>, <code>clear</code> empties it, and <code>view</code> reads it. Every call answers with the whole list, so the list you read in the transcript is the list the model has.</p>
+<p>The list belongs to the conversation rather than to the running program. Each change is an event on the path, exactly as a model switch or <code>/plan</code> is, and the list in force is the latest change on the branch you are on. So going back to an earlier turn in the <a href="tui.html#session-tree">session tree</a> shows the model the list as it was there — empty, if that branch never made one — and coming back shows the later list again. Resuming a session opens on the list it had, and <code><a href="sessions.html#cloning">/clone</a></code> and <code><a href="sessions.html#forking">/fork</a></code> carry it into the copy. <code>/clear</code> does not empty it: it clears what the model has been told, not what the conversation is working on.</p>
+<p>Nothing new appears in the transcript, because the tool's own reply already shows the list. The tree shows one <code>todo</code> row per change, so you can see where the list moved and go back to any of them.</p>
+<p>A <a href="agents.html">subagent</a> has a list of its own, in its own session. It starts empty rather than inheriting the parent's, and nothing it writes there reaches the conversation that spawned it.</p>
 
 <h2 id="memory-tools">Memory tools</h2>
 <p><code>recall</code>, <code>retain</code>, <code>reflect</code>, and <code>memory_edit</code> are described on the <a href="memory.html">Memory</a> page. <code>reflect</code> needs a <code>memory</code> role.</p>
