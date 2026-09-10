@@ -56,7 +56,7 @@ title: Permissions
 <ul>
 <li>In plan mode and in a read-only subagent, <code>shell</code> is denied outright, and <code>edit</code> and <code>write</code> are limited to that context's writable roots: the session scratch directory for plan mode, nothing for a read-only child, its own worktree for a mutable child.</li>
 <li>In print mode, <code>ask_user</code> does not exist.</li>
-<li>File tools resolve paths against the workspace root and your home directory. Anything outside both is refused with <code>path_outside_workspace</code>.</li>
+<li>File tools resolve paths against the workspace root, your home directory, and the conversation's own scratch directory. Anything outside all three is refused with <code>path_outside_workspace</code>.</li>
 </ul>
 
 <h2 id="config-files">Keeping the model out of the config files</h2>

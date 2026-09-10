@@ -29,12 +29,19 @@ title: Tools
 <p>Tool definitions are sent to the provider in strict mode. A required argument that is missing or null comes back to the model as <code>tool_error</code> naming the argument, and the tool does not run.</p>
 
 <h2 id="paths">Paths</h2>
-<p>File tools resolve paths against the workspace root and your home directory. A path outside both is refused with <code>path_outside_workspace</code>. Named pipes, sockets, and devices are refused by <code>read</code>, <code>edit</code>, and <code>grep</code>, so a tool cannot be parked forever on a FIFO.</p>
+<p>File tools resolve paths against the workspace root, your home directory, and the conversation's own <a href="sessions.html">scratch directory</a>. A path outside all three is refused with <code>path_outside_workspace</code>. Named pipes, sockets, and devices are refused by <code>read</code>, <code>edit</code>, and <code>grep</code>, so a tool cannot be parked forever on a FIFO.</p>
 
 <h2 id="limits">Limits</h2>
 <p>Every limit that cuts a result short is announced to the model in the result itself, so a partial file never reads as the whole file.</p>
+
+<h3 id="output-cap">The output cap</h3>
+<p>One cap covers every tool there is: no single result may put more than 64 KiB into a request. A longer result is written whole to <code>tool-output/&lt;call-id&gt;.txt</code> in the conversation's <a href="sessions.html">scratch directory</a>, and what the model receives is one notice line followed by the first 64 KiB, cut at a character boundary:</p>
+<pre>tool_truncated: showing the first 65536 of 312904 bytes; the whole output is at ~/.local/share/ashyo/sessions/&lt;uuid&gt;.scratch/tool-output/call_31c9.txt</pre>
+<p>The notice comes first so that anything trimming the tail of a result later takes the cut bytes and leaves the sentence explaining them. The model reads the rest back with <code>read</code>, on the path the notice gives it. The file is copied by <code><a href="sessions.html#cloning">/clone</a></code> and <code><a href="sessions.html#forking">/fork</a></code> along with the rest of the scratch directory, and is deleted with the session. A failed call over the cap is cut the same way and stays a failure. If the scratch directory cannot be written, the result is still cut and the notice says the rest was not kept.</p>
+<p>The transcript shows the capped result, notice and all — it is what the model was handed. The per-tool limits below sit underneath the cap: each tool decides which of its bytes matter, and the cap decides how many of them reach the request.</p>
 <table>
 <tr><th>Tool</th><th>Limit</th><th>Notice</th></tr>
+<tr><td>every tool</td><td>64 KiB per result</td><td><code>tool_truncated</code>, naming the file that holds the whole output</td></tr>
 <tr><td><code>read</code></td><td>400 lines or 400 entries per call; images up to 20 MiB</td><td><code>read_truncated: showing lines A–B of N</code></td></tr>
 <tr><td><code>glob</code></td><td>1000 paths</td><td><code>glob_truncated</code>, and <code>glob_incomplete</code> for directories it could not walk</td></tr>
 <tr><td><code>grep</code></td><td>1000 matches; lines up to 4 MiB</td><td><code>grep_truncated</code> with the <code>skip</code> value for the next page, and <code>grep_incomplete</code> for paths it could not read</td></tr>

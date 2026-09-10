@@ -12,7 +12,7 @@ title: Sessions
 <tr><td>Index</td><td><code>~/.local/share/ashyo/sessions/index.db</code></td></tr>
 <tr><td>Scratch directory</td><td><code>~/.local/share/ashyo/sessions/&lt;uuid&gt;.scratch/</code></td></tr>
 </table>
-<p>The log is one JSON object per line, one event each, in the order they happened. The index is a SQLite database with full-text search over the logs; it is reconciled against the logs when Ashyo opens the store, so the logs are the truth. The scratch directory holds the plan document and per-run markers. Session ids are UUIDs; the store rejects anything else before composing a path.</p>
+<p>The log is one JSON object per line, one event each, in the order they happened. The index is a SQLite database with full-text search over the logs; it is reconciled against the logs when Ashyo opens the store, so the logs are the truth. The scratch directory holds the plan document, per-run markers, and the whole of any <a href="tools.html#output-cap">tool result too large</a> to put in a request. Session ids are UUIDs; the store rejects anything else before composing a path.</p>
 
 <h2 id="events">Events</h2>
 <p>Every event has an id and a parent id. The event types are:</p>
