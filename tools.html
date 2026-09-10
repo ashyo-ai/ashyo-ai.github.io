@@ -28,6 +28,16 @@ title: Tools
 </table>
 <p>Tool definitions are sent to the provider in strict mode. A required argument that is missing or null comes back to the model as <code>tool_error</code> naming the argument, and the tool does not run.</p>
 
+<h2 id="intent">What a call is for</h2>
+<p>Every tool takes one argument the table above does not list: <code>intent</code>, one line saying what the call is for, in the model's own words. It is required on every call, added to every definition in one place, and taken back off before the tool runs — so no tool's own arguments changed and no tool ever sees it.</p>
+<p>It is shown wherever the call is. The transcript's tool line reads <code>tool: shell — read the crash log</code>. The <a href="tui.html#session-tree">session tree</a>'s row reads the same, and typing what a call was for finds that row, which is how you pick one <code>shell</code> call out of forty. A docked <a href="permissions.html#approval">approval</a> shows it above the arguments, so the reason for a call is read before the mechanics of it.</p>
+<p>Rules ignore it unless you point one at it. A matcher on <code>/command</code> or <code>/path</code> decides exactly as it did before intents existed; a matcher on <code>/intent</code> matches what the model wrote — worth knowing is that the model writes it, so it is evidence about a call and not a control over one.</p>
+<p>The <code>intent</code> is required by the schema, so a provider holding the roster to it never sends a call without one. A call that arrives without one anyway still runs, and every surface then draws it the way it drew calls before: the tool's name alone.</p>
+
+<h2 id="versions">Tool versions</h2>
+<p>Each tool carries a version: a small integer, starting at 1, bumped whenever the tool's arguments or the shape of its output change. It is not a release number and nothing behaves differently because of it.</p>
+<p>What it is for is the log. Every call recorded in a session carries the version it was made against, as <code>toolVersion</code> on the <a href="sessions.html#events">tool lifecycle record</a>, so reading a session months later tells a call made under one contract from a call made under the next — which reading the arguments alone cannot.</p>
+
 <h2 id="paths">Paths</h2>
 <p>File tools resolve paths against the workspace root, your home directory, and the conversation's own <a href="sessions.html">scratch directory</a>. A path outside all three is refused with <code>path_outside_workspace</code>. Named pipes, sockets, and devices are refused by <code>read</code>, <code>edit</code>, and <code>grep</code>, so a tool cannot be parked forever on a FIFO.</p>
 
