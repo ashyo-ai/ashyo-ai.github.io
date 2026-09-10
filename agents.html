@@ -59,6 +59,12 @@ title: Agents
 <h3 id="steer">Steering</h3>
 <p><code>steer</code> sends a message to a running child, queued on the child's branch, or to the parent when <code>target</code> is empty or <code>parent</code>. A steer to a preserved dirty child restarts it.</p>
 
+<h3 id="branch">The branch a child belongs to</h3>
+<p>A child belongs to the branch it was started from. <a href="sessions.html#branching">Switch</a> to a branch that does not hold its <code>subagent_start</code> and the child is ended: what it is running is cancelled, the switch waits for it to stop, and its result is recorded as <code>interrupted</code> on the branch that asked for it — under the request, where the model that made it would look for the answer — and never on the branch you moved to, which never asked. Switch back and the result is there under the request. Ending a child ends the children it started too.</p>
+<p>A child whose start is on the branch you switch to is still that conversation's: it keeps working and records its result as usual. <code><a href="sessions.html#branching">/clear</a></code> ends nothing either — the request stays on the branch, above the marker, and the result lands below it.</p>
+<p>The switch takes as long as the work takes to stop. A <code>shell</code> command is killed at once; a tool running inside Ashyo ends when it returns.</p>
+<p>A child cannot outlive the run that started it. If Ashyo stops while one is working, reopening the session records that child as <code>interrupted</code> with a summary saying it was lost with the run that started it, so the conversation shows every agent it had as ended rather than as working for good.</p>
+
 <h3 id="statuses">Statuses</h3>
 <p>A child reports <code>running</code>, <code>finishing</code>, <code>clean</code>, <code>policy_error</code>, <code>interrupted</code>, <code>failed</code>, <code>cleaning</code>, or <code>cleaned_up</code>. Worktrees themselves are tracked as <code>creating</code>, <code>ready</code>, <code>failed</code>, <code>orphaned</code>, <code>dirty_child</code>, <code>clean</code>, <code>removed</code>, or <code>abandoned</code>, and <code>ashyo diagnostics</code> counts them.</p>
 
