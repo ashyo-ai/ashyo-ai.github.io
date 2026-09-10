@@ -8,11 +8,11 @@ title: Tools
 <h2 id="registry">Registry</h2>
 <table>
 <tr><th>Tool</th><th>Does</th><th>Arguments</th></tr>
-<tr><td><code>read</code></td><td>Read UTF-8 text, a directory listing, or a local image.</td><td><code>path</code>, <code>offset</code>, <code>limit</code></td></tr>
+<tr><td><code>read</code></td><td>Read UTF-8 text, a directory listing, or a local image. A text file is reported with the hash <a href="#anchors"><code>edit</code> anchors on</a>.</td><td><code>path</code>, <code>offset</code>, <code>limit</code></td></tr>
 <tr><td><code>write</code></td><td>Create a new file. Existing files go through <code>edit</code>.</td><td><code>path</code>, <code>content</code></td></tr>
-<tr><td><code>edit</code></td><td>Replace line ranges in an existing file, atomically, anchored by content hashes so a stale view cannot clobber the file.</td><td><code>path</code>, <code>operations[]</code> of <code>hash</code>, <code>startLine</code>, <code>endLine</code>, <code>content</code></td></tr>
+<tr><td><code>edit</code></td><td>Replace line ranges in an existing file, atomically, <a href="#anchors">anchored by content hashes</a> so a stale view cannot clobber the file.</td><td><code>path</code>, <code>operations[]</code> of <code>hash</code>, <code>startLine</code>, <code>endLine</code>, <code>content</code></td></tr>
 <tr><td><code>glob</code></td><td>Find paths by glob pattern, deterministically ordered.</td><td><code>patterns[]</code>, <code>hidden</code>, <code>gitignore</code>, <code>limit</code></td></tr>
-<tr><td><code>grep</code></td><td>Search file contents with a Go regular expression.</td><td><code>pattern</code>, <code>path</code>, <code>case</code>, <code>gitignore</code>, <code>skip</code></td></tr>
+<tr><td><code>grep</code></td><td>Search file contents with a Go regular expression, <a href="#ignored">skipping what <code>.gitignore</code> excludes</a>.</td><td><code>pattern</code>, <code>path</code>, <code>case</code>, <code>gitignore</code>, <code>skip</code></td></tr>
 <tr><td><code>shell</code></td><td>Run the exact command through <code>bash -lc</code> as you.</td><td><code>command</code>, <code>timeout</code>, <code>cwd</code></td></tr>
 <tr><td><code>web_fetch</code></td><td>Fetch a public URL as read-only text.</td><td><code>url</code></td></tr>
 <tr><td><code>web_search</code></td><td>Search DuckDuckGo; returns title, URL, snippet.</td><td><code>query</code>, <code>limit</code></td></tr>
@@ -40,6 +40,18 @@ title: Tools
 
 <h2 id="paths">Paths</h2>
 <p>File tools resolve paths against the workspace root, your home directory, and the conversation's own <a href="sessions.html">scratch directory</a>. A path outside all three is refused with <code>path_outside_workspace</code>. Named pipes, sockets, and devices are refused by <code>read</code>, <code>edit</code>, and <code>grep</code>, so a tool cannot be parked forever on a FIFO.</p>
+
+<h2 id="ignored">Ignored paths</h2>
+<p><code>glob</code> and <code>grep</code> honor the workspace's <code>.gitignore</code> unless you set <code>gitignore</code> to false. A directory the file excludes is stepped over whole, so a search of the workspace does not walk into build output or a vendored dependency and come back with a compiled binary's bytes. A path you ask for by name is always searched, whatever the workspace ignores.</p>
+
+<h2 id="anchors">Anchoring an edit</h2>
+<p><code>edit</code> applies its operations only when the hash they carry is the file's, so a model working from a stale view is refused instead of clobbering the file. The hash comes from the tools themselves. A <code>read</code> of a text file opens with it:</p>
+<pre>file_hash: 3c720cbfdb33922bb72de70f212e78a25a5b820974615ba239d69be22f1ac677
+1:package main
+2:
+3:func main() {</pre>
+<p>and a successful <code>edit</code> ends with the file's new one, so a second edit to the same file costs no second read. The hash is of the whole file rather than of the window read out of it, so a paged read still anchors an edit, and it is the first line rather than the last because the <a href="#output-cap">output cap</a> keeps the head of a result and spills the rest.</p>
+<p>A file that moved underneath the model is refused with <code>content_drift</code>, and that refusal does not say what the file hashes to now: re-anchoring without looking at the file again is exactly what the anchor exists to prevent. The model reads the file and tries again.</p>
 
 <h2 id="limits">Limits</h2>
 <p>Every limit that cuts a result short is announced to the model in the result itself, so a partial file never reads as the whole file.</p>
