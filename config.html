@@ -30,6 +30,7 @@ title: Config
 <tr><td><code>advisor.immuneTurns</code></td><td>integer</td><td><code>3</code></td><td>How many turns the main model is left alone after the advisor cuts in. See <a href="#immune-turns">Immunity</a>.</td></tr>
 <tr><td><code>roles.&lt;role&gt;[].reasoningEffort</code></td><td>string</td><td>none</td><td>How hard this model is asked to think. Must be one of the model's levels when they are known. See <a href="#reasoning-effort">Reasoning effort</a>.</td></tr>
 <tr><td><code>roles.&lt;role&gt;[].reasoningEfforts</code></td><td>array of strings</td><td>what Ashyo ships</td><td>The levels this model offers, ascending. <code>[]</code> declares a model with no reasoning control. See <a href="#reasoning-effort">Reasoning effort</a>.</td></tr>
+<tr><td><code>roles.&lt;role&gt;[].contextLength</code></td><td>integer</td><td>what the model catalog says</td><td>How many tokens this model holds. What <a href="sessions.html#compaction">compaction</a> measures a conversation against. See <a href="#context-length">Context length</a>.</td></tr>
 <tr><td><code>permissions</code></td><td>array</td><td><code>[]</code></td><td>Allow, ask, and deny rules. See <a href="permissions.html">Permissions</a>.</td></tr>
 <tr><td><code>hooks.before</code></td><td>array of strings</td><td><code>[]</code></td><td>Executables run before a tool call. See <a href="hooks.html">Hooks</a>.</td></tr>
 <tr><td><code>hooks.after</code></td><td>array of strings</td><td><code>[]</code></td><td>Executables run after a tool call.</td></tr>
@@ -44,7 +45,7 @@ title: Config
 </table>
 
 <h2 id="roles">Roles</h2>
-<p>A role names a job and lists the models allowed to do it, in order of preference. The first entry is tried first; the rest are fallbacks. Each entry is an object with a <code>model</code> reference written as <code>provider/model</code>, an optional <code>reasoningEffort</code> passed to the provider, and an optional <code>reasoningEfforts</code> naming the levels that model offers. See <a href="#reasoning-effort">Reasoning effort</a>.</p>
+<p>A role names a job and lists the models allowed to do it, in order of preference. The first entry is tried first; the rest are fallbacks. Each entry is an object with a <code>model</code> reference written as <code>provider/model</code>, an optional <code>reasoningEffort</code> passed to the provider, an optional <code>reasoningEfforts</code> naming the levels that model offers, and an optional <code>contextLength</code> saying how many tokens it holds. See <a href="#reasoning-effort">Reasoning effort</a> and <a href="#context-length">Context length</a>.</p>
 <table>
 <tr><th>Role</th><th>Used for</th></tr>
 <tr><td><code>default</code></td><td>The main conversation. Required.</td></tr>
@@ -104,6 +105,18 @@ title: Config
 }</pre>
 <p>A <code>reasoningEffort</code> outside the model's known set is a configuration error naming the field, as is a <code>reasoningEfforts</code> that names a word off the scale or lists levels out of order.</p>
 <p>What a request carries is the level chosen with <a href="tui.html#reasoning-effort"><code>/thinking</code></a> mapped into the set of whichever model runs, fallbacks included; <code>reasoningEffort</code> here is what runs when nothing has been chosen in session.</p>
+
+<h2 id="context-length">Context length</h2>
+<p>Ashyo needs to know how big a model's window is to know when a conversation is filling it, which is what <a href="sessions.html#compaction">compaction</a> is scheduled against. It reads that from the <a href="tui.html#model-picker">model catalog</a> — the lists OpenRouter and the ChatGPT backend publish about their own models — so for most models there is nothing to write here.</p>
+<p><code>contextLength</code> on an entry declares that model's window in tokens and is read before the catalog, for the same two cases <code>reasoningEfforts</code> covers: a model no provider publishes, and one whose published number is wrong. A model with no window from either source is simply never compacted — Ashyo will not fold a conversation on a number it does not have — and runs exactly as it did before, until the provider refuses a request that no longer fits.</p>
+<pre>{
+  "roles": {
+    "default": [
+      { "model": "openrouter/house-model", "contextLength": 128000 }
+    ]
+  }
+}</pre>
+<p>A negative <code>contextLength</code> is a configuration error naming the field. Zero is the same as writing none.</p>
 
 <h2 id="example">Complete example</h2>
 <div class="file-label">~/.config/ashyo/config.json</div>
