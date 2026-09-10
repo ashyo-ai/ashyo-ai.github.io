@@ -12,7 +12,7 @@ title: Sessions
 <tr><td>Index</td><td><code>~/.local/share/ashyo/sessions/index.db</code></td></tr>
 <tr><td>Scratch directory</td><td><code>~/.local/share/ashyo/sessions/&lt;uuid&gt;.scratch/</code></td></tr>
 </table>
-<p>The log is one JSON object per line, one event each, in the order they happened. The index is a SQLite database with full-text search over the logs; it is reconciled against the logs when Ashyo opens the store, so the logs are the truth. The scratch directory holds the plan document, per-run markers, and the whole of any <a href="tools.html#output-cap">tool result too large</a> to put in a request. Session ids are UUIDs; the store rejects anything else before composing a path.</p>
+<p>The log is one JSON object per line, one event each, in the order they happened. The index is a SQLite database with full-text search over the logs; it also records, for every line, where it sits in its file and what its row in the <a href="tui.html#session-tree">session tree</a> reads, which is what lets a session be opened without reading its log. It is reconciled against the logs when Ashyo opens the store, so the logs are the truth: delete <code>index.db</code> and the next start rebuilds it from them. The scratch directory holds the plan document, per-run markers, and the whole of any <a href="tools.html#output-cap">tool result too large</a> to put in a request. Session ids are UUIDs; the store rejects anything else before composing a path.</p>
 
 <h2 id="events">Events</h2>
 <p>Every event has an id and a parent id. The event types are:</p>
@@ -91,6 +91,11 @@ title: Sessions
 <pre class="terminal"><span class="prompt">$ </span>ashyo session list
 <span class="prompt">$ </span>ashyo session search 'sqlite wal'
 <span class="prompt">$ </span>ashyo session resume 6f1c2a0e-3b7d-4c1e-9a2f-0d8e5b4c7a11</pre>
+
+<h2 id="opening">Opening a session</h2>
+<p>Opening a session costs what is read out of it, not how long it has run. Ashyo builds the shape of the conversation — every event, its parent, and its place — from the index, and goes to the log only for the turns something is about to show you: the ones since the last <code>/clear</code>, and above that the settings the branch carries, such as the model, the reasoning effort, the mode, the session rules and the task list. A message from before a clear is still on the branch, still in the log, and still copied by <code>/clone</code> and <code>/fork</code>; it is simply not read until something asks for it. A session that has run for a year opens as quickly as one started this morning, and Ashyo holds the turns it has shown you rather than the whole history.</p>
+<p>Before trusting the index Ashyo checks it against the file: the log's size, its modification time, and the hash of its last line. Anything that does not match — a log another program appended to, a log truncated, a log whose last line was edited — and the whole file is read back and indexed again, which is also what repairs an index that has fallen behind. Editing a log by hand in the middle, in a way that leaves its length and its timestamp exactly as they were, is the one change this check does not notice; nothing Ashyo itself does can produce it.</p>
+<p>The first start after upgrading to a build that records this reads every log in the store once, to fill in what it did not record before. That start is as slow as every start used to be. Nothing is lost, nothing is asked, and every start after it is fast.</p>
 
 <h2 id="resume">Resuming</h2>
 <p><code>ashyo session resume &lt;id&gt;</code> opens the TUI on that session's current leaf. If the session cannot be opened, because it is missing, corrupt, or already open in another Ashyo, the surface starts with no session bound and the picker as the way out; press <kbd>Ctrl-S</kbd>.</p>
