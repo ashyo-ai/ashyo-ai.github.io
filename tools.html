@@ -8,7 +8,7 @@ title: Tools
 <h2 id="registry">Registry</h2>
 <table>
 <tr><th>Tool</th><th>Does</th><th>Arguments</th></tr>
-<tr><td><code>read</code></td><td>Read UTF-8 text, a directory listing, or a local image. A text file is reported with the hash <a href="#anchors"><code>edit</code> anchors on</a>.</td><td><code>path</code>, <code>offset</code>, <code>limit</code></td></tr>
+<tr><td><code>read</code></td><td>Read UTF-8 text, a directory listing, a local image, or <code>session://&lt;id&gt;</code> to recover <a href="sessions.html#recovery">compacted content</a>. A text file is reported with the hash <a href="#anchors"><code>edit</code> anchors on</a>.</td><td><code>path</code>, <code>offset</code>, <code>limit</code></td></tr>
 <tr><td><code>write</code></td><td>Create a new file. Existing files go through <code>edit</code>.</td><td><code>path</code>, <code>content</code></td></tr>
 <tr><td><code>edit</code></td><td>Replace line ranges in an existing file, atomically, <a href="#anchors">anchored by content hashes</a> so a stale view cannot clobber the file.</td><td><code>path</code>, <code>operations[]</code> of <code>hash</code>, <code>startLine</code>, <code>endLine</code>, <code>content</code></td></tr>
 <tr><td><code>glob</code></td><td>Find paths by glob pattern, deterministically ordered.</td><td><code>patterns[]</code>, <code>hidden</code>, <code>gitignore</code>, <code>limit</code></td></tr>
@@ -39,6 +39,7 @@ title: Tools
 <p>What it is for is the log. Every call recorded in a session carries the version it was made against, as <code>toolVersion</code> on the <a href="sessions.html#events">tool lifecycle record</a>, so reading a session months later tells a call made under one contract from a call made under the next — which reading the arguments alone cannot.</p>
 
 <h2 id="paths">Paths</h2>
+<p>A <code>read</code> whose <code>path</code> begins <code>session://</code> is not a path at all: it names something the <a href="sessions.html#compaction">compaction ladder</a> took out of the model's context, and it is answered from the session's own log — whole, or paged by <code>offset</code> and <code>limit</code> as a file is. Nothing is resolved against the filesystem for it, so no permission rule about files has anything to say about it, and an id this conversation never minted is a visible error the model can correct. See <a href="sessions.html#recovery">Getting compacted content back</a>.</p>
 <p>File tools resolve paths against the workspace root, your home directory, and the conversation's own <a href="sessions.html">scratch directory</a>. A path outside all three is refused with <code>path_outside_workspace</code>. Named pipes, sockets, and devices are refused by <code>read</code>, <code>edit</code>, and <code>grep</code>, so a tool cannot be parked forever on a FIFO.</p>
 
 <h2 id="ignored">Ignored paths</h2>
@@ -59,7 +60,7 @@ title: Tools
 <h3 id="output-cap">The output cap</h3>
 <p>One cap covers every tool there is: no single result may put more than 64 KiB into a request. A longer result is written whole to <code>tool-output/&lt;call-id&gt;.txt</code> in the conversation's <a href="sessions.html">scratch directory</a>, and what the model receives is one notice line followed by the first 64 KiB, cut at a character boundary:</p>
 <pre>tool_truncated: showing the first 65536 of 312904 bytes; the whole output is at ~/.local/share/ashyo/sessions/&lt;uuid&gt;.scratch/tool-output/call_31c9.txt</pre>
-<p>The notice comes first so that anything trimming the tail of a result later — a <a href="sessions.html#trim">context trim</a>, say — takes the cut bytes and leaves the sentence explaining them. The model reads the rest back with <code>read</code>, on the path the notice gives it. The file is copied by <code><a href="sessions.html#cloning">/clone</a></code> and <code><a href="sessions.html#forking">/fork</a></code> along with the rest of the scratch directory, and is deleted with the session. A failed call over the cap is cut the same way and stays a failure. If the scratch directory cannot be written, the result is still cut and the notice says the rest was not kept.</p>
+<p>The notice comes first so that anything cutting the tail of a result later takes the cut bytes and leaves the sentence explaining them. The model reads the rest back with <code>read</code>, on the path the notice gives it. The file is copied by <code><a href="sessions.html#cloning">/clone</a></code> and <code><a href="sessions.html#forking">/fork</a></code> along with the rest of the scratch directory, and is deleted with the session. A failed call over the cap is cut the same way and stays a failure. If the scratch directory cannot be written, the result is still cut and the notice says the rest was not kept.</p>
 <p>The transcript shows the capped result, notice and all — it is what the model was handed. The per-tool limits below sit underneath the cap: each tool decides which of its bytes matter, and the cap decides how many of them reach the request.</p>
 <table>
 <tr><th>Tool</th><th>Limit</th><th>Notice</th></tr>

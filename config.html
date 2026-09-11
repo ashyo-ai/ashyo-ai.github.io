@@ -38,6 +38,11 @@ title: Config
 <tr><td><code>memory.embeddingModel</code></td><td>string</td><td><code>BAAI/bge-small-en-v1.5</code></td><td>Hugging Face repository id.</td></tr>
 <tr><td><code>webSearch.backend</code></td><td>string</td><td><code>auto</code></td><td><code>auto</code> or <code>duckduckgo</code>.</td></tr>
 <tr><td><code>webSearch.maxResults</code></td><td>integer</td><td><code>5</code></td><td>1 to 10.</td></tr>
+<tr><td><code>compaction.threshold</code></td><td>integer</td><td><code>80</code></td><td>1 to 100. The percent of the model's window at which the <a href="sessions.html#compaction">compaction ladder</a> runs.</td></tr>
+<tr><td><code>compaction.cleanMargin</code></td><td>integer</td><td><code>10</code></td><td>0 to <code>threshold</code>. How many percentage points below the threshold the <a href="sessions.html#clean">clean</a> begins.</td></tr>
+<tr><td><code>compaction.protectTokens</code></td><td>integer</td><td><code>16000</code></td><td>0 or more. How much of the most recent conversation the <a href="sessions.html#shake">shake</a> and the <a href="sessions.html#summarize">summary</a> leave alone.</td></tr>
+<tr><td><code>compaction.minSavings</code></td><td>integer</td><td><code>4000</code></td><td>0 or more. How many tokens a shake must save before it replaces anything.</td></tr>
+<tr><td><code>compaction.idleAfter</code></td><td>string</td><td>never</td><td>A duration such as <code>10m</code>. How long the session must sit untouched before clean and shake run on it.</td></tr>
 <tr><td><code>tui.theme.dark</code></td><td>string</td><td><code>graphite</code></td><td>The theme used on a terminal with a dark background. Names a file in the themes directory, or a built-in. See <a href="tui.html#themes">Themes</a>.</td></tr>
 <tr><td><code>tui.theme.light</code></td><td>string</td><td><code>paper</code></td><td>The theme used on a terminal with a light background. Ashyo asks the terminal which it is, so one config serves both.</td></tr>
 <tr><td><code>tui.commandCompletionLimit</code></td><td>integer</td><td><code>10</code></td><td>3 to 20. How many rows the <a href="tui.html#completion">completion dock</a> shows before it scrolls, for the commands and for a path alike. A short terminal shows fewer: the dock takes what is left after the status line, a docked pane, the composer, the transcript's five-row minimum, and its own border, and never takes the transcript below those five rows.</td></tr>
@@ -82,6 +87,17 @@ title: Config
 <p>Leave it out and the advisor carries everything it has seen since the conversation was opened, which is what it has always done and what it still does unless you set the window. Setting it keeps a long session's advisor turns from growing more expensive as the session goes on; the price of a short window is that the advisor can lose track of something it was told early. <code>0</code> is a window too: the advisor sees only the update it is answering.</p>
 <p>The advisor keeps its whole context in memory regardless, so widening the window while the conversation is open brings the earlier turns back. A negative value, or one that is not a whole number, is a configuration error like any other.</p>
 
+<h2 id="compaction">The compaction section</h2>
+<p>One optional top-level object holds every setting the <a href="sessions.html#compaction">compaction ladder</a> runs on. Keys you leave out take their defaults, and a saved change applies at once, to the next compaction rather than to one already running.</p>
+<pre>"compaction": { "threshold": 80, "cleanMargin": 10, "protectTokens": 16000, "minSavings": 4000, "idleAfter": "10m" }</pre>
+<p><code>threshold</code> is a percent of the active model's window, 1 to 100, and is the one number the whole ladder runs on. Lower it and a conversation is kept leaner at the cost of losing older detail sooner; raise it and the model keeps more until it does not fit. Every comparison is "at or over".</p>
+<p><code>cleanMargin</code> is how many percentage points below the threshold the <a href="sessions.html#clean">clean</a> starts, 0 to <code>threshold</code>. The clean loses nothing the model could still want, so starting it early is cheap; set it to <code>0</code> to run it only on crossing, or to <code>threshold</code> to have it run on every check.</p>
+<p><code>protectTokens</code> is how much of the most recent conversation the <a href="sessions.html#shake">shake</a> and the <a href="sessions.html#summarize">summary</a> leave alone — the work in hand, whatever turn it is in. Set it to <code>0</code> and nothing is protected.</p>
+<p><code>minSavings</code> is what a shake must save before it replaces anything. Every compaction invalidates the provider's cached prefix from the first replaced byte down, and a saving too small to pay for that is no saving; this is the gate.</p>
+<p><code>idleAfter</code> is how long the session must sit with nothing happening before the two cheap steps run on their own, written as a duration such as <code>30s</code>, <code>10m</code>, or <code>1h</code>. Leave it out and nothing runs on an idle session, which is what Ashyo has always done. A summary is never written this way: it is lossy, it costs a model request, and nothing needs it while you are away.</p>
+<p>A value out of range is a configuration error naming the key, and the section already in force stays in force, as every other section does. Two numbers are definitions rather than settings and cannot be moved: a compaction placeholder is counted as sixteen tokens, and a fenced or XML block is worth replacing at four hundred.</p>
+<p>Unlike the <code>advisor</code> section, a project's <code>compaction</code> section is merged key by key: a project that writes <code>threshold</code> alone moves that key and keeps the global value for the rest.</p>
+
 <h2 id="merging">How the two files combine</h2>
 <ul>
 <li><strong>Roles:</strong> project replaces global, per role.</li>
@@ -89,6 +105,7 @@ title: Config
 <li><strong>Permissions:</strong> both sets are kept; project rules are consulted before global ones. See <a href="permissions.html#scopes">scopes</a>.</li>
 <li><strong>Hooks:</strong> appended, global first, then project, and run in that order.</li>
 <li><strong>Web search:</strong> merged field by field; a project value wins where set.</li>
+<li><strong>Compaction:</strong> merged key by key; a project value wins where set.</li>
 </ul>
 
 <h2 id="reasoning-effort">Reasoning effort</h2>
@@ -107,8 +124,8 @@ title: Config
 <p>What a request carries is the level chosen with <a href="tui.html#reasoning-effort"><code>/thinking</code></a> mapped into the set of whichever model runs, fallbacks included; <code>reasoningEffort</code> here is what runs when nothing has been chosen in session.</p>
 
 <h2 id="context-length">Context length</h2>
-<p>Ashyo needs to know how big a model's window is to know when a conversation is filling it, which is what <a href="sessions.html#compaction">compaction</a> is scheduled against. It reads that from the <a href="tui.html#model-picker">model catalog</a> — the lists OpenRouter and the ChatGPT backend publish about their own models — so for most models there is nothing to write here.</p>
-<p><code>contextLength</code> on an entry declares that model's window in tokens and is read before the catalog, for the same two cases <code>reasoningEfforts</code> covers: a model no provider publishes, and one whose published number is wrong. A model with no window from either source is simply never compacted — Ashyo will not fold a conversation on a number it does not have — and runs exactly as it did before, until the provider refuses a request that no longer fits.</p>
+<p>Ashyo needs to know how big a model's window is to know when a conversation is filling it, which is what the <a href="sessions.html#compaction">compaction ladder</a> is measured against. It reads that from the <a href="tui.html#model-picker">model catalog</a> — the lists OpenRouter and the ChatGPT backend publish about their own models — so for most models there is nothing to write here.</p>
+<p><code>contextLength</code> on an entry declares that model's window in tokens and is read before the catalog, for the same two cases <code>reasoningEfforts</code> covers: a model no provider publishes, and one whose published number is wrong. A model with no window from either source is never compacted on the threshold — Ashyo will not fold a conversation on a number it does not have — and runs exactly as it did before. It still compacts when a request is actually refused for the window, where the refusal is the measurement and no number is needed; see <a href="sessions.html#threshold">the threshold</a>.</p>
 <pre>{
   "roles": {
     "default": [
