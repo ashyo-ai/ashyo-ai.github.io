@@ -94,7 +94,7 @@ Continue from it; do not redo what it says is done.
 <h3 id="marker">What you see</h3>
 <p>A muted line in the transcript where each compaction happened, naming the method and nothing else:</p>
 <pre>── compacted: shake ──────────────────────────────</pre>
-<p>No saving is shown, because without a tokenizer it is an estimate; the status line's usage shows what actually happened at the next answer. The line is drawn the moment it happens — mid-turn included — and again when you reopen the session.</p>
+<p>No saving is shown, because without a tokenizer it is an estimate; the status line's <a href="tui.html#status-line-bar">context bar</a> shows what actually happened at the next answer. The line is drawn the moment it happens — mid-turn included — and again when you reopen the session.</p>
 <p>A summary's line stands where the turns it covers were, with the transcript above it taken off the screen the way <code>/clear</code> takes turns off. Focus the transcript with <kbd>Tab</kbd> and press <kbd>Enter</kbd> on it to open it on the summary the model reads; press again to close it. Earlier markers are inside the collapsed part. The <a href="tui.html#session-tree">session tree</a> is untouched: every turn is still a row, and <kbd>Enter</kbd> on a row above a summary gives you a branch with the whole conversation back.</p>
 
 <h3 id="what-is-kept">Nothing is deleted</h3>
