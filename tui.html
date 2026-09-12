@@ -275,10 +275,10 @@ Total: 10,671,038</pre>
 
 <h2 id="status-line">Status line</h2>
 <p>The status line is yours to write. <a href="config.html#schema"><code>tui.statusLine</code></a> is a template — literal text with placeholders in it — drawn once per frame and cut at the terminal's width with no mark. Write nothing and you get the default:</p>
-<pre class="terminal">~/code/go/ashyo · GPT 5.6 Luna · xhigh · advisor ready                            237.4k / 1m ─────────24%────────────────────┃───────</pre>
+<pre class="terminal">~/code/go/ashyo · GPT 5.6 Luna · xhigh · advisor ready                            237.4k / 1m ────────────────────────────────────────</pre>
 <p>which is this template:</p>
 <pre class="terminal">%{color:user %{projectDir}} %{color:muted %{separator}} %{color:accent %{modelName}}%{if:effort  %{color:muted %{separator}} %{effort}}%{if:advisor  %{color:muted %{separator}} advisor %{advisor}}%{if:mode  %{color:muted %{separator}} %{mode}}%{right}%{contextTokens} / %{contextMaxTokens} %{contextProgress}</pre>
-<p>Reading across: the project directory, in the theme's <code>user</code> blue; the model as the <a href="#model-catalog">catalog</a> names it, in the accent color; the <a href="#reasoning-effort">reasoning effort</a> your next request carries; the <a href="agents.html#advisor">advisor</a>'s state, when you have one; and <code>plan</code> when you are <a href="#plan-mode">planning</a> — each after a muted <a href="config.html#schema"><code>tui.statusSeparator</code></a>. Then, against the right edge: what the model read on its last answer — on a long turn, on its latest block — against the window it read into, and the same as a <a href="#status-line-bar">bar</a>, with <code>┃</code> standing where your conversation will be <a href="sessions.html#compaction">folded</a>. With no advisor and no plan the left part ends at the model.</p>
+<p>Reading across: the project directory, in the theme's <code>user</code> blue; the model as the <a href="#model-catalog">catalog</a> names it, in the accent color; the <a href="#reasoning-effort">reasoning effort</a> your next request carries; the <a href="agents.html#advisor">advisor</a>'s state, when you have one; and <code>plan</code> when you are <a href="#plan-mode">planning</a> — each after a muted <a href="config.html#schema"><code>tui.statusSeparator</code></a>. Then, against the right edge: what the model read on its last answer — on a long turn, on its latest block — against the window it read into, and the same as a <a href="#status-line-bar">bar</a>. With no advisor and no plan the left part ends at the model.</p>
 <p>The template lives in either <a href="config.html">config file</a>, the project's overriding your global one, and it is applied live like every other <code>tui</code> key: save the file and the next frame is drawn from it. A template that does not parse is a configuration error like any other — the line you were seeing stays, and the error names <code>tui.statusLine</code>, the column, and what is wrong with it.</p>
 
 <h3 id="status-line-syntax">Syntax</h3>
@@ -322,7 +322,7 @@ Total: 10,671,038</pre>
 </table>
 
 <h3 id="status-line-bar">The context bar</h3>
-<p><code>%{contextProgress}</code> draws <code>contextPercent</code> as a bar. The cells up to the fill are in the <code>accent</code> role and the rest are muted; the percentage is written into the bar where the fill stands, so the bar says its own number; and <code>┃</code> stands at <a href="config.html#schema"><code>compaction.threshold</code></a>, the percentage of the window at which your conversation is <a href="sessions.html#compaction">folded</a>, which is the distance the bar exists to show.</p>
+<p><code>%{contextProgress}</code> draws <code>contextPercent</code> as a bar: the cells up to the fill in the <code>accent</code> role and the rest muted, with nothing written into it. Put <code>%{contextPercent}</code> beside it if you want the number.</p>
 <p>The bar takes whatever width the terminal has left after everything else on the line, never fewer than ten cells and never more than forty, so it grows with the terminal instead of being cut by it. <code>%{contextProgress:24}</code> fixes it at that many cells instead; a line holding two bars gives each half of what is left.</p>
 
 <h3 id="status-line-errors">What a template cannot leave out</h3>
