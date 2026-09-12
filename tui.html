@@ -277,7 +277,7 @@ Total: 10,671,038</pre>
 <p>The status line is yours to write. <a href="config.html#schema"><code>tui.statusLine</code></a> is a template — literal text with placeholders in it — drawn once per frame and fitted to the terminal's width. Write nothing and you get the default:</p>
 <pre class="terminal">~/code/go/ashyo · GPT 5.6 Luna · xhigh · advisor ready                                            █████▋░░░░░░░░░░░░░░░░░░ 237.4k / 1m (23%)</pre>
 <p>which is this template:</p>
-<pre class="terminal">%{color:user %{projectDir}}%{if:modelName  %{color:muted %{separator}} %{color:accent %{modelName}}}%{if:effort  %{color:muted %{separator}} %{effort}}%{if:advisor  %{color:muted %{separator}} advisor %{advisor}}%{if:mode  %{color:muted %{separator}} %{mode}}%{right}%{contextProgress} %{contextTokens} / %{contextMaxTokens} (%{contextPercent})</pre>
+<pre class="terminal">%{color:user %{projectDir}} %{color:muted %{separator}} %{color:accent %{modelName}} %{color:muted %{separator}} %{effort} %{color:muted %{separator}} %{if:advisor advisor %{advisor}} %{color:muted %{separator}} %{mode}%{right}%{contextProgress} %{contextTokens} / %{contextMaxTokens} (%{contextPercent})</pre>
 <p>Reading across: the project directory, in the theme's <code>user</code> blue; the model as the <a href="#model-catalog">catalog</a> names it, in the accent color; the <a href="#reasoning-effort">reasoning effort</a> your next request carries; the <a href="agents.html#advisor">advisor</a>'s state, when you have one; and <code>plan</code> when you are <a href="#plan-mode">planning</a> — each after a muted <a href="config.html#schema"><code>tui.statusSeparator</code></a>. Then, against the right edge: how full the window is as a <a href="#status-line-bar">bar</a>, and then what the model read on its last answer — on a long turn, on its latest block — against the window it read into, with the percentage in brackets. With no advisor and no plan the left part ends at the model.</p>
 <p>The template lives in either <a href="config.html">config file</a>, the project's overriding your global one, and it is applied live like every other <code>tui</code> key: save the file and the next frame is drawn from it. A template that does not parse is a configuration error like any other — the line you were seeing stays, and the error names <code>tui.statusLine</code>, the column, and what is wrong with it.</p>
 
@@ -290,7 +290,7 @@ Total: 10,671,038</pre>
 <tr><td><code>%{right}</code></td><td>Everything after it against the terminal's right edge, with the cells between blank and never fewer than two. Once per template, and not inside a wrapper. A <a href="#status-line-bar">bar</a> with no width of its own on the right stretches back toward the left part, so the blank is what the bar's cap leaves beyond those two.</td></tr>
 <tr><td><code>%%</code></td><td>One <code>%</code>. Any other <code>%</code> is itself, so <code>24%</code> needs no escape and <code>%{</code> is written <code>%%{</code>.</td></tr>
 </table>
-<p>A line wider than the terminal, even with its bars shrunk to nothing, is not cut where it overflows. The part after <code>%{right}</code> is left out whole, and then the part before it loses its pieces from the right — each top-level wrapper, field, or run of text is one piece — one at a time until what is left fits. Only a lone piece wider than the terminal is cut, and a configuration error is never left out. The default's elements after the directory are each one <code>if</code> wrapper holding its own separator, so on a narrow terminal they go one at a time, separator and all.</p>
+<p>A line wider than the terminal, even with its bars shrunk to nothing, is not cut where it overflows. The part after <code>%{right}</code> is left out whole, and then the part before it loses its pieces from the right — each top-level wrapper, field, or run of text is one piece — one at a time until what is left fits. Only a lone piece wider than the terminal is cut, and a configuration error is never left out. </p>
 <p>Whitespace is yours: nothing is trimmed and nothing is collapsed. The one space between a wrapper's name and its text is the separator; every space after it is drawn. Outside every wrapper the line is drawn in the theme's <code>dim</code> role, as the whole line always was.</p>
 
 <h3 id="status-line-fields">Fields</h3>
@@ -319,7 +319,7 @@ Total: 10,671,038</pre>
 <tr><td><code>title</code></td><td>Its title.</td></tr>
 <tr><td><code>branch</code></td><td>The id of the current leaf.</td></tr>
 <tr><td><code>memory</code></td><td><code>on</code> or <code>off</code>.</td></tr>
-<tr><td><code>separator</code></td><td>The character <a href="config.html#schema"><code>tui.statusSeparator</code></a> names — <code>·</code> unless you set one — so one setting moves every separator on the line.</td></tr>
+<tr><td><code>separator</code></td><td>The character <a href="config.html#schema"><code>tui.statusSeparator</code></a> names — <code>·</code> unless you set one — so one setting moves every separator on the line. A separator is drawn only between two things that are drawn: one beside an element that is empty, or left out to fit the terminal, goes with it, blanks and all, and two with nothing between them draw as one.</td></tr>
 </table>
 
 <h3 id="status-line-bar">The context bar</h3>
