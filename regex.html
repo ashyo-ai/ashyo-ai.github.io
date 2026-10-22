@@ -1,0 +1,123 @@
+---
+layout: default
+title: Regex scripts
+---
+{% raw %}
+<h1 id="regex-scripts">Regex scripts</h1>
+<p class="lead">A regex script is a find-and-replace rule that runs on messages without you lifting a finger. Use one to tidy a model's habits, hide bits of a reply you do not want to see, change what the model is sent without changing what you read, or clean up your own messages before they go out. If you have used regex scripts in SillyTavern, these work the same way and import from cards.</p>
+
+<h2 id="what-scripts-do">What scripts do</h2>
+<p>Scripts live on the <strong>Regex scripts</strong> tab of the <a href="library.html#regex-scripts">Library</a>. Each one has a pattern to look for, a replacement to put in its place, a list of what it applies to and a mode that says when it runs. A script reaches a chat in one of two ways: it is marked <strong>Global</strong>, so it runs in every chat, or a <a href="characters.html#lore-and-scripts">character</a> lists it, so it runs in that character's chats.</p>
+<p>A script runs only when all three are true: it is <strong>Enabled</strong>, it has a <strong>Pattern</strong>, and it has at least one target checked under <strong>Applies to</strong>. A script that is missing any of these is simply skipped.</p>
+<table>
+<tr><th>Field</th><th>Default</th><th>Meaning</th></tr>
+<tr><td><strong>Enabled</strong></td><td>on</td><td>Off keeps the script but stops it running.</td></tr>
+<tr><td><strong>Global</strong></td><td>off</td><td>"Run in every chat, not only those of a character that lists it."</td></tr>
+<tr><td><strong>Pattern</strong></td><td></td><td>What to find. See <a href="#pattern">Pattern</a>.</td></tr>
+<tr><td><strong>Replacement</strong></td><td></td><td>What to put there. See <a href="#replacement">Replacement</a>.</td></tr>
+<tr><td><strong>Trim strings</strong></td><td>none</td><td>Text removed from each captured group before it is inserted.</td></tr>
+<tr><td><strong>Applies to</strong></td><td>none</td><td>Your messages, Replies, Lore content, Reasoning. See <a href="#targets">Targets</a>.</td></tr>
+<tr><td><strong>Mode</strong></td><td>Rewrite</td><td>Rewrite, Display only, Prompt only or Display and prompt. See <a href="#modes">Modes</a>.</td></tr>
+<tr><td><strong>Min depth</strong>, <strong>Max depth</strong></td><td>unset</td><td>Which messages, counted from the newest. See <a href="#depth">Depth</a>.</td></tr>
+<tr><td><strong>Run on edit</strong></td><td>off</td><td>A rewrite also runs on a message you save from the editor.</td></tr>
+<tr><td><strong>Macros in pattern</strong></td><td>None</td><td>Whether {{macros}} in the pattern expand, and how. See <a href="#pattern">Pattern</a>.</td></tr>
+</table>
+
+<h2 id="pattern">Pattern</h2>
+<p>Write the pattern the way you would in JavaScript or SillyTavern: <code>/pattern/flags</code>. You can also write a bare pattern with no slashes and no flags. The flags are any of <code>g</code>, <code>i</code>, <code>m</code>, <code>s</code>, <code>u</code> and <code>y</code>, each at most once; if what follows the last slash is not a valid set of flags, the whole text is taken as a bare pattern, slashes included.</p>
+<table>
+<tr><th>Flag</th><th>Effect</th></tr>
+<tr><td><code>g</code></td><td>Replace every match. Without it only the first match changes.</td></tr>
+<tr><td><code>i</code></td><td>Ignore case.</td></tr>
+<tr><td><code>m</code></td><td><code>^</code> and <code>$</code> match at every line, not only the ends of the text.</td></tr>
+<tr><td><code>s</code></td><td><code>.</code> also matches a newline.</td></tr>
+<tr><td><code>u</code></td><td>Accepted for compatibility; patterns always understand Unicode.</td></tr>
+<tr><td><code>y</code></td><td>Sticky: each match must start exactly where the previous one ended.</td></tr>
+</table>
+<p>The syntax is the Oniguruma family, so look-ahead and look-behind, backreferences, named groups and the usual classes all work. An empty match moves ahead one character and tries again, so a pattern that can match nothing does not get stuck.</p>
+<p><strong>Macros in pattern</strong> decides what happens to {{user}}, {{char}} and other <a href="macros.html">macros</a> written in the pattern. <strong>None</strong> leaves them as literal text, which will not match anything useful. <strong>Raw</strong> expands them and treats the result as part of the pattern, so a name containing a dot or a parenthesis is read as regex syntax. <strong>Escaped</strong> expands them and escapes the result so the name matches literally; this is what you want nearly every time.</p>
+<p>Patterns are checked when you save a script and when Ashyo starts, and an invalid one is refused with the reason. If a pattern that passed those checks still fails while matching some text, that text is left unchanged and the failure goes to the log.</p>
+
+<h2 id="replacement">Replacement</h2>
+<p>The replacement is plain text with a few placeholders, filled in for each match:</p>
+<table>
+<tr><th>Write</th><th>Inserts</th></tr>
+<tr><td><code>$0</code> or <code>{{match}}</code></td><td>The whole match.</td></tr>
+<tr><td><code>$1</code>, <code>$2</code>, …</td><td>The numbered capture group.</td></tr>
+<tr><td><code>$&lt;name&gt;</code></td><td>The named capture group.</td></tr>
+</table>
+<p>A group that did not take part in the match inserts nothing. Each group's text first has every <strong>Trim strings</strong> entry removed from it, then goes in. After the groups are filled, macros in the result expand, so a replacement can read <code>$1, said {{char}}</code>. The trim strings themselves are macro-expanded too, which lets a trim string of {{char}} strip the character's name wherever it was captured. An empty replacement deletes the match.</p>
+
+<h2 id="targets">Targets</h2>
+<p><strong>Applies to</strong> is a set of checkboxes. A script can target any combination:</p>
+<ul>
+<li><strong>Your messages.</strong> What you type and send. Also the messages added with <code>/send</code>.</li>
+<li><strong>Replies.</strong> What the character writes, and messages you add as the character with <code>/sendas</code>.</li>
+<li><strong>Reasoning.</strong> A reply's reasoning or thinking text, when the model produces any. Reasoning is never sent back to the model, so a prompt-side mode does nothing for it.</li>
+<li><strong>Lore content.</strong> The text of lore entries as it goes into the prompt. Lore is never displayed, so a display-side mode does nothing for it.</li>
+</ul>
+<p>System messages are never touched by scripts.</p>
+
+<h2 id="modes">Modes</h2>
+<p>The <strong>Mode</strong> decides when a script runs and whether its changes stick:</p>
+<ul>
+<li><strong>Rewrite</strong> (the default). Changes the stored text itself. Your messages are rewritten as you send them, replies when they finish generating, and lore content as it is sent. What you see and what the model sees are both the rewritten text, and it is what is saved to disk. With <strong>Run on edit</strong> on, a rewrite also runs when you save a message from the inline editor.</li>
+<li><strong>Display only.</strong> Changes what the transcript shows and nothing else. The stored text and what the model is sent stay as they were. Changing a display-only script redraws every open chat so you see the effect at once; the message still streaming is shown raw until it finishes.</li>
+<li><strong>Prompt only.</strong> Changes what the model is sent and nothing else. The transcript shows the original.</li>
+<li><strong>Display and prompt.</strong> Both of the above, still without touching the stored text.</li>
+</ul>
+<p>Because lore is never displayed, a Rewrite, Prompt only or Display and prompt script targeting lore content all do the same thing: change the lore as it is sent. Because reasoning is never sent, only Rewrite and the display-side modes do anything for it.</p>
+<div class="callout">
+<span class="label">Tip</span>
+<p>When in doubt, start with Display only. It is reversible: turn the script off and your messages are exactly as they were. Rewrite is permanent, since it changes what is saved.</p>
+</div>
+
+<h2 id="depth">Depth</h2>
+<p><strong>Min depth</strong> and <strong>Max depth</strong> limit a script to a slice of the conversation, counted in messages from the newest, which is depth 0. A script with Min depth 1 skips the newest message; one with Max depth 0 touches only the newest. Depth applies to the display-side and prompt-side modes. Rewrites ignore it, since they run on one message at the moment it is sent or finishes, not over the history.</p>
+<p>When you <a href="branches.html#continue">continue</a> a reply, only matches that start inside the newly generated text are changed, so a script does not re-run over the part of the reply you already had.</p>
+
+<h2 id="order">Order</h2>
+<p>When several scripts apply to the same text they run one after another, each seeing the previous one's output. Global scripts go first, in alphabetical order by name. Then the character's listed scripts go in the order they are listed on the character, which you can change with Move up and Move down. A script that is both Global and listed by the character runs once.</p>
+
+<h2 id="cards">Scripts on cards</h2>
+<p>A character card can carry regex scripts with it. When you import such a card, Ashyo asks "Regex scripts" with the line "This card carries N regex scripts: …" and offers <strong>Leave out</strong> or <strong>Keep</strong>. Kept scripts are added to the Library under their own names (or "<em>Character</em> regex N" when they have none), linked to the character, and never Global. A script whose target Ashyo does not support, or whose pattern does not compile, is left out and named in the notice. Details in <a href="import-export.html#cards">Character cards</a>.</p>
+
+<h2 id="examples">Examples</h2>
+<h3 id="example-quotes">Curly quotes, display only</h3>
+<p>Show straight quotes as curly ones in the transcript without changing what is stored or sent.</p>
+<table>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Pattern</td><td><code>/"([^"]+)"/g</code></td></tr>
+<tr><td>Replacement</td><td><code>“$1”</code></td></tr>
+<tr><td>Applies to</td><td>Replies, Your messages</td></tr>
+<tr><td>Mode</td><td>Display only</td></tr>
+</table>
+<h3 id="example-trailing-question">Drop a trailing question</h3>
+<p>Some models end every reply with "What do you do?" This removes it for good, as the reply finishes.</p>
+<table>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Pattern</td><td><code>/\s*What do you do\?\s*$/i</code></td></tr>
+<tr><td>Replacement</td><td>(empty)</td></tr>
+<tr><td>Applies to</td><td>Replies</td></tr>
+<tr><td>Mode</td><td>Rewrite</td></tr>
+</table>
+<h3 id="example-ooc">Keep notes to yourself out of the prompt</h3>
+<p>Write an aside in parentheses after "OOC:" and keep it in your transcript, but never send it to the model.</p>
+<table>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Pattern</td><td><code>/\s*\(OOC:.*?\)/gs</code></td></tr>
+<tr><td>Replacement</td><td>(empty)</td></tr>
+<tr><td>Applies to</td><td>Your messages</td></tr>
+<tr><td>Mode</td><td>Prompt only</td></tr>
+</table>
+<h3 id="example-name">Match the character's name</h3>
+<p>Replace the character's name in replies with "she", using a macro so the script works for any character.</p>
+<table>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Pattern</td><td><code>/\b{{char}}\b/g</code></td></tr>
+<tr><td>Replacement</td><td><code>she</code></td></tr>
+<tr><td>Macros in pattern</td><td>Escaped</td></tr>
+<tr><td>Applies to</td><td>Replies</td></tr>
+<tr><td>Mode</td><td>Display and prompt</td></tr>
+</table>
+{% endraw %}

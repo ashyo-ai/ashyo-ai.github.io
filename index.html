@@ -1,0 +1,80 @@
+---
+layout: default
+title: Welcome
+---
+{% raw %}
+<h1 id="welcome">Welcome to Ashyo</h1>
+<p class="lead">Ashyo is a terminal app for roleplaying and chatting with language models. You bring a model, whether that is a server running on your own machine or a hosted account, and Ashyo gives you characters, personas, lore books, swipes, branching chats and full control over the prompt. Everything lives in your terminal and everything is saved on your disk.</p>
+
+<h2 id="what-is-ashyo">What Ashyo is</h2>
+<p>If you have used SillyTavern, you already know the shape of it: pick a character, pick who you are, start a chat, and shape what the model sees with lore books, templates and samplers. Ashyo brings that way of working to a terminal window, with no browser and no server of its own to run.</p>
+<ul>
+<li><strong>Characters and personas.</strong> Import character cards you already have, or write your own. Your persona is who the model talks to. See <a href="characters.html">Personas and characters</a>.</li>
+<li><strong>Lore books.</strong> Facts that enter the prompt only when the conversation touches them, with keys, recursion, timed effects and a budget so they never crowd out the chat. See <a href="lore.html">Lore books</a>.</li>
+<li><strong>Swipes and branches.</strong> Every reply can have alternatives, and every chat is a tree you can walk, label and fork. Nothing you generate is ever lost. See <a href="branches.html">Swipes and branches</a>.</li>
+<li><strong>The prompt is yours.</strong> System prompts, context templates, instruct templates, samplers and regex scripts are all presets you can switch per chat. A built-in inspector shows you the exact prompt before it leaves. See <a href="prompt.html">Prompt building</a> and <a href="context.html">Context and budget</a>.</li>
+<li><strong>Your files stay with you.</strong> Chats are single files on your disk, settings are one JSON file, and nothing is sent anywhere except to the model you chose. See <a href="files.html">Files and logs</a>.</li>
+<li><strong>It speaks SillyTavern.</strong> Character cards, World Info books, instruct and sampler presets and chat logs from SillyTavern all import, and chats export back out. See <a href="import-export.html">Import and export</a>.</li>
+</ul>
+
+<h2 id="requirements">What you need</h2>
+<ul>
+<li>A Linux machine on x86_64 and a terminal window at least 24 columns by 12 rows. Ashyo uses the mouse when your terminal offers it, but every action has a key.</li>
+<li>A model to talk to. Ashyo connects to <strong>KoboldCPP</strong> or <strong>llama.cpp</strong> running on your own machine, to any <strong>OpenAI-compatible</strong> server, to <strong>OpenRouter</strong> with an API key, or to a ChatGPT subscription through <strong>OpenAI Codex</strong>. See <a href="connections.html">Connections</a>.</li>
+<li>Optional helpers: a clipboard tool such as <code>wl-paste</code>, <code>xclip</code> or <code>xsel</code> for pasting with <kbd>Ctrl+V</kbd> (copying needs nothing, it works over the terminal itself, even through SSH), <code>notify-send</code> for a desktop notification when a reply arrives, and <code>xdg-open</code> so the Codex login can open your browser.</li>
+</ul>
+
+<h2 id="install">Install</h2>
+<p>Ashyo is built from source with the Rust toolchain. The build targets static musl, so the result is one file that runs on any x86_64 Linux machine with nothing else installed. You need <code>rustup</code> with the musl target added, plus the <code>musl-gcc</code> wrapper from your distribution's musl package.</p>
+<pre class="terminal"><span class="prompt">$ </span>rustup target add x86_64-unknown-linux-musl
+<span class="prompt">$ </span>git clone https://github.com/ashyo-ai/ashyo
+<span class="prompt">$ </span>cd ashyo
+<span class="prompt">$ </span>cargo build --release</pre>
+<p>The binary lands at <code>target/x86_64-unknown-linux-musl/release/ashyo</code>. Copy it somewhere on your <code>PATH</code> and check it runs:</p>
+<pre class="terminal"><span class="prompt">$ </span>ashyo --version
+ashyo 0.1.0 (34c12462)</pre>
+<p>That is the only command line option. Anything else, <code>--help</code> included, is refused with "ashyo: unknown option". Everything happens inside the app.</p>
+
+<h2 id="first-run">First run: connect a model</h2>
+<p>Start Ashyo with no arguments. Because there is no configuration yet, it opens Settings on the <strong>Connection</strong> tab and tells you to "Set up a connection to start chatting." The rows you fill in here become the defaults for every new chat.</p>
+<pre class="terminal"><span class="prompt">$ </span>ashyo</pre>
+<ol>
+<li>Move to <strong>Provider</strong> and press <kbd>Enter</kbd>. Pick the kind of server or service you are using. KoboldCPP is the default.</li>
+<li>Fill in how to reach it. Local servers want an <strong>Address</strong> and <strong>Port</strong> (KoboldCPP defaults to 127.0.0.1:5001, llama.cpp to 127.0.0.1:8080). An OpenAI-compatible server wants a <strong>Base URL</strong>. OpenRouter and Codex need nothing here.</li>
+<li>If the service needs credentials, pick an <strong>Account</strong> and either paste your <strong>API key</strong> (OpenRouter and OpenAI-compatible) or run <strong>Login</strong> (Codex). Local servers skip this.</li>
+<li>Choose a <strong>Model</strong> where the provider has one. Ashyo lists what the server offers. KoboldCPP has no model row at all, since it serves whatever it has loaded, and llama.cpp uses its loaded model when you leave the row empty.</li>
+<li>Press <kbd>Enter</kbd> on the <strong>Connection</strong> row under <strong>Test</strong>. It reads "Connecting", then "Connected", or "Disconnected" with the reason.</li>
+</ol>
+<p>Press <kbd>Esc</kbd> to leave Settings. You land in the chat picker, which is empty for now. The details of every provider, including the two protocols and what context size means, are in <a href="connections.html">Connections</a>.</p>
+<div class="callout">
+<span class="label">Tip</span>
+<p>You can come back to Settings any time with <code>/settings</code>. With a chat open, the Settings screen edits that chat; with no chat open it edits the defaults new chats start from. See <a href="settings.html">Settings and presets</a>.</p>
+</div>
+
+<h2 id="first-chat">Your first chat</h2>
+<p>Press <kbd>Esc</kbd> to close the empty picker, type <code>/new</code> in the composer and press <kbd>Enter</kbd>. A fresh chat opens with the built-in persona <strong>User</strong> and the built-in character <strong>Assistant</strong>. Type a message and press <kbd>Enter</kbd> to send it. The reply streams in under your message, and while it does the line above the composer shows a spinner and how long it has been generating.</p>
+<p>A few things to try straight away:</p>
+<ul>
+<li>Press <kbd>←</kbd> or <kbd>→</kbd> on an empty composer to swipe the last reply. <kbd>→</kbd> past the last swipe generates a new one.</li>
+<li>Press <kbd>Esc</kbd> while a reply is generating to stop it. Whatever arrived so far is kept.</li>
+<li>Press <kbd>Ctrl+↑</kbd> to move into the transcript, then <kbd>↑</kbd> and <kbd>↓</kbd> to mark a message and <kbd>Tab</kbd> for its actions: edit, delete, copy, continue, and more.</li>
+<li>Type <code>/</code> at the start of the composer to see every command with a one-line description. The list narrows as you type.</li>
+<li>Press <kbd>Ctrl+S</kbd> to open the chat picker, and <code>/rename My first chat</code> to give the chat a name.</li>
+</ul>
+<p>To give the model a character to play, open the <a href="library.html">Library</a> with <code>/library</code> and import a character card, then pick it on the <strong>Participants</strong> tab of Settings. The chat's greeting appears at once. When you are done, <code>/quit</code> saves everything and leaves.</p>
+
+<h2 id="where-things-live">Where things live</h2>
+<p>Ashyo follows the XDG base directories. The paths below are the defaults when <code>XDG_CONFIG_HOME</code> and <code>XDG_DATA_HOME</code> are unset.</p>
+<table>
+<tr><th>What</th><th>Path</th></tr>
+<tr><td>Settings and library</td><td><code>~/.config/ashyo/ashyo.json</code></td></tr>
+<tr><td>Chats, one file each</td><td><code>~/.local/share/ashyo/chats/</code></td></tr>
+<tr><td>Accounts and keys</td><td><code>~/.local/share/ashyo/auth.json</code></td></tr>
+<tr><td>Input history</td><td><code>~/.local/share/ashyo/history.jsonl</code></td></tr>
+<tr><td>Log file</td><td><code>~/.local/share/ashyo/ashyo.log</code></td></tr>
+</table>
+<p>More about each file, including what is safe to edit by hand, in <a href="files.html">Files and logs</a>.</p>
+
+<h2 id="what-ashyo-leaves-out">What Ashyo leaves out</h2>
+<p>A few things are decisions rather than gaps. Ashyo has no image generation, no text-to-speech and no browser interface. Today a chat is one persona and one character. Keybindings are fixed; there is no keymap to configure, which is why this site has a <a href="keys.html">Keyboard reference</a>. Only one copy runs at a time: a second start is refused with "Another copy of Ashyo is already running."</p>
+{% endraw %}

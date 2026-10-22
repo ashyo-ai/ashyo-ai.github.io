@@ -1,0 +1,53 @@
+---
+layout: default
+title: Macros
+---
+{% raw %}
+<h1 id="macros">Macros</h1>
+<p class="lead">A macro is a placeholder in double curly braces that Ashyo fills in before text reaches the model. Write <code>{{char}}</code> in a system prompt and it becomes whichever character the chat has; write <code>{{roll::d20}}</code> in a lore entry and fate takes a hand. They work almost everywhere you can type text that ends up in a prompt.</p>
+
+<h2 id="reference">The macros</h2>
+<table>
+<tr><th>Macro</th><th>What it gives you</th><th>Example</th></tr>
+<tr><td><code>{{user}}</code></td><td>Your persona's display name.</td><td><code>{{user}} enters the hall.</code></td></tr>
+<tr><td><code>{{char}}</code></td><td>The character's display name.</td><td><code>Write {{char}}'s next reply.</code></td></tr>
+<tr><td><code>{{random::a::b}}</code></td><td>One item from the list, chosen fresh every time the text is expanded. Items can also be separated by commas after a single colon.</td><td><code>{{random::coffee::tea::cocoa}}</code>, <code>{{random:rain,fog,snow}}</code></td></tr>
+<tr><td><code>{{pick::a::b}}</code></td><td>One item from the list, but the same item every time for this chat, this text and this spot in it. Good for a detail that should be random once and then stay put.</td><td><code>{{pick::red::blue::green}}</code></td></tr>
+<tr><td><code>{{roll::formula}}</code></td><td>Dice. <code>2d6+3</code> rolls two six-sided dice and adds three; <code>d6</code> is one die; a bare number such as <code>20</code> is one die with that many sides. A formula Ashyo cannot read gives nothing and leaves a warning in the log.</td><td><code>{{roll::2d6+3}}</code>, <code>{{roll::20}}</code>, <code>{{roll::d6}}</code></td></tr>
+<tr><td><code>{{time}}</code></td><td>The current time, hours and minutes, in your locale's format.</td><td><code>It is {{time}}.</code></td></tr>
+<tr><td><code>{{time::UTC+2}}</code></td><td>The current time in a time zone given as a whole-hour offset from UTC. The older <code>{{time_UTC-7}}</code> spelling works too.</td><td><code>{{time::UTC+2}}</code>, <code>{{time_UTC-7}}</code></td></tr>
+<tr><td><code>{{date}}</code></td><td>Today's date in long form, in your locale.</td><td><code>October 17, 2026</code></td></tr>
+<tr><td><code>{{weekday}}</code></td><td>The day of the week.</td><td><code>Saturday</code></td></tr>
+<tr><td><code>{{idle_duration}}</code></td><td>How long it has been since your previous message, in words such as "32 minutes" or "a few seconds". "just now" when there is no previous message. <code>{{idleDuration}}</code> is the same macro.</td><td><code>{{user}} returns after {{idle_duration}}.</code></td></tr>
+<tr><td><code>{{newline}}</code></td><td>A line break. <code>{{newline::N}}</code> gives N of them.</td><td><code>{{newline::2}}</code></td></tr>
+<tr><td><code>{{trim}}</code></td><td>Nothing, but it eats the line breaks on both sides of itself. Use it to pull two lines together when a template puts a break between them.</td><td>A <code>{{trim}}</code> at the end of a line joins the next line onto it.</td></tr>
+<tr><td><code>{{// comment}}</code></td><td>Nothing at all. Anything after the two slashes is dropped, so you can leave yourself notes in a prompt.</td><td><code>{{// tighten this later}}</code></td></tr>
+<tr><td><code>{{outlet::name}}</code></td><td>The content of the lore entries whose <strong>Outlet name</strong> matches, joined by line breaks. Expands to nothing when no entry fills it. See <a href="lore.html#outlets">Outlets</a>.</td><td><code>{{outlet::Notes}}</code></td></tr>
+<tr><td><code>{{original}}</code></td><td>Inside a character card's own system prompt, the chat's system prompt that the card replaced. Only the first use expands; later ones give nothing. See <a href="characters.html#card-prompts">A card's own prompts</a>.</td><td><code>{{original}} Stay in character at all times.</code></td></tr>
+</table>
+
+<h2 id="rules">How macros are read</h2>
+<ul>
+<li><strong>Names are forgiving.</strong> Case and surrounding spaces do not matter: <code>{{ User }}</code>, <code>{{CHAR}}</code> and <code>{{idleDuration}}</code> all work.</li>
+<li><strong>Arguments follow the name</strong> after a space, a single colon or a double colon. Several arguments are separated by <code>::</code>, as in <code>{{random::a::b}}</code>. With a single colon the whole rest is one argument and splits on commas, as in <code>{{random:a,b}}</code>; write <code>\,</code> for a comma that belongs to an item. Items are trimmed either way.</li>
+<li><strong>Macros nest</strong> and expand from the inside out, so <code>{{random::{{user}}::{{char}}}}</code> picks one of the two names.</li>
+<li><strong>Three braces are not a macro.</strong> A run of three opening braces treats the first as plain text, so <code>{{{char}}}</code> gives the character's name wrapped in single braces.</li>
+<li><strong>Unknown macros stay as written.</strong> <code>{{foo}}</code> reaches the model untouched, and so does a macro left unclosed. A known macro given arguments it does not take, such as <code>{{user::x}}</code>, is also left as written, with a warning in the log.</li>
+<li><strong>Random is fresh, pick is fixed.</strong> <code>{{random}}</code> is drawn anew on every generation. <code>{{pick}}</code> depends on the chat, the exact text it sits in and its position in that text, so it stays the same across generations but may change if you edit the text around it.</li>
+<li><strong>Dice formulas</strong> are <code>NdS</code>, <code>dS</code> or <code>S</code>, optionally followed by <code>+M</code> or <code>-M</code>. The count and the sides must be whole numbers above zero.</li>
+<li><strong>Time zones</strong> are written <code>UTC+H</code> or <code>UTC-H</code> with whole hours, in any case. Offsets past a full day wrap around the clock. Without an offset you get your own local time.</li>
+<li><strong>Dates and times follow your locale</strong>, taken from <code>LC_ALL</code>, then <code>LC_TIME</code>, then <code>LANG</code>. An English locale gives "5:32 PM, Saturday, October 17, 2026"; a German one gives "17:32, Samstag, 17. Oktober 2026".</li>
+</ul>
+
+<h2 id="where">Where macros work</h2>
+<p>Macros are expanded in every piece of text that becomes part of a prompt:</p>
+<ul>
+<li>The system prompt, the persona description, and the character's description, personality, scenario and post-history instructions.</li>
+<li>Example messages and greetings, where <code>{{user}}:</code> and <code>{{char}}:</code> are the usual way to mark speakers. See <a href="prompt.html#examples">Example messages</a>.</li>
+<li>Lore entry keys, which are expanded before matching, and lore entry content.</li>
+<li>Context template row prefixes.</li>
+<li>Regex script replacements and trim strings. Whether they expand in a script's pattern is up to that script's <strong>Macros in pattern</strong> setting. See <a href="regex.html#pattern">Regex scripts</a>.</li>
+<li>Messages you send. These are expanded as they are sent and stored that way, so the transcript shows the result rather than the macro.</li>
+</ul>
+<p>They are never expanded in instruct template sequences, in stop strings or in sampler values, where a pair of braces means exactly what it says.</p>
+{% endraw %}

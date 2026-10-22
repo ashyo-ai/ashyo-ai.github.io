@@ -1,0 +1,172 @@
+---
+layout: default
+title: Settings and presets
+---
+{% raw %}
+<h1 id="settings">Settings and presets</h1>
+<p class="lead">Settings is where you decide how a chat talks to its model and what it says: the connection, the samplers, the pieces of the prompt, who is talking and which lore books are in play. Every chat carries its own copy of these choices, and the <a href="library.html">Library</a> holds the presets they start from. This page explains how the two fit together, then walks every tab.</p>
+
+<h2 id="how-settings-work">How settings work</h2>
+<p>Type <code>/settings</code> to open the screen. Its title reads <strong>Settings</strong> followed by the version, and the pane on the left lists the tabs: <strong>General</strong>, <strong>Appearance</strong>, <strong>Connection</strong>, <strong>Samplers</strong>, <strong>Prompt</strong>, <strong>Participants</strong> and <strong>Lore</strong>. The Samplers tab appears once a provider is chosen, because the samplers on offer depend on the protocol that provider speaks.</p>
+<p>What you are editing depends on where you opened it from:</p>
+<ul>
+<li><strong>With a chat open</strong>, Settings edits that chat and nothing else. Two chats can use different models, personas and lore books at the same time.</li>
+<li><strong>With no chat open</strong>, Settings edits the defaults that every new chat starts from. This is what you see on first run, when Ashyo opens the Connection tab with the notice "Set up a connection to start chatting."</li>
+</ul>
+<p>General and Appearance are different: they are about the app, not about a chat, so they are global and take effect the moment you change them.</p>
+<p>The Connection, Samplers, Prompt and Participants tabs show a status line reading "No unsaved changes." or "N unsaved changes." That count is the number of values you have changed away from the selected preset. The chat remembers them, so nothing is lost when you leave; "unsaved" means they have not been written back into the preset yet. See <a href="#presets">Presets</a>.</p>
+<p>Changing a chat's settings refreshes its connection details in the background. It may also add or remove a greeting: picking a character on an empty chat seeds its greetings, and picking a different one removes them. See <a href="characters.html#greetings">Greetings</a>.</p>
+
+<h2 id="overrides">Overrides</h2>
+<p>Every value on the Connection, Samplers, Prompt and Participants tabs comes from a preset. When you change one of those values in Settings, you are not editing the preset. You are giving this chat, or the defaults, an <em>override</em> that wins over the preset's value.</p>
+<ul>
+<li><strong>Overrides are marked.</strong> An overridden row gets a <strong>∗</strong> before its label and a note under it showing what it is overriding: "Inherits: X" on connection rows, "Default: X" on sampler rows, and "Preset: X" on the system prompt and participant rows.</li>
+<li><strong>Reset puts it back.</strong> Press <kbd>Tab</kbd> on an overridden row and choose <strong>Reset</strong> to return to the preset's value. On a row that is not overridden there is no Reset, and asking for one is refused with "Nothing to reset."</li>
+<li><strong>Matching values are not overrides.</strong> If you set a value equal to what the preset already says, the mark disappears.</li>
+<li><strong>Switching clears.</strong> Choosing a different connection preset or a different provider drops every connection override. Choosing a different persona or character drops that participant's overrides.</li>
+<li><strong>Empty connection fields</strong> fall back to the provider's own defaults, such as KoboldCPP's address and port.</li>
+<li><strong>Samplers need a provider.</strong> Changing a sampler before a provider is chosen is refused, since Ashyo cannot know which samplers apply.</li>
+</ul>
+<div class="callout">
+<span class="label">Tip</span>
+<p>Overrides are how you experiment. Try a higher temperature or a different system prompt in one chat without touching the preset every other chat uses. When you like the result, save it into the preset or save it as a new one.</p>
+</div>
+
+<h2 id="presets">Presets</h2>
+<p>Each of these sections starts with a <strong>Preset</strong> row showing which Library item it uses. Connection presets list as "name · provider · protocol". Where it makes sense the list offers <strong>None</strong>; when there is nothing to choose, the row notes "No saved presets." Press <kbd>Enter</kbd> on the row to pick, or <kbd>Tab</kbd> to see its actions:</p>
+<ul>
+<li><strong>Save.</strong> Writes your overrides into the selected preset and clears them, so every chat using that preset picks up the change. Offered only when a preset is selected and you have changes. Context and instruct templates never offer it, because their fields edit the template directly (see <a href="#prompt">Prompt</a>). Saving a connection with no provider is refused.</li>
+<li><strong>Save as.</strong> Asks for a name, suggesting "Untitled", then makes a new preset from the current selection plus your overrides and selects it. This is the usual way to turn a good experiment into something reusable.</li>
+<li><strong>Rename.</strong> Renames the selected preset. Every chat that uses it follows the new name.</li>
+<li><strong>Delete.</strong> Asks "Delete preset?" For a persona or character it asks "Delete <em>name</em>?" and warns "Chats using this persona will switch to User." or "Chats using this character will switch to Assistant." The default answer is Keep. The built-in User and Assistant cannot be deleted.</li>
+<li><strong>Reset all</strong> and <strong>Neutralize</strong>, on the sampler Preset row only. Reset all drops every sampler override and returns to the preset. Neutralize sets every sampler to its built-in default value, which is a quick way to start from a known place. See <a href="samplers.html#presets">Samplers</a>.</li>
+</ul>
+<p>After Save or Save as, "saved preset" shows on the status bar for a few seconds.</p>
+<p>If you pick a different preset while you still have unsaved changes, Ashyo asks what to do with them: <strong>Discard and switch</strong>, <strong>Save then switch</strong>, or <strong>Cancel</strong>. Save then switch is offered only when there is a preset selected to save into.</p>
+<p>Presets and chats stay in step. Renaming a preset or a lore book updates every chat that selects it, including chats on disk. If a chat names a preset that has since been deleted, it falls back to that kind's default when it is next opened, missing lore books are dropped from its list, and a provider that no longer exists is cleared.</p>
+
+<h2 id="general">General</h2>
+<p>Two rows, both global and applied at once.</p>
+<ul>
+<li><strong>Close idle chats after.</strong> Whole hours, 4 by default. A chat you have left open in the background is closed quietly once it has been idle this long, which frees its memory. 0 keeps every chat open. See <a href="chats.html#open-chats">Open chats</a>.</li>
+<li><strong>Log level.</strong> One of off, error, warn, info (the default), debug and trace. The help text says it all: "Choose how much Ashyo records in ashyo.log and the log viewer. Off records nothing." See <a href="files.html#log-level">Log level</a>.</li>
+</ul>
+
+<h2 id="appearance">Appearance</h2>
+<p>Everything about how chats look and sort. Each change applies on the spot, to every open chat.</p>
+<table>
+<tr><th>Row</th><th>Default</th><th>What it does</th></tr>
+<tr><td><strong>Theme colors</strong></td><td>Ashyo Dark</td><td>One of ten schemes: Ashyo Dark, Ashyo Light, Graphite, Mist, and Blue, Rose or Violet variants of Graphite (dark) and Mist (light). The list previews each scheme live as you move through it, with the hint "↑↓: preview, enter: choose, esc: cancel". See <a href="screen.html#themes">Themes</a>.</td></tr>
+<tr><td><strong>Chat sort criteria</strong></td><td>Modified</td><td>How the chat picker orders chats: Name, Created, Modified, Turns, Duration or Size. <kbd>Alt+S</kbd> in the picker changes this too and saves it here. See <a href="chats.html#sorting">Sorting</a>.</td></tr>
+<tr><td><strong>Sort chats ascending</strong></td><td>off</td><td>The picker's direction. Off puts the newest or largest first.</td></tr>
+<tr><td><strong>Lore entry sort criteria</strong></td><td>Book order</td><td>How a lore book's entries list in the Library: Book order, Comment, Insertion order or Priority.</td></tr>
+<tr><td><strong>Sort lore entries ascending</strong></td><td>on</td><td>The entry list's direction.</td></tr>
+<tr><td><strong>Reading format</strong></td><td>Full width</td><td>Centers the transcript at a fixed line length when the window is wide enough: Narrow (45), Classic (66), Accessible (80) or Fast (100) columns. See <a href="screen.html#reading-format">Reading format</a>.</td></tr>
+<tr><td><strong>Show message timestamps</strong></td><td>on</td><td>The time in each message header.</td></tr>
+<tr><td><strong>Show message indices</strong></td><td>on</td><td>The <code>#N</code> number in each header, the same number the <a href="composer.html#message-numbers">number commands</a> use.</td></tr>
+<tr><td><strong>Show message token count</strong></td><td>off</td><td>How many tokens a reply took, when known.</td></tr>
+<tr><td><strong>Show message duration</strong></td><td>off</td><td>How long a reply took to generate, when known.</td></tr>
+<tr><td><strong>Message timing</strong></td><td>Hidden</td><td>Under header draws a block of timing lines under each reply: when it was queued and received, time to first token, generation and thinking time, token rate.</td></tr>
+<tr><td><strong>Show context marker</strong></td><td>on</td><td>A divider reading "last prompt starts here" where the model's view of the history began on the last generation. See <a href="context.html#eviction">Eviction</a>.</td></tr>
+<tr><td><strong>Render markdown</strong></td><td>on</td><td>Formats headings, emphasis, lists, code and tables in messages. Off shows the text as written.</td></tr>
+<tr><td><strong>Reasoning display</strong></td><td>Always collapsed</td><td>How a model's reasoning shows by default: Always expanded, Always collapsed or Only last expanded. See <a href="transcript.html#reasoning">Reasoning</a>.</td></tr>
+<tr><td><strong>Highlight dialogue</strong></td><td>on</td><td>Colors quoted speech differently from prose and from *actions*.</td></tr>
+<tr><td><strong>Code block syntax highlighting</strong></td><td>on</td><td>Colors code blocks by their fence language.</td></tr>
+<tr><td><strong>Reply alert</strong></td><td>When unfocused</td><td>A desktop notification when a reply finishes or fails: Off, When unfocused or Always. See <a href="screen.html#alerts">Alerts</a>.</td></tr>
+</table>
+
+<h2 id="connection">Connection</h2>
+<p>This tab holds the route to your model: a <strong>Preset</strong> row, then <strong>Provider</strong> and <strong>Protocol</strong> under Route, the address or base URL under Endpoint, an <strong>Account</strong> with its API key or login under Authentication, the <strong>Model</strong>, any <strong>Extra request fields</strong>, OpenRouter's routing rows, and the <strong>Context size</strong> with <strong>Auto-update on connect</strong>. Only the fields your provider uses are shown. Under the Test heading, the <strong>Connection</strong> row runs a test when you press <kbd>Enter</kbd> and reads "Connecting", then "Connected" or "Disconnected" with the reason; it clears whenever a setting or the connection's status changes, and a change made while a test runs cancels the test. Every row is explained in <a href="connections.html">Connections</a>.</p>
+
+<h2 id="samplers">Samplers</h2>
+<p>Until a provider is chosen this tab says "Select a provider to set its samplers." After that it shows a <strong>Preset</strong> row labeled with the protocol, such as "Preset (Text Completions)", then the samplers in groups. Each row's note shows the default as "Default: X" when you have overridden it, the allowed range as "min · max · step", and for the sampler order the list of names it refers to. Values display as they would be sent. A <strong>Global bans</strong> row sits with the text-completions bans and applies under every text preset. The samplers themselves, their defaults and which providers accept them are in <a href="samplers.html">Samplers</a>.</p>
+
+<h2 id="prompt">Prompt</h2>
+<p>Three sections, one for each piece of the prompt you can swap.</p>
+<ul>
+<li><strong>System prompt.</strong> A <strong>Preset</strong> row that allows None, and a <strong>System prompt</strong> row that previews the first six lines of the text, or "No system prompt." when it is empty. <kbd>Enter</kbd> opens the full editor. When you have edited the text away from the preset, the row is marked and notes "Preset: N characters" or "Preset: None". If the character's card is set to prefer its own system prompt, a note tells you what happens to this one: either "The character's card supplies the system prompt; this one is used only where the card writes {{original}}." or "…; this one is not used." See <a href="characters.html#card-prompts">Card prompts</a>.</li>
+<li><strong>Context template.</strong> A selector with no None, then the template's fields. These fields edit the template itself, not an override, so a change here applies to every chat using that template. The rows list can be reordered with <strong>Move up</strong> and <strong>Move down</strong> and each row has an <strong>Edit prefix</strong> action. Fields that only matter for one protocol say so in their note. What each field does is in <a href="prompt.html#context-template">Context template</a>.</li>
+<li><strong>Instruct template.</strong> Shown only when the connection uses text completions. A selector and the template's fields, again edited in place. See <a href="prompt.html#instruct-template">Instruct template</a>.</li>
+</ul>
+
+<h2 id="participants">Participants</h2>
+<p>Who is in the chat. Under <strong>Persona</strong>, a <strong>Preset</strong> row picks your persona and a <strong>Description</strong> row shows its text, which you can override for this chat alone. Under <strong>Character</strong>, the <strong>Preset</strong> row picks the character, with <strong>Description</strong>, <strong>Prefer the card's system prompt</strong> and <strong>Prefer the card's post-history instructions</strong> below it, each overridable and noting "Preset: X" when overridden. Picking a character seeds its greetings into an empty chat, and choosing the character that is already selected reapplies it. Everything about these two is in <a href="characters.html">Personas and characters</a>.</p>
+
+<h2 id="lore">Lore</h2>
+<p>The <strong>Lore books</strong> row holds the chat's own books as an ordered list: <strong>Add lore book</strong> adds one, and each book has <strong>Move up</strong>, <strong>Move down</strong> and <strong>Remove</strong>. Books attached to the persona and the character join these automatically. The Activation rows below tune how entries fire; what each one means is explained in <a href="lore.html#settings">Lore books</a>.</p>
+<table>
+<tr><th>Row</th><th>Default</th><th>Range</th></tr>
+<tr><td><strong>Lore scan depth</strong></td><td>2</td><td>0–1000</td></tr>
+<tr><td><strong>Lore budget (%)</strong></td><td>25</td><td>1–100</td></tr>
+<tr><td><strong>Lore budget cap</strong></td><td>0</td><td>0–65536</td></tr>
+<tr><td><strong>Minimum activations</strong></td><td>0</td><td>0–100</td></tr>
+<tr><td><strong>Minimum activations depth</strong></td><td>0</td><td>0–100</td></tr>
+<tr><td><strong>Recursive scan</strong></td><td>on</td><td></td></tr>
+<tr><td><strong>Maximum recursion steps</strong></td><td>0</td><td>0–10</td></tr>
+<tr><td><strong>Lore insertion strategy</strong></td><td>Character lore first</td><td>Character lore first, Chat lore first, Sorted evenly</td></tr>
+<tr><td><strong>Scan with names</strong></td><td>on</td><td></td></tr>
+<tr><td><strong>Case-sensitive keys</strong></td><td>off</td><td></td></tr>
+<tr><td><strong>Match whole words</strong></td><td>on</td><td></td></tr>
+<tr><td><strong>Group scoring</strong></td><td>off</td><td></td></tr>
+</table>
+<div class="callout warn">
+<span class="label">Heads up</span>
+<p>Minimum activations and Maximum recursion steps cannot both be on. Setting either one above zero sets the other back to zero.</p>
+</div>
+<p>These rows belong to the chat rather than to a preset, so the Lore tab has no unsaved-changes line and no Save action.</p>
+
+<h2 id="board">Moving around and editing rows</h2>
+<p>Settings and the Library share one layout and one set of keys. The screen is split by a vertical rule: the pane on the left lists the tabs, the pane on the right lists that tab's rows.</p>
+<dl>
+<dt><kbd>←</kbd> / <kbd>→</kbd></dt><dd>Switch between the two panes.</dd>
+<dt><kbd>↑</kbd> / <kbd>↓</kbd></dt><dd>Move between tabs or rows, skipping headings and tabs that do not apply right now (those show muted). If the tab you are on stops applying, the cursor moves up.</dd>
+<dt><kbd>PageUp</kbd> / <kbd>PageDown</kbd></dt><dd>Move a page at a time.</dd>
+<dt><kbd>Enter</kbd></dt><dd>Change the row. An on/off row flips. A choice opens a list. A long text opens the <a href="#text-editor">full-screen editor</a>. A short field edits in place. An action row runs.</dd>
+<dt><kbd>Tab</kbd></dt><dd>Open the row's actions, such as Save, Rename, Reset or Delete.</dd>
+<dt><kbd>Esc</kbd></dt><dd>Step back: close an open entry if one is open, otherwise clear a filter if one is typed, otherwise close the screen.</dd>
+<dt><kbd>Alt+S</kbd>, <kbd>Alt+&lt;</kbd>, <kbd>Alt+&gt;</kbd></dt><dd>Sort a tab's entries and set the direction, keeping the cursor on the same entry. Used by lore book entries in the Library.</dd>
+</dl>
+<p>Rows sit in sections with headings. Each row shows its label on the left and its value on the right, cut to fit one line, with <strong>∗</strong> marking an override. The footer shows the keys that apply right now, such as "← →: switch pane", "enter: change, tab: actions" and "esc: back", "esc: clear" or "esc: close", along with the row's help text. A refusal shows there in red instead.</p>
+
+<h3 id="inline-editing">Editing in place</h3>
+<p>Short fields open an editor beside the label, or below it when the window is narrow. <kbd>Enter</kbd> checks the value and saves it, <kbd>Esc</kbd> cancels. On a number, <kbd>↑</kbd> and <kbd>↓</kbd> step the value. Characters the field cannot take are ignored. A secret such as an API key is masked as you type and saved straight to the account. A paste is converted to fit the field.</p>
+<ul>
+<li><strong>Numbers</strong> step to the next multiple of their step (1 for whole numbers, 0.01 for decimals unless the field says otherwise) and stay within their range, which the note shows as "min X · max Y · step Z". A blank clears an optional number. Pasting into a number is refused, and text that is not a number is refused with "<em>x</em>" is not a number.</li>
+<li><strong>JSON fields</strong> such as extra request fields and logit bias take a JSON value; blank means unset, and bad input is refused with "Invalid JSON: …".</li>
+<li><strong>One-per-line lists</strong> such as banned tokens, quantizations and model providers edit one entry per line.</li>
+<li><strong>Secrets</strong> always open empty, never showing the saved value.</li>
+</ul>
+<p>Values display in a compact form: a choice shows its label, a list shows "N entries", "N books", "N scripts" or "None", a checkbox list shows "N of M enabled", a three-way choice shows Default, Yes or No, an on/off row shows <code>[x]</code> or <code>[ ]</code>, newlines show as ↵, and anything longer than 80 characters is cut.</p>
+
+<h3 id="choice-lists">Choice lists</h3>
+<p>A choice opens a list. <kbd>↑</kbd> and <kbd>↓</kbd> move, <kbd>PageUp</kbd> and <kbd>PageDown</kbd> page, <kbd>Enter</kbd> chooses and <kbd>Esc</kbd> backs out. Choosing the item that is already selected does nothing, with one exception: choosing the current character again reapplies it. The model list and the lore book list are long, so they filter as you type by name or description; <kbd>Esc</kbd> clears the filter before it closes the list. The model list starts on the current model, and for providers that accept any model id the list offers "Use <em>what you typed</em>". While a list is loading it says "Loading…"; other things you may see are "Nothing left to add.", "No matches for "x"." and "No models."</p>
+
+<h3 id="popups">Popups</h3>
+<p>Small questions open over the board, near the cursor. There are four kinds: the actions menu, a titled choice with a line or two of detail, a Keep/Delete confirmation that defaults to Keep, and a one-line text field for names. Name prompts are titled "Save as", "Rename", "New <em>kind</em>" or "Account", and an empty name is refused.</p>
+<dl>
+<dt><kbd>↓</kbd> or <kbd>Tab</kbd> / <kbd>↑</kbd></dt><dd>Next and previous item, wrapping around.</dd>
+<dt><kbd>Enter</kbd></dt><dd>Choose, or submit the name.</dd>
+<dt><kbd>Esc</kbd></dt><dd>Back out. Backing out of a Delete returns to the actions menu on the same item.</dd>
+<dt><kbd>Ctrl+Z</kbd>, <kbd>Ctrl+Shift+Z</kbd> or <kbd>Ctrl+R</kbd></dt><dd>Undo and redo in a text field.</dd>
+</dl>
+<p>In a text field, <kbd>Tab</kbd> and newlines are ignored and pasted newlines become spaces. An error shows in red under the field.</p>
+
+<h3 id="list-entries">Lists of entries</h3>
+<p>Some rows hold a list: greetings, example messages, lore books, context template rows, lore entries. Each entry shows as a checkbox and its text. <kbd>Enter</kbd> toggles the checkbox; a locked entry, such as a lore row in a context template, has a muted checkbox that cannot change. An add row at the bottom appends a new entry, and a list of names adds from the names not yet used, saying "Nothing left to add." when there are none. <kbd>Tab</kbd> on an entry opens its actions: <strong>Edit</strong>, <strong>Duplicate</strong>, <strong>Move up</strong>, <strong>Move down</strong>, <strong>Edit text</strong>, <strong>Edit prefix</strong>, <strong>Move to book</strong>, <strong>Copy to book</strong>, <strong>Delete</strong> (which asks "Delete this entry?" and shows the text) or <strong>Remove</strong> (which does not ask), whichever apply to that list.</p>
+
+<h3 id="text-editor">The full-screen text editor</h3>
+<p>Long texts such as descriptions, system prompts and lore content open a full-screen editor titled by the field.</p>
+<dl>
+<dt><kbd>Enter</kbd></dt><dd>Insert a newline.</dd>
+<dt><kbd>Ctrl+S</kbd></dt><dd>Save and close.</dd>
+<dt><kbd>Ctrl+Z</kbd>, <kbd>Ctrl+Shift+Z</kbd> or <kbd>Ctrl+R</kbd></dt><dd>Undo and redo.</dd>
+<dt><kbd>Esc</kbd></dt><dd>Close at once if nothing changed. Otherwise a question offers <strong>Discard and close</strong>, <strong>Save then close</strong> or <strong>Cancel</strong>.</dd>
+<dt><kbd>Home</kbd> / <kbd>End</kbd>, <kbd>Ctrl+Home</kbd> / <kbd>Ctrl+End</kbd></dt><dd>Line and document ends.</dd>
+<dt><kbd>Shift</kbd> with movement, <kbd>PageUp</kbd> / <kbd>PageDown</kbd></dt><dd>Select, and page (with <kbd>Shift</kbd>, select by pages).</dd>
+</dl>
+<p>A click places the cursor, a drag selects and the wheel scrolls. With text selected, the footer switches to "ctrl+c: copy, ctrl+x: cut, esc: clear".</p>
+
+<h3 id="filters">Filters</h3>
+<p>Some lists filter as you type: lore entries in the Library, the model list, the lore book list. Any printable character starts the filter, which shows above the list as "🔍 <em>query</em>" only while it has text and scrolls sideways when long. Arrow keys and paging always go to the list, not the filter. <kbd>Esc</kbd> clears the filter. A filter has no undo, so <kbd>Ctrl+Z</kbd> does nothing there. Switching tabs or opening another box clears it too.</p>
+<p>The mouse works everywhere on the board: the wheel scrolls the pane under the pointer, a click moves to a row, and a drag selects text in the full-screen editor. While a popup is open the wheel does nothing.</p>
+{% endraw %}

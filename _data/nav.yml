@@ -1,0 +1,50 @@
+- group: Start here
+  pages:
+    - title: Welcome
+      file: index.html
+    - title: Connections
+      file: connections.html
+- group: Chatting
+  pages:
+    - title: The screen
+      file: screen.html
+    - title: Composer and commands
+      file: composer.html
+    - title: Transcript
+      file: transcript.html
+    - title: Swipes and branches
+      file: branches.html
+    - title: Managing chats
+      file: chats.html
+    - title: Keyboard reference
+      file: keys.html
+- group: Characters and prompts
+  pages:
+    - title: Settings and presets
+      file: settings.html
+    - title: Library
+      file: library.html
+    - title: Personas and characters
+      file: characters.html
+    - title: Lore books
+      file: lore.html
+    - title: Prompt building
+      file: prompt.html
+    - title: Macros
+      file: macros.html
+    - title: Regex scripts
+      file: regex.html
+- group: Models
+  pages:
+    - title: Samplers
+      file: samplers.html
+    - title: Context and budget
+      file: context.html
+- group: Reference
+  pages:
+    - title: Import and export
+      file: import-export.html
+    - title: Files and logs
+      file: files.html
+    - title: Troubleshooting
+      file: troubleshooting.html

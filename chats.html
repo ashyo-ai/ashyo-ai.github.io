@@ -1,0 +1,76 @@
+---
+layout: default
+title: Managing chats
+---
+{% raw %}
+<h1 id="managing-chats">Managing chats</h1>
+<p class="lead">Every conversation in Ashyo is a chat: one file on your disk with its own name, its own settings and its own tree of turns. This page is about the housekeeping around them. How to start, open, name, park and close chats, how the chat picker works, and what Ashyo does to keep your chats saved without you having to think about it.</p>
+
+<h2 id="picker">The chat picker</h2>
+<p>The picker is the list of your chats. It opens on its own when Ashyo starts, since the last chat you were in is not reopened automatically, and you can bring it up any time with <kbd>Ctrl+S</kbd> or <code>/chat</code>. Its title reads "Chats — Modified ↓", naming the sort order and direction.</p>
+<p>Chats that are already open come first, then a rule, then every other chat on your disk. A temporary chat is never listed. The cursor skips the rule. Opening the picker rescans the chats folder, so a file you copied in while Ashyo was running shows up.</p>
+<ul>
+<li><strong>Typing filters.</strong> Start typing and the list narrows to chats whose name contains what you typed, regardless of case. The filter shows above the list as "🔍 query". With no matches it reads "No matches for "x"."; with no chats at all, "(no chats)".</li>
+<li><kbd>Enter</kbd> <strong>opens</strong> the highlighted chat.</li>
+<li><kbd>Esc</kbd> <strong>clears the filter</strong> if there is one, and closes the picker otherwise.</li>
+<li><kbd>Alt+I</kbd> <strong>imports</strong> a transcript file from another app, in any filter state. See <a href="import-export.html#import-transcripts">Importing transcripts</a>.</li>
+<li><kbd>Tab</kbd> <strong>opens the actions</strong> for a saved chat: <strong>Details</strong>, <strong>Rename</strong>, <strong>Export…</strong> and <strong>Delete</strong>. A chat that has never been saved, or an empty list, has no actions.</li>
+<li>The mouse wheel scrolls the list.</li>
+</ul>
+<p>The footer hint follows what you can do, for example "enter: open, alt+i: import, tab: actions, esc: close". While the picker is open the composer underneath still shows one row of your draft.</p>
+<h3 id="details">Details</h3>
+<p>Choose <strong>Details</strong> to see a chat before opening it. The name is at the top in bold, then the last message's excerpt, or "No message excerpt." for a chat with no messages. Under that come the rows <strong>Persona</strong>, <strong>Character</strong>, <strong>Turns</strong>, <strong>Size</strong>, <strong>Path</strong> (with your home folder shortened to <code>~</code>), <strong>Created</strong>, <strong>Modified</strong> and <strong>Duration</strong>, lined up in one column. Duration is the total time the model spent generating on the current branch, reasoning included. The view scrolls if it needs to; <kbd>Esc</kbd> goes back to the list.</p>
+<h3 id="deleting">Deleting</h3>
+<p><strong>Delete</strong> asks "Delete <name>?" with <strong>Keep</strong> and <strong>Delete</strong>, defaulting to Keep. Deleting removes the chat's file from disk. If the chat is open and still generating, its reply is stopped first. A chat that is in the middle of being saved shows "Saving…" instead of acting, and the picker refuses to operate on a chat while it is saving or opening ("Chat is still saving.", "Chat is still opening.").</p>
+<h3 id="sorting">Sorting</h3>
+<p>Press <kbd>Alt+S</kbd> to cycle the sort key and <kbd>Alt+&lt;</kbd> or <kbd>Alt+&gt;</kbd> to set the direction. Both are remembered as the <strong>Chat sort criteria</strong> and <strong>Sort chats ascending</strong> rows on the <a href="settings.html#appearance">Appearance</a> tab of Settings.</p>
+<table>
+<tr><th>Sort key</th><th>Orders by</th></tr>
+<tr><td><strong>Name</strong></td><td>The chat's name, ignoring case.</td></tr>
+<tr><td><strong>Created</strong></td><td>When the chat was created.</td></tr>
+<tr><td><strong>Modified</strong></td><td>When it last changed. The default. A chat never modified sorts by its creation time.</td></tr>
+<tr><td><strong>Turns</strong></td><td>How many turns it holds.</td></tr>
+<tr><td><strong>Duration</strong></td><td>Total generation time on the current branch.</td></tr>
+<tr><td><strong>Size</strong></td><td>The file's size on disk.</td></tr>
+</table>
+<p>The highlight stays on the same chat when the list refreshes. After an import, the imported chat is highlighted and any filter is cleared so you can see it.</p>
+
+<h2 id="open-chats">Open and parked chats</h2>
+<p>Ashyo keeps more than one chat open at a time. The one you are looking at is the shown chat; the others are parked. A parked chat keeps going: if it was generating a reply when you left, the reply keeps streaming in, and anything that goes wrong in it is noted in its own transcript for when you return. Opening the picker shows the open chats at the top of the list, so switching between them is <kbd>Ctrl+S</kbd>, a couple of arrow presses and <kbd>Enter</kbd>.</p>
+<ul>
+<li><strong>Opening.</strong> Choosing a chat from the picker closes the picker, puts the focus in the composer and shows "Opening <name>…" where the transcript will appear. Opening happens in the background, so you can keep working. If you open the picker again meanwhile and pick another chat, both open; the last one you picked is shown and the rest are parked. A chat already on its way is not opened twice.</li>
+<li><strong>Starting a new chat.</strong> <code>/new</code> creates a chat from your <a href="settings.html#how-settings-work">default settings</a>, parks the chat you were in and shows the new one. It is refused if the defaults cannot be used as they are.</li>
+<li><strong>Closing.</strong> <code>/close</code> closes the shown chat and shows the next parked chat, or the picker when there is none. Closing is refused while the chat is streaming a reply.</li>
+<li><strong>Idle chats close themselves.</strong> A parked chat that has been left alone for the number of hours in <strong>Close idle chats after</strong> (4 by default, on the <a href="settings.html#general">General</a> tab) is closed quietly to free memory. Idle means no visit, no reply and no failure in that time. A chat that is busy or has an edit open is never closed this way. Set the row to 0 to keep every chat open.</li>
+<li><strong>Switching remembers your place.</strong> Coming back to a parked chat restores its scroll position. A mouse selection and an open actions menu do not survive the switch.</li>
+<li><strong>Failures.</strong> A chat that cannot be opened or loaded is closed with the error. A chat whose main branch loaded but whose other branches did not stays open with a notice and closes itself once nothing is generating or being edited in it.</li>
+</ul>
+
+<h2 id="temporary">Temporary chats</h2>
+<p><code>/chat temp</code> starts a chat that is never written to disk. Use it for a quick question, a test of a new preset, or anything you don't want in your list. The status bar reads "(temp)" next to its name and <code>/rename</code> is hidden, since there is nothing to name. Only one temporary chat exists at a time.</p>
+<div class="callout warn">
+<span class="label">Heads up</span>
+<p>A temporary chat is discarded the moment any other chat is shown, including when you pick one from the picker, and when you close it. There is no way to save it afterwards. If a throwaway conversation turns out to be worth keeping, copy the text out of the transcript before you move on.</p>
+</div>
+
+<h2 id="naming">Naming chats</h2>
+<p>A new chat has no name. Give it one with <code>/rename</code> followed by the title, or from the picker's <strong>Rename</strong> action, which opens a field prefilled with the current name. Runs of whitespace collapse to one space and an empty name is refused. Submitting the name unchanged simply closes the field. If you rename a chat from the picker while a filter is active and the new name no longer matches, the filter clears so the chat stays in view.</p>
+<p>A chat without a name is listed under its file name, minus the <code>.db</code> extension. File names are built from the chat's creation time and the start of its id, like <code>2026-10-22_14-03-27Z_3f2a1b9c.db</code>, and never change afterwards, so renaming a chat does not rename its file. The status bar shows the same thing in place of a name. See <a href="files.html#chat-files">Chat files</a>.</p>
+
+<h2 id="what-a-chat-records">What a chat records</h2>
+<p>Besides its turns, a chat remembers when it was created, when it was last modified and when it was last saved; the total generation time on its current branch; its turn count; the excerpt of its last message; the persona and character it uses now, and every persona and character that has ever spoken in it, in order of first appearance. Any change to a turn, a message or the chat's settings stamps the modified time.</p>
+<p>Each message belongs to one of three roles. Your messages take your persona's display name, replies take the character's display name, and system messages are always named <strong>System</strong>. Messages are numbered along the current branch from 1, counting only turns that have a message; a copy of a message made by a branch operation keeps its original number. Those numbers are what the <a href="composer.html#message-numbers">number commands</a> use.</p>
+<p>Every chat also carries its own settings: which connection, samplers, system prompt, templates, persona and character it uses, plus any values you changed just for this chat. New chats start from the defaults you set in Settings with no chat open, and changing a chat's settings never touches another chat. See <a href="settings.html#how-settings-work">How settings work</a>.</p>
+
+<h2 id="loading">Opening long chats</h2>
+<p>A chat with thousands of turns does not make you wait for all of it. It opens on the newest screenful right away and loads the older turns in batches above it while you read, then its other branches. While that is going on, the notice line shows the progress, "loading 1.2k/3k messages" and then "loading other branches".</p>
+<p>Until the load finishes, anything that would need the unloaded turns is refused with "The chat is still loading.": sending a message, editing, and branch changes. <code>/tree</code> and <code>/goto</code> wait and then run. Message numbers already account for the unloaded part, so they do not jump around as older turns arrive, though they are corrected once everything is in. The chat's duration and its persona and character lists use the stored values for the unread part until then.</p>
+
+<h2 id="drafts">Drafts</h2>
+<p>Whatever you have typed in the composer belongs to the chat you typed it in. One second after you stop typing it is saved with the chat, so a draft survives switching chats and quitting. When you come back to the chat the draft is restored with the cursor at the end. Sending, running a command or switching chats empties the composer and its undo history.</p>
+
+<h2 id="saving">How saving works</h2>
+<p>You never save a chat by hand. Ashyo writes changed chats on its own every few seconds, and only the parts that changed. A chat whose file has gone missing is written out whole. A chat you close is written out and then dropped from memory. When Ashyo cannot write a chat, it tells you once with "Could not save …", keeps your changes in memory and keeps trying.</p>
+<p>Quitting with <code>/quit</code> closes every box, every chat and every running generation, then writes whatever is still unsaved while the screen reads "Saving <name>…". If nothing is pending it exits at once. A hangup from the terminal or a termination signal from the system quits the same way, so closing the window does not lose a chat. If a save fails during quit, the failure prints as "ashyo: …" after the screen is restored and goes into the log. See <a href="files.html#log-level">Logging</a>.</p>
+<p>While a reply is generating or an edit is open, <code>/quit</code> first asks above the composer whether to quit anyway, for example "A generation is running. Quit anyway? [y/N]"; <kbd>y</kbd> quits and <kbd>n</kbd> or <kbd>Esc</kbd> keeps working. Everything received up to that point is kept.</p>
+{% endraw %}

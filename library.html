@@ -1,0 +1,123 @@
+---
+layout: default
+title: Library
+---
+{% raw %}
+<h1 id="library">Library</h1>
+<p class="lead">The Library is where your reusable pieces live: connection and sampler presets, system prompts, context and instruct templates, personas, characters, lore books and regex scripts. <a href="settings.html">Settings</a> picks from the Library for each chat; the Library is where you make, edit, import and export the items themselves.</p>
+
+<h2 id="tabs">Tabs</h2>
+<p>Type <code>/library</code> to open it. The pane on the left lists ten tabs, one per kind of item:</p>
+<ul>
+<li><strong>Connection presets</strong>, the route to a model. See <a href="#connection-presets">below</a> and <a href="connections.html#presets">Connections</a>.</li>
+<li><strong>Sampler presets (chat)</strong> and <strong>Sampler presets (text)</strong>, one set per protocol. See <a href="#sampler-presets">below</a> and <a href="samplers.html#presets">Samplers</a>.</li>
+<li><strong>System prompts</strong>, the instructions that open the prompt. See <a href="#system-prompts">below</a>.</li>
+<li><strong>Context templates</strong>, the order and framing of the prompt's parts. See <a href="#context-templates">below</a>.</li>
+<li><strong>Instruct templates</strong>, the tokens a text-completions model expects around each turn. See <a href="#instruct-templates">below</a>.</li>
+<li><strong>Personas</strong> and <strong>Characters</strong>, who talks. See <a href="#personas-characters">below</a> and <a href="characters.html">Personas and characters</a>.</li>
+<li><strong>Lore books</strong>, facts that join the prompt when the chat touches them. See <a href="#lore-books">below</a> and <a href="lore.html">Lore books</a>.</li>
+<li><strong>Regex scripts</strong>, find-and-replace rules that run on messages. See <a href="#regex-scripts">below</a> and <a href="regex.html">Regex scripts</a>.</li>
+</ul>
+<p>Each tab opens with an item picker row labeled by the kind, such as <strong>Character</strong>, showing the item you are looking at. <kbd>Enter</kbd> on it lists every item of that kind. Below it come the item's fields. The item you chose stays chosen while you work, even as the screen refreshes. A tab with nothing in it says "No characters" (or whichever kind) and offers a <strong>New item</strong> row.</p>
+<p>Connection preset items show their Route (the Provider, which may be None, and the Protocol) followed by the provider's field groups, with unset fields showing the provider's defaults. Sampler preset items show their groups with each sampler's limits.</p>
+<p>If one item fails to load, Ashyo reports it and the other tabs still load. Moving around and editing rows works exactly as in Settings; see <a href="settings.html#board">Moving around and editing rows</a>.</p>
+<div class="callout warn">
+<span class="label">Heads up</span>
+<p>Templates are edited in place. A change to a context or instruct template applies to every chat that uses it, the moment you make it. There are no overrides for templates and no Save step. To try something without touching a template other chats rely on, duplicate it first with Save as in Settings, or make a New one here.</p>
+</div>
+
+<h2 id="actions">Actions</h2>
+<p>Press <kbd>Tab</kbd> on the item picker row to see what you can do with the kind and the item:</p>
+<ul>
+<li><strong>New.</strong> Asks for a name in a prompt titled "New character", "New lore book" and so on, then creates an item with default values and shows it.</li>
+<li><strong>Import.</strong> Opens the file dialog to bring in a file: an Ashyo item file, a character card, a World Info book or a SillyTavern preset. The imported item is revealed in the Library with a notice about anything that was left out. See <a href="import-export.html">Import and export</a>.</li>
+<li><strong>Export.</strong> Writes the item as a JSON file through the file dialog and confirms with "Exported to <em>path</em>." A connection preset exports without its account and without fields its provider does not use. See <a href="import-export.html#ashyo-items">Ashyo item files</a>.</li>
+<li><strong>Rename.</strong> Asks for the new name. Everything that refers to the item follows; see <a href="#naming">Names</a>.</li>
+<li><strong>Delete.</strong> Asks "Delete this item?" The default answer is Keep.</li>
+</ul>
+<p>An empty tab offers only New and Import. Individual entries inside an item, such as a greeting or a lore entry, have their own actions on their own rows; see <a href="settings.html#list-entries">Lists of entries</a>.</p>
+
+<h2 id="built-ins">What comes built in</h2>
+<p>Five kinds ship with a default you cannot delete:</p>
+<table>
+<tr><th>Kind</th><th>Default</th><th>What it holds</th></tr>
+<tr><td>System prompt</td><td><strong>Default</strong></td><td>Empty. Chats start with no system prompt unless you write one.</td></tr>
+<tr><td>Context template</td><td><strong>Default</strong></td><td>The six rows in their usual order, with no prefixes.</td></tr>
+<tr><td>Instruct template</td><td><strong>Raw role labels</strong></td><td>Plain "User:", "Assistant:" and "System:" labels around each turn.</td></tr>
+<tr><td>Persona</td><td><strong>User</strong></td><td>Described as "A curious human."</td></tr>
+<tr><td>Character</td><td><strong>Assistant</strong></td><td>A plain assistant with no greeting.</td></tr>
+</table>
+<p>The instruct templates tab also ships a set of ready-made templates for common model families: Raw role labels, Alpaca, ChatML, Gemma 2, Gemma 4, Gemma 4 (Thinking), Llama 2 Chat, Llama 3 Instruct, Llama 4 Instruct, Mistral V1, Mistral V2/V3, Mistral V3 Tekken, Mistral V7, Mistral V7 Tekken and Phi. Llama 2 Chat and the Mistral templates share a filler message that opens the chat when it would otherwise start with the model's turn.</p>
+<p>Built-in items cannot be renamed, but they can be edited: your changes are kept as a difference from the shipped version. You can delete a built-in template other than the defaults, but it comes back the next time Ashyo starts. Nothing ships for the other kinds: there are no sampler presets, connection presets, lore books or regex scripts until you make or import them. Providers are built into Ashyo and are not Library items.</p>
+
+<h2 id="naming">Names</h2>
+<p>Every item has a name. Names are trimmed, required and must be unique within their kind; an empty name is refused with "Name is required." and a taken one with "Name already exists." Lists sort by name without regard to case. A new item starts from defaults, or as a copy when you use Save as in Settings. Personas and characters also have a separate display name that appears in chat; when it matched the item's name, it follows a rename.</p>
+<p>Renaming and deleting reach everything that points at the item:</p>
+<ul>
+<li>Renaming a lore book or regex script updates every persona and character that lists it. Deleting one removes it from those lists.</li>
+<li>Renaming a character updates the lore entries whose character filter names it.</li>
+<li>Renaming or deleting a preset repoints or clears every reference to it: in the defaults new chats start from, in open chats and in chats on disk. Chats on disk are rewritten the next time they are saved or opened; if a rewrite fails you are told once and Ashyo keeps trying.</li>
+<li>Deleting a persona or character switches the chats that used it to User or Assistant.</li>
+</ul>
+<p>A persona or character can only list lore books and regex scripts that exist, and the configuration file is checked for that when Ashyo starts.</p>
+
+<h2 id="connection-presets">Connection presets</h2>
+<p>A connection preset is a named route to a model: the provider and protocol, then only the fields that provider uses, such as address and port, base URL, account, model, extra request fields, OpenRouter's model providers, quantizations and fallback flag, and the context size with its auto-update flag. New presets start as KoboldCPP over text completions. Changing the provider clears the account unless you choose one. Every field is explained in <a href="connections.html#presets">Connections</a>.</p>
+
+<h2 id="sampler-presets">Sampler presets</h2>
+<p>Two tabs, because chat completions and text completions take different samplers. Each preset holds a full set of values for its protocol, shown in groups with their limits. Nothing ships here; Ashyo's built-in defaults apply until you save a preset from Settings or make one. See <a href="samplers.html#presets">Samplers</a>.</p>
+
+<h2 id="system-prompts">System prompts</h2>
+<p>A system prompt has a name and its text, edited in the full-screen editor. It opens the prompt and can use <a href="macros.html">macros</a> such as {{char}} and {{user}}. A chat picks one on the Prompt tab of Settings and can override its text per chat. See <a href="prompt.html#system-prompt">System prompt</a>.</p>
+
+<h2 id="context-templates">Context templates</h2>
+<p>A context template decides which parts of the prompt are sent, in what order, with what framing, and how replies are cleaned up afterwards. What each field does is in <a href="prompt.html#context-template">Context template</a>; this is the list.</p>
+<table>
+<tr><th>Field</th><th>Default</th></tr>
+<tr><td><strong>Rows</strong>: System prompt, Lore (early), Persona, Character, Scenario, Lore (late), each with a checkbox and a prefix</td><td>All on, no prefixes. The two lore rows are always on and cannot be unchecked. <strong>Move up</strong>, <strong>Move down</strong> and <strong>Edit prefix</strong> on each row.</td></tr>
+<tr><td><strong>Squash system messages</strong></td><td>on</td></tr>
+<tr><td><strong>Prompt post-processing</strong></td><td>None</td></tr>
+<tr><td><strong>Example separator</strong></td><td>empty</td></tr>
+<tr><td><strong>Chat start</strong></td><td>empty</td></tr>
+<tr><td><strong>Separators as stop strings</strong></td><td>off</td></tr>
+<tr><td><strong>Names as stop strings</strong></td><td>on</td></tr>
+<tr><td><strong>Strip the character's name from replies</strong></td><td>on</td></tr>
+<tr><td><strong>End replies where the persona speaks</strong></td><td>on</td></tr>
+<tr><td><strong>Normalize whitespace</strong></td><td>off</td></tr>
+<tr><td><strong>Trim spaces</strong></td><td>on</td></tr>
+<tr><td><strong>Trim incomplete sentences</strong></td><td>off</td></tr>
+</table>
+
+<h2 id="instruct-templates">Instruct templates</h2>
+<p>An instruct template wraps each turn in the tokens a text-completions model was trained on. Pick the one matching your model's family, or make your own. Meanings are in <a href="prompt.html#instruct-template">Instruct template</a>.</p>
+<table>
+<tr><th>Field</th><th>Default</th></tr>
+<tr><td><strong>Sequences as stop strings</strong></td><td>on</td></tr>
+<tr><td><strong>Wrap sequences in newlines</strong></td><td>off</td></tr>
+<tr><td><strong>Include names</strong></td><td>Past participants</td></tr>
+<tr><td><strong>System uses the same format as user</strong></td><td>off</td></tr>
+<tr><td><strong>User prefix</strong>, <strong>User suffix</strong>, <strong>User filler message</strong></td><td>empty</td></tr>
+<tr><td><strong>Assistant prefix</strong>, <strong>Assistant suffix</strong>, <strong>Assistant prefix for turn end</strong></td><td>empty</td></tr>
+<tr><td><strong>System prefix</strong>, <strong>System suffix</strong></td><td>empty</td></tr>
+<tr><td><strong>Story string prefix</strong>, <strong>Story string suffix</strong></td><td>empty</td></tr>
+<tr><td><strong>Stop sequence</strong></td><td>empty; a text, or a list</td></tr>
+<tr><td><strong>Reasoning prefix</strong>, <strong>Reasoning suffix</strong></td><td>empty</td></tr>
+<tr><td><strong>Emit empty reasoning at turn end</strong></td><td>off</td></tr>
+</table>
+
+<h2 id="personas-characters">Personas and characters</h2>
+<p>A persona has a <strong>Name</strong> (what appears in chat), a <strong>Description</strong> and a list of <strong>Lore books</strong>. A character has those plus <strong>Personality</strong>, <strong>Scenario</strong>, its own <strong>System prompt</strong> and <strong>Post-history instructions</strong> with a "prefer" flag for each, <strong>Greetings</strong>, <strong>Example messages</strong> and <strong>Regex scripts</strong>. All of it, including what greetings and example messages do, is in <a href="characters.html">Personas and characters</a>. Character cards in PNG or JSON form import straight into the Characters tab; see <a href="import-export.html#cards">Character cards</a>.</p>
+
+<h2 id="lore-books">Lore books</h2>
+<p>A lore book has a name and a list of entries. On the Lore books tab the entries list as checkbox rows, each labeled by its comment (or by its keys when it has no comment), with the checkbox showing whether the entry is enabled, followed by a <strong>New entry</strong> row. While entries are showing, the title changes to "Library — <em>sort</em> ↑" or "↓" to show how they are sorted.</p>
+<dl>
+<dt><kbd>Enter</kbd></dt><dd>Toggle the entry on or off.</dd>
+<dt><kbd>Tab</kbd></dt><dd>The entry's actions: <strong>Edit</strong>, <strong>Duplicate</strong> (a copy right below it), <strong>Move up</strong> and <strong>Move down</strong> (only while sorted in ascending book order), <strong>Move to book</strong> and <strong>Copy to book</strong> (when you have other books; copying confirms with a notice), and <strong>Delete</strong>.</dd>
+<dt><kbd>Alt+S</kbd></dt><dd>Cycle the sort: Book order, Comment, Insertion order, Priority. <kbd>Alt+&lt;</kbd> and <kbd>Alt+&gt;</kbd> set the direction. The same choice lives on the Appearance tab of Settings.</dd>
+<dt>Typing</dt><dd>Filter the entries by comment, keys, secondary keys and content. Move up and Move down are hidden while a filter is active. Switching to another book clears the filter.</dd>
+</dl>
+<p>Opening an entry shows its fields under the heading "Entry N"; <kbd>Esc</kbd> returns to the list with the cursor on that entry. What every field means, from keys and secondary keys to position, sticky and group weight, is in <a href="lore.html#entries">Lore books</a>. World Info files from SillyTavern import as lore books; see <a href="import-export.html#world-info">World Info</a>.</p>
+
+<h2 id="regex-scripts">Regex scripts</h2>
+<p>A regex script has a name, an on/off switch, a <strong>Global</strong> flag, a <strong>Pattern</strong>, a <strong>Replacement</strong>, <strong>Trim strings</strong>, what it <strong>Applies to</strong>, a <strong>Mode</strong>, <strong>Min depth</strong> and <strong>Max depth</strong>, <strong>Run on edit</strong> and <strong>Macros in pattern</strong>. A pattern that does not compile is refused when you save it. Everything about writing one is in <a href="regex.html">Regex scripts</a>.</p>
+{% endraw %}

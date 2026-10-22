@@ -1,0 +1,113 @@
+---
+layout: default
+title: Troubleshooting
+---
+{% raw %}
+<h1 id="troubleshooting">Troubleshooting</h1>
+<p class="lead">When something goes wrong, Ashyo tells you in a sentence: in red on the notice line above the composer, as a red "error: …" note in the transcript, or on the terminal before it exits. This page collects those sentences by the situation you are in, says what each one means, and what to do about it.</p>
+
+<h2 id="startup">Ashyo will not start</h2>
+<p>A problem before the screen opens prints one line to the terminal starting with "ashyo: " and exits with status 1. When several things went wrong in a row, the causes follow one another after "; caused by: ".</p>
+<table>
+<tr><th>Message</th><th>Meaning</th><th>What to do</th></tr>
+<tr><td>"Another copy of Ashyo is already running."</td><td>Only one Ashyo may use the config and data folders at a time.</td><td>Switch to the copy that is open, or quit it. A copy that crashed releases the lock as soon as its process is gone.</td></tr>
+<tr><td>"ashyo: unknown option …"</td><td>The only option is <code>--version</code>; anything else is refused, <code>--help</code> included. Exits with status 2.</td><td>Start Ashyo with no arguments.</td></tr>
+<tr><td>"neither XDG_CONFIG_HOME nor HOME is set" or "neither XDG_DATA_HOME nor HOME is set"</td><td>Ashyo cannot work out where your files live.</td><td>Make sure <code>HOME</code> is set in the environment you launch from. A relative XDG path is ignored.</td></tr>
+<tr><td>"config file …: …", "config file is not valid JSON: …", "invalid value for config field at …", "missing required config key at …", "duplicate config name … at …", "duplicate lore entry uid … at …", "unknown config key at …"</td><td>The settings file could not be read. Each message names the JSON path of the problem.</td><td>Fix the file by hand at the path named, or move it aside to start from defaults. Ashyo never repairs or rewrites a file it cannot read. See <a href="files.html#config-file">the config file</a>.</td></tr>
+<tr><td>"No {kind} is named …"</td><td>A persona or character lists a lore book or regex script that does not exist.</td><td>Edit the list in the file, or add an item with that name.</td></tr>
+<tr><td>"…/auth.json: the credentials file must be a regular file, not a symlink" or "…: permissions NNNN expose credentials; require 0600"</td><td>Ashyo refuses credentials other people on the machine could read.</td><td>Run <code>chmod 600</code> on the file, or replace a symlink with the real file. See <a href="files.html#auth">auth.json</a>.</td></tr>
+<tr><td>"…/ashyo.log: …"</td><td>The log file could not be opened, and logging is not off.</td><td>Fix the folder's permissions or free disk space. With <strong>Log level</strong> set to off, Ashyo starts without the file.</td></tr>
+<tr><td>A red "Terminal too small" in the middle of the screen</td><td>The window is under 24 columns by 12 rows; input is held until it grows.</td><td>Enlarge the terminal or shrink its font.</td></tr>
+</table>
+<p>On the very first start there is no config file, so Settings opens on the <strong>Connection</strong> tab with "Set up a connection to start chatting." That is not an error; see <a href="index.html#first-run">First run</a>. Ashyo also quits gracefully and saves every chat on SIGHUP and SIGTERM, so closing the terminal window loses nothing.</p>
+
+<h2 id="connecting">Cannot reach the model</h2>
+<p>Connection trouble shows on the <strong>Connection</strong> row of the Settings' <strong>Connection</strong> tab as "Disconnected — " and a reason, and on a failed send as a note. The address in each message is the host and port Ashyo tried.</p>
+<table>
+<tr><th>Message</th><th>Meaning</th><th>What to do</th></tr>
+<tr><td>"… is not accepting connections (connection refused). Is the server running?"</td><td>Something answered at the address, but nothing is listening on that port.</td><td>Start KoboldCPP or llama.cpp, or check the <strong>Port</strong>. Ashyo keeps probing and reconnects on its own once the server is up.</td></tr>
+<tr><td>"… did not accept a connection within N seconds"</td><td>No answer at all within the connect timeout.</td><td>Check the <strong>Address</strong> and any firewall. Raise <code>connect_timeout</code> in the config file for slow networks, see <a href="connections.html#network">Timeouts and proxies</a>.</td></tr>
+<tr><td>"cannot resolve host …", "host unreachable", "no answer", "Disconnected — not yet checked"</td><td>The name does not resolve, the network cannot route to it, nothing replied, or the connection has not been tried yet.</td><td>Check the spelling of the host, your network, and press <kbd>Enter</kbd> on the <strong>Connection</strong> row to test.</td></tr>
+<tr><td>"HTTP request timed out." or "no data for N seconds; the request was aborted"</td><td>The server accepted the request but sent nothing for the whole read timeout.</td><td>A big local model may need longer before its first token: raise <code>read_timeout</code> in the config file.</td></tr>
+<tr><td>"Invalid URL …", "Not a valid URL.", "Base URL is required."</td><td>The OpenAI-compatible <strong>Base URL</strong> is missing or malformed.</td><td>Give a full address starting with http:// or https:// and naming a host.</td></tr>
+<tr><td>"Choose a connection provider first."</td><td>The chat has no provider, so there is nothing to send to.</td><td>Pick one under <strong>Route</strong> on the Connection tab.</td></tr>
+<tr><td>"API key is required."</td><td>OpenRouter needs a key and the chosen account holds none.</td><td>Add an account with your key, see <a href="connections.html#accounts">Accounts and credentials</a>.</td></tr>
+<tr><td>"OpenAI Codex is not logged in; log in from the connection settings' Login row.", "… has no login.", "… has no account named …"</td><td>The chat names an account that is logged out, missing, or has been deleted.</td><td>Choose an account on the <strong>Account</strong> row and run <strong>Login</strong>.</td></tr>
+<tr><td>"The credential changed while it was being replaced."</td><td>Two changes to the same account crossed.</td><td>Try again.</td></tr>
+<tr><td>"Model listing failed.", "Model provider listing failed.", "Model detection failed.", "Context window detection failed.", "Token count failed.", "Abort failed."</td><td>A background request to the server failed; these appear as notes and most are harmless.</td><td>Check the connection. A failed token count only means Ashyo estimates instead; a failed abort only means the server finishes a stopped reply on its own.</td></tr>
+<tr><td>"Model picker is not available for provider …"</td><td>KoboldCPP has no model list to show.</td><td>Nothing; it serves the model it loaded.</td></tr>
+<tr><td>"{provider} answered {status} with no readable error."</td><td>The server returned an HTTP error without a message Ashyo could show.</td><td>Look at the server's own log, and at the <a href="files.html#log-viewer">log viewer</a> for the status.</td></tr>
+</table>
+<h3 id="login-trouble">Logging in to Codex</h3>
+<table>
+<tr><th>Message</th><th>Meaning</th><th>What to do</th></tr>
+<tr><td>"Open this URL to log in: …"</td><td>No browser could be opened automatically.</td><td>Copy the address into any browser; the login still completes.</td></tr>
+<tr><td>"Listening for the login's callback failed: …"</td><td>Neither local port 1455 nor 1457 was free for the browser to call back on.</td><td>Free the port, or use <strong>Log in with a device code</strong> instead.</td></tr>
+<tr><td>"Login cancelled."</td><td>You chose <strong>Cancel login</strong>, or the browser page was cancelled.</td><td>Start again when ready.</td></tr>
+<tr><td>"… failed at …: HTTP …"</td><td>One step of the login was refused by OpenAI's servers.</td><td>Retry; if it persists, check that the subscription is active.</td></tr>
+<tr><td>"The device login timed out after 15 minutes."</td><td>The code was not entered in time.</td><td>Run the device login again for a fresh code.</td></tr>
+<tr><td>"The login was replaced twice while it was being refreshed … log in again."</td><td>Another Ashyo or tool rewrote the login while this one was refreshing it.</td><td>Log out and log in once more.</td></tr>
+<tr><td>"… The account is logged out regardless."</td><td>Revoking the login with OpenAI failed, but it was removed locally.</td><td>Nothing further; you are logged out.</td></tr>
+</table>
+
+<h2 id="generating">A reply fails or will not start</h2>
+<p>While waiting, the streaming card says "Waiting for model… (Ns)" after 3 seconds, "Still waiting for first response… (Ns)" from 8 and "Provider is taking unusually long… (Ns)" from 30. That is patience, not failure; press <kbd>Esc</kbd> if you would rather stop. A stopped reply keeps whatever text had arrived, and a reply that produced nothing is discarded without a trace.</p>
+<table>
+<tr><th>Message</th><th>Meaning</th><th>What to do</th></tr>
+<tr><td>"error: …" as a red note after your message</td><td>The generation failed; the note carries the provider's reason or one of the sentences on this page.</td><td>Read the reason, then swipe with <kbd>→</kbd> or send again. A desktop notification "Generation failed in &lt;chat&gt;: &lt;reason&gt;" is sent if <strong>Reply alert</strong> is on.</td></tr>
+<tr><td>"The response was cut off."</td><td>The server closed the stream mid-reply.</td><td>Check the server; what arrived is kept.</td></tr>
+<tr><td>"The response was not valid text." or "Failed to decode JSON: …"</td><td>The server sent something Ashyo could not read.</td><td>Make sure the <strong>Base URL</strong> points at an OpenAI-style API and not a web page.</td></tr>
+<tr><td>"HTTP transport error: …"</td><td>The network connection broke.</td><td>Retry once the network is back.</td></tr>
+<tr><td>"The request was cancelled."</td><td>You stopped it, or the chat closed.</td><td>Nothing.</td></tr>
+<tr><td>"Streaming in progress." or "Cannot close chat while streaming is in progress."</td><td>The chat is busy generating.</td><td>Wait, or press <kbd>Esc</kbd> to stop the reply first.</td></tr>
+<tr><td>"The chat is still loading.", "Chat is still opening.", "Chat is still saving."</td><td>A long chat is still being read or written.</td><td>Wait for the notice line's "loading …" to clear; the command you typed stays in the composer.</td></tr>
+<tr><td>"no chat is open; press ctrl+s to pick a chat" or "the chat is still opening"</td><td>You pressed <kbd>Enter</kbd> with nothing to send to.</td><td>Press <kbd>Ctrl+S</kbd> and open a chat, or type <code>/new</code>.</td></tr>
+<tr><td>"Continuing a message requires a text-completions connection.", "Only the newest message can be continued.", "Only a model message can be continued.", "There is nothing to continue."</td><td>Continue only extends the newest, non-empty reply, and only over Text Completions.</td><td>Switch the <strong>Protocol</strong>, or swipe instead. See <a href="branches.html#continue">Continue</a>.</td></tr>
+<tr><td>"This turn holds the most swipes it can."</td><td>A turn has reached 65,535 swipes.</td><td>Delete a swipe from the actions menu.</td></tr>
+<tr><td>"Only a model message has reasoning."</td><td>Reasoning can be edited only on replies.</td><td>Nothing.</td></tr>
+<tr><td>"Chat not found." or "Chat not loaded."</td><td>The chat was closed or deleted out from under the action.</td><td>Reopen it from the picker.</td></tr>
+<tr><td>"The … panicked."</td><td>A background task crashed. Ashyo keeps running.</td><td>Retry the action and check the <a href="files.html#log-viewer">log viewer</a>; the log has the details.</td></tr>
+</table>
+
+<h2 id="context">The prompt does not fit</h2>
+<table>
+<tr><th>Message</th><th>Meaning</th><th>What to do</th></tr>
+<tr><td>"The provider's context window is unknown and could not be retrieved. Test the connection or set a context size."</td><td>Ashyo needs to know the model's window to plan the prompt, and the provider did not say.</td><td>Press <kbd>Enter</kbd> on the <strong>Connection</strong> row to test, or type a <strong>Context size</strong> on the Connection tab. See <a href="connections.html#context-size">Context size</a>.</td></tr>
+<tr><td>"The prompt does not fit the context budget: X tokens against the Y that fit. The system prompt and the last user message are never evicted, so raise the context size, lower the generation reserve, or shorten them."</td><td>Even with every old message and example dropped, the fixed parts of the prompt plus your message are bigger than the budget.</td><td>Lower <strong>Max length</strong> or <strong>Max tokens</strong> (the reserve), raise the context size if the model allows, or trim the system prompt, the card and the lore budget. See <a href="context.html#eviction">Context and budget</a>.</td></tr>
+<tr><td>The server's own "context length" or "too long" error</td><td>The model's real window was smaller than the estimate assumed.</td><td>Ashyo trims and resends once by itself. If it still fails, set a smaller <strong>Context size</strong> by hand.</td></tr>
+</table>
+<p>If replies seem to forget early events, the chat has simply grown past the window. The "last prompt starts here" divider in the transcript shows where the model's view began, and a reply's <a href="context.html#itemization">itemization</a> lists exactly what was dropped. Lore books are the tool for keeping facts alive past that point, see <a href="lore.html">Lore books</a>.</p>
+
+<h2 id="files">Files, saving and imports</h2>
+<table>
+<tr><th>Message</th><th>Meaning</th><th>What to do</th></tr>
+<tr><td>"Could not save &lt;chat&gt;: …"</td><td>Writing the chat file failed. Nothing is lost: the changes stay in memory and Ashyo retries every few seconds.</td><td>Free disk space or fix permissions on the chats folder, then keep working; the next retry succeeds. The message shows once per failure.</td></tr>
+<tr><td>"Could not load &lt;chat&gt;: …" or "Could not load the other branches of &lt;chat&gt;: …"</td><td>The chat file could not be read, or its side branches could not. In the second case the chat stays open on its current branch with a notice, and closes itself once nothing is generating or being edited.</td><td>Check the file named; see below for version and integrity messages.</td></tr>
+<tr><td>"chat … has format version N, not the M this app reads"</td><td>The file was written by a different version of Ashyo. Nothing is converted automatically.</td><td>Open it with the version that wrote it.</td></tr>
+<tr><td>"… is not valid"</td><td>The chat file failed an integrity check on opening.</td><td>Restore it from a backup; the file is not modified.</td></tr>
+<tr><td>"Not a transcript Ashyo can read." or "No file at …"</td><td>The file you tried to import is not a SillyTavern JSONL or ShareGPT transcript, or is gone.</td><td>See <a href="import-export.html#import-transcripts">Importing transcripts</a> for the formats that work.</td></tr>
+<tr><td>"The PNG has no embedded character card.", "The PNG character card data could not be decoded.", "Not a character card: expected JSON or a PNG card.", "The character card has no name.", "Not a valid item file."</td><td>The file is not a card or an Ashyo item in a form Ashyo recognizes.</td><td>Re-export the card from its source; a card needs at least a name. See <a href="import-export.html#cards">Character cards</a>.</td></tr>
+<tr><td>"Cannot write &lt;path&gt;: …" or "Cannot open &lt;dir&gt;: …" in red in the file dialog</td><td>An export could not be written, or a folder could not be listed.</td><td>Pick a folder you can write to; the dialog remembers the folder you were in for next time.</td></tr>
+<tr><td>"Name is required.", "Name already exists.", "Cannot delete the default …", "Cannot rename the built-in …"</td><td>Library names must be unique and non-blank, and the five built-in defaults and templates stay.</td><td>Choose another name, or <strong>Save as</strong> a copy of a built-in to change it freely.</td></tr>
+<tr><td>"input history: …; messages are sent as usual and nothing is recalled"</td><td>The input history file could not be read at startup.</td><td>Sending still works; delete or repair <code>history.jsonl</code> to get recall back.</td></tr>
+<tr><td>"Could not read ashyo.log: …"</td><td>The <strong>Log file</strong> tab of the log viewer could not open the file.</td><td>Check the file's permissions.</td></tr>
+</table>
+<h3 id="validation">A field refuses a value</h3>
+<p>Settings rows check what you type before saving it. The refusal appears in red under the field and names the row: "{Field} is required.", "{Field} must be one of: …", "{Field} must be true or false.", "{Field} must be an integer." or "must be a number.", "{Field} must be between X and Y.", "{Field} must be X or higher." or "X or lower.", "{Field} can hold at most N entries.", "{Field} must be a JSON object.", "Invalid value for {Field}.", "Invalid JSON: …" and ""x" is not a number." Each row's note shows its limits as "min X · max Y · step Z". Commands have their own refusals above the composer: "usage: /model &lt;id&gt;" when a command gets the wrong number of words, "no message #N; the chat has K messages" for a number out of range, and for labels in the turn tree "Label must not be empty." and "Label is N columns wide; at most 48 are allowed."</p>
+
+<h2 id="clipboard">Copy and paste</h2>
+<p>Copying never needs a helper program: Ashyo hands the text to your terminal, which puts it on the clipboard, and this works over SSH when the terminal allows it. The status bar confirms with "copied". If nothing lands on the clipboard, the terminal is blocking that feature; most terminals have a setting to allow it.</p>
+<p>Pasting is the other way around. <kbd>Ctrl+V</kbd> asks the system for the clipboard through <code>pbpaste</code>, <code>wl-paste</code>, <code>xclip</code>, <code>xsel</code> or <code>termux-clipboard-get</code>, whichever is installed, and finally asks the terminal itself. "No clipboard tool is installed." means none of those worked: install your desktop's clipboard tool (wl-clipboard on Wayland, xclip or xsel on X11), or simply use your terminal's own paste shortcut, which Ashyo always accepts wherever text can be typed.</p>
+
+<h2 id="limitations">Known limitations</h2>
+<ul>
+<li><strong>OpenRouter fallback is fenced in.</strong> Hosts you list under <strong>Model providers</strong> go out as a strict allow-list, so <strong>Allow fallback providers</strong> cannot route to a host outside them. Leave the list empty if you want OpenRouter free to fall back anywhere.</li>
+<li><strong>Only HTTP proxies.</strong> Ashyo honors HTTP CONNECT proxies from the environment; SOCKS proxies are not supported.</li>
+<li><strong>Old card placeholders stay as written.</strong> A character card using <code>&lt;USER&gt;</code>, <code>&lt;BOT&gt;</code> or <code>&lt;CHAR&gt;</code> is imported as is; only <code>{{user}}</code> and <code>{{char}}</code> are expanded. Edit the card's text after importing.</li>
+<li><strong>An unbalanced asterisk is shown as typed.</strong> A finished reply with a stray <code>*</code> is not italicized or corrected.</li>
+<li><strong>Code inside a list item renders wrongly.</strong> A fenced code block nested in a bullet point is not drawn correctly by the markdown renderer.</li>
+</ul>
+
+<h2 id="logs">When the message is not enough</h2>
+<p>Everything Ashyo does is written to <code>ashyo.log</code> in the data folder at the level set by the <strong>Log level</strong> row on the <strong>General</strong> tab of Settings: info by default, debug or trace when you are chasing a problem, off to record nothing. Open the <a href="files.html#log-viewer">log viewer</a> with <code>/log</code> to read this session's records live or page through the file without leaving Ashyo. Refusals you could have corrected are logged at info; real failures at error, with the provider's full answer where there was one. See <a href="files.html#log-level">Files and logs</a>.</p>
+{% endraw %}

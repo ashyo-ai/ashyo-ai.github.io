@@ -1,0 +1,93 @@
+---
+layout: default
+title: Import and export
+---
+{% raw %}
+<h1 id="import-and-export">Import and export</h1>
+<p class="lead">You probably already have characters, lore and chats somewhere else. Ashyo reads the common formats, character cards as PNG or JSON, SillyTavern World Info and presets, and chat logs as SillyTavern JSONL or ShareGPT, and it writes its own library items and your chats back out. This page covers every file that goes in or out, what survives the trip and what doesn't, and the file dialog you pick them with.</p>
+
+<h2 id="where-to-find-it">Where to find it</h2>
+<ul>
+<li><strong>Library items</strong> come in and go out through the <strong>Import</strong> and <strong>Export</strong> actions on each tab of the <a href="library.html#actions">Library</a>. Import takes character cards, World Info, SillyTavern presets and Ashyo's own item files; Export writes an Ashyo item file.</li>
+<li><strong>Chats</strong> export from the <a href="chats.html#picker">chat picker</a>: press <kbd>Tab</kbd> on a chat and choose <strong>Export…</strong>. Transcripts from other apps import with <kbd>Alt+I</kbd> in the same picker.</li>
+</ul>
+<p>Both go through the same <a href="#file-dialog">file dialog</a>. Every import ends with a note telling you what came in and, when something could not be carried over, what was left behind. Imported names that are already taken get " (2)", " (3)" and so on.</p>
+
+<h2 id="how-files-are-recognized">How Ashyo recognizes a file</h2>
+<p>You never tell the Library what kind of file you are importing; it looks for itself. A PNG is read as a character card. A JSON file with a "kind" field is an Ashyo item file. A JSON file whose "entries" is an object is World Info. A file Ashyo recognizes as a SillyTavern preset imports as one. Any other JSON is tried as a character card. A file that is not JSON at all is refused.</p>
+
+<h2 id="cards">Character cards</h2>
+<p>Character cards are the portable form of a character: a PNG with the character data embedded in it, or the same data as plain JSON. Ashyo reads v1, v2 and v3 cards. A card needs at least a name.</p>
+<p>What comes in: the description, personality, scenario, system prompt and post-history instructions, with line endings normalized; the example messages, split into blocks at each <code>&lt;START&gt;</code>; and the first message plus every alternate greeting, each as an enabled greeting, with blank ones dropped. The display name defaults to the file's name. See <a href="characters.html">Personas and characters</a> for what each field does.</p>
+<p>A card with an embedded character book becomes a new <a href="lore.html">lore book</a> linked to the character, named after the book or, when the book has no name, after the character. Entry positions and extension fields map into Ashyo's entry fields much as a World Info import does.</p>
+<p>Dropped quietly, because Ashyo has no use for them: creator notes, tags, the creator and version fields, the depth prompt, the avatar and any other extensions. The import note does list lore features that had to be dropped and regex scripts that were left out.</p>
+<h3 id="card-scripts">Regex scripts on a card</h3>
+<p>Some cards carry their own regex scripts. When one does, Ashyo stops to ask with a box titled <strong>Regex scripts</strong>, reading "This card carries N regex scripts: …" and offering <strong>Leave out</strong> and <strong>Keep</strong>. Kept scripts become <a href="regex.html">regex scripts</a> in your Library, linked to the character and never global. Each keeps its name, or gets "<Character> regex N" when it has none, along with its pattern, replacement, trim strings, depth limits and run-on-edit setting. Scripts that target something Ashyo does not rewrite, or whose pattern is not valid, are left out and named in the note. See <a href="regex.html#cards">Regex scripts from cards</a> for how the fields map.</p>
+
+<h2 id="world-info">World Info</h2>
+<p>A SillyTavern World Info file imports as one lore book named after the file, or "Lore book" if the file has no usable name. Entries keep their order and, where possible, their ids. Most of what you set in SillyTavern lands in the matching Ashyo field:</p>
+<table>
+<tr><th>In SillyTavern</th><th>In Ashyo</th></tr>
+<tr><td>Before or after the character definitions</td><td><strong>Before character</strong> or <strong>After character</strong></td></tr>
+<tr><td>Author's Note positions</td><td><strong>At depth</strong> 4 as System</td></tr>
+<tr><td>At depth</td><td><strong>At depth</strong>, with the role carried over</td></tr>
+<tr><td>Before or after example messages</td><td><strong>Before examples</strong> or <strong>After examples</strong></td></tr>
+<tr><td>Outlet</td><td><strong>Outlet</strong></td></tr>
+<tr><td>Selective logic: AND ANY, NOT ALL, NOT ANY, AND ALL</td><td><strong>Secondary logic</strong> Any, Not all, No, All</td></tr>
+<tr><td>Insertion order</td><td><strong>Insertion order</strong>, also used as the entry's priority (100 when unset)</td></tr>
+<tr><td>Probability</td><td><strong>Trigger %</strong>, only when the probability toggle was on</td></tr>
+<tr><td>Normal, swipe or regenerate, continue, quiet triggers</td><td>Generation types Send, Swipe, Continue, /sysgen</td></tr>
+<tr><td>Delay until recursion (on)</td><td><strong>Delay until recursion</strong> level 1</td></tr>
+</table>
+<p>Values outside Ashyo's ranges are clamped: depth, probability, group weight and scan depth, and sticky, cooldown and delay cannot go negative. Features Ashyo lacks are dropped and counted in the note: vectorized matching, tag filters, Character's Note matching, creator's notes matching and impersonate triggers. An entry that fired only on impersonate, or only for tagged characters, imports disabled so nothing surprising fires. Unknown keys are listed as ignored. The note starts "Imported lore book <name>." followed by sentences like "Dropped vectorized matching on 3 entries."</p>
+
+<h2 id="sillytavern-presets">SillyTavern presets</h2>
+<p>Ashyo imports SillyTavern's instruct templates, system prompts and Text Completion presets, and it pulls the same three out of a master export. It recognizes context templates and reasoning templates too, but refuses them on their own with a message saying so, and it refuses Chat Completion presets. A file with nothing Ashyo can use is refused.</p>
+<ul>
+<li><strong>Instruct templates</strong> map their input, output and system sequences and suffixes, the last output sequence, the story string parts, stop and wrap settings, "system same as user" and the user alignment message onto Ashyo's <a href="prompt.html#instruct-template">instruct template</a> fields. The names behavior becomes <strong>Include names</strong>: always, force and none become Always, Past participants and Never. Older files with a separate separator sequence or an old-style system prompt are understood; the system prompt becomes a system prompt item of its own.</li>
+<li><strong>Master exports</strong> yield the instruct template with the reasoning prefix and suffix folded in, the system prompt, and the text preset, named by the file's "name" or the file. The context template inside is skipped, and so is a lone reasoning template. A Start Reply With value is reported but not kept.</li>
+<li><strong>Text Completion presets</strong> map onto Ashyo's <a href="samplers.html#text-completions">text samplers</a>. Response length becomes max tokens; typical, mirostat, grammar and the default bad words flag come across. Dynamic temperature turns into a temperature midpoint with a half-span range. DRY breakers come as JSON or comma text, banned tokens one per line with quotes stripped and bare id lines dropped, and logit bias only as token-id lists.</li>
+</ul>
+<p>Things SillyTavern has that Ashyo does not keep are left out and named in the note: on templates, the first and last role prefixes, activation regex, skip examples, bind to context, the instruct on/off switch and a reasoning separator that is not a newline; on presets, frequency penalty, temperature last, epsilon and eta cutoff, repetition penalty decay, no-repeat n-gram, penalty alpha, beams, length penalty, min length, encoder repetition penalty, skew, guidance scale, negative prompt, min keep, speculative n-gram and JSON schema. Any value that is not valid for its field is left out by label. Macros found inside instruct sequences are listed, since Ashyo does not expand macros there. A system prompt's post-history instructions are reported.</p>
+<p>The note reads like "Imported instruct template "ChatML" and system prompt "Roleplay"; skipped the context template; left out: skip examples, bind to context."</p>
+
+<h2 id="ashyo-items">Ashyo item files</h2>
+<p><strong>Export</strong> on a Library tab writes the chosen item as a JSON file: every field, the kind of item, and a version number. A connection preset exports without its account and without fields its provider does not use, so a file you share never carries a credential. The dialog proposes the item's name with a <code>.json</code> extension; when the file is written you see "Exported to <path>.".</p>
+<p><strong>Import</strong> reads these files back on any Library tab. The item lands on its own tab, which is shown with the new item selected, along with any note. An import needs a non-blank name and refuses an unknown kind or version. A connection preset needs its name, provider and protocol, may hold only its provider's fields, and never carries an account; you pick one after importing. Personas and characters that name lore books or regex scripts you don't have drop those names quietly. Lore entries get fresh ids.</p>
+<p>There is one file kind per Library tab: connection preset, Chat Completions sampler preset, Text Completions sampler preset, system prompt, context template, instruct template, persona, character, lore book and regex script.</p>
+
+<h2 id="export-transcripts">Exporting a chat</h2>
+<p>From the chat picker, press <kbd>Tab</kbd> on a chat and choose <strong>Export…</strong>. A box asks "Export as" with three formats, then the <a href="#file-dialog">file dialog</a> asks where to put it; <kbd>Esc</kbd> steps back one stage. Only the current branch is exported, and disabled turns are left out. Export is not offered while a chat is still loading, and it is refused while a chat is generating. If the chat was just closed, the export waits for its pending save so it writes what you see.</p>
+<table>
+<tr><th>Format</th><th>File</th><th>What it carries</th></tr>
+<tr><td><strong>Markdown</strong></td><td><code>.md</code></td><td>The chat's title as a heading, then each message as a "### Name" heading and its text. Text only.</td></tr>
+<tr><td><strong>ShareGPT</strong></td><td><code>.json</code></td><td>A "conversations" list of human, gpt and system entries with the text. The showing swipe only, no names.</td></tr>
+<tr><td><strong>SillyTavern JSONL</strong></td><td><code>.jsonl</code></td><td>A header line, then one line per message with the speaker, whether it is yours, the text, and the send and generation times. Replies also carry the provider, model, reasoning, token count, reasoning time and time to first token. System messages are marked as narrator lines. A turn with several swipes carries all of them and which one was showing.</td></tr>
+</table>
+<div class="callout">
+<span class="label">Tip</span>
+<p>SillyTavern JSONL is the only format that round-trips a chat with its swipes and reasoning, and it opens in SillyTavern. Markdown is for reading or sharing; ShareGPT is for datasets and tools that expect that shape.</p>
+</div>
+
+<h2 id="import-transcripts">Importing a chat</h2>
+<p>Press <kbd>Alt+I</kbd> in the chat picker and pick a file. Ashyo works out the format itself: a ShareGPT object or array, a SillyTavern JSONL chat with its header line, or a JSONL file of ShareGPT conversations. One file can hold several conversations; each becomes its own chat, numbered "Name 1", "Name 2" and so on. Anything else is refused as "Not a transcript Ashyo can read."</p>
+<ul>
+<li><strong>ShareGPT</strong> roles human and user become your messages, gpt, assistant and model become replies, system stays system; unknown roles are skipped. The messages are named after your current persona and character.</li>
+<li><strong>SillyTavern JSONL</strong> keeps who said what, treats narrator and comment lines as system messages, and disables lines marked as system or comment. Timestamps come from the generation time, else the send date, else now. Reasoning, the API and model names and the time to first token are read. Swipes come across with the one that was showing, falling back to the first when the index is out of range. A turn with more than 65,535 swipes rejects the file.</li>
+</ul>
+<p>Imported chats use your default settings, have one straight branch and no greetings, and get the usual formatting applied. Assistant messages become replies with their provider, model and reasoning when the file had them. The new chats are queued for saving right away, and the first one is highlighted in the picker, with a note like "Imported 240 messages." Import is refused while a chat is generating.</p>
+
+<h2 id="file-dialog">The file dialog</h2>
+<p>Every import and export goes through the same box, titled <strong>Import</strong> or <strong>Export</strong>. It lists folders always and files only of the kinds that make sense: <code>.json</code> and <code>.png</code> for a Library import, <code>.json</code> for a Library export, <code>.jsonl</code> and <code>.json</code> for a transcript import, and the chosen format's extension for a transcript export. Long paths are shortened from the left at a <code>/</code> to fit. The dialog remembers the folder you were last in and whether hidden files were shown, and falls back to your home folder when it can't read that memory.</p>
+<dl>
+<dt><kbd>↑</kbd> / <kbd>↓</kbd>, <kbd>Home</kbd> / <kbd>End</kbd>, <kbd>PageUp</kbd> / <kbd>PageDown</kbd></dt><dd>Move through the list. The mouse wheel scrolls.</dd>
+<dt><kbd>Enter</kbd> or <kbd>→</kbd></dt><dd>Enter the folder under the cursor. <kbd>Enter</kbd> on "../" goes up.</dd>
+<dt><kbd>←</kbd> or <kbd>Backspace</kbd></dt><dd>Go to the parent folder, with the cursor left on the folder you just came out of.</dd>
+<dt><kbd>Alt+H</kbd></dt><dd>Show or hide hidden files. Remembered for next time.</dd>
+<dt><kbd>Enter</kbd> on a file</dt><dd>Imports it. In an export, it asks for a name prefilled with that file's name, so you can overwrite or vary it.</dd>
+<dt><kbd>Ctrl+S</kbd></dt><dd>In an export, save into the current folder: asks for a name prefilled with the item's or chat's name plus the right extension. Any <code>/</code> in that name becomes <code>_</code>.</dd>
+<dt><kbd>Esc</kbd></dt><dd>Back.</dd>
+</dl>
+<p>The footer spells the keys out: "enter: open or pick, backspace: parent, alt+h: hidden files, esc: back" when importing, and "enter: open or name, ctrl+s: save here, backspace: parent, alt+h: hidden files, esc: back" when exporting.</p>
+<p>A file name must not be blank, must not contain <code>/</code>, and cannot be "." or "..". Saving over an existing file asks "Replace <name>?" with <strong>Keep</strong> and <strong>Replace</strong>. If something goes wrong you see "Cannot write <path>: …" or "Cannot open <dir>: …" in red inside the dialog, and an import that is refused shows the reason as a note. Listing, reading and writing happen in the background with a loading placeholder, and keys are ignored while a file is being written.</p>
+{% endraw %}

@@ -1,0 +1,4 @@
+title: Ashyo
+description: A terminal frontend for roleplaying with language models
+exclude:
+  - README.md

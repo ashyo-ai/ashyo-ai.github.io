@@ -1,0 +1,78 @@
+---
+layout: default
+title: Files and logs
+---
+{% raw %}
+<h1 id="files-and-logs">Files and logs</h1>
+<p class="lead">Everything Ashyo knows about you lives in a handful of files on your own disk: one settings file, one file per chat, one file of accounts, your input history and a log. This page tells you where each one is, what is in it, what is safe to touch by hand, and how to read the log when something needs explaining.</p>
+
+<h2 id="locations">Where everything lives</h2>
+<p>Ashyo follows the XDG base directories. Your settings go under <code>XDG_CONFIG_HOME</code> and your data under <code>XDG_DATA_HOME</code>; when a variable is unset, or set to a relative path, which Ashyo ignores, the usual defaults under your home folder apply. Both folders are created at startup if they are missing. If neither <code>XDG_CONFIG_HOME</code> nor <code>HOME</code> is set, Ashyo cannot start and says so.</p>
+<table>
+<tr><th>What</th><th>Default path</th></tr>
+<tr><td>Settings and library</td><td><code>~/.config/ashyo/ashyo.json</code></td></tr>
+<tr><td>Chats, one file each</td><td><code>~/.local/share/ashyo/chats/*.db</code></td></tr>
+<tr><td>Accounts and keys</td><td><code>~/.local/share/ashyo/auth.json</code></td></tr>
+<tr><td>Input history</td><td><code>~/.local/share/ashyo/history.jsonl</code></td></tr>
+<tr><td>File dialog memory</td><td><code>~/.local/share/ashyo/file-dialog.json</code></td></tr>
+<tr><td>Log</td><td><code>~/.local/share/ashyo/ashyo.log</code></td></tr>
+</table>
+<p>To back Ashyo up, copy the two folders. To move to another machine, copy them there. Nothing else is stored anywhere.</p>
+
+<h2 id="config-file">The settings file</h2>
+<p><code>ashyo.json</code> holds your whole <a href="library.html">Library</a>, every preset, persona, character, lore book and regex script, together with the app-wide settings from the General and Appearance tabs, the defaults new chats start from, and a few values that have no row on screen. Ashyo writes it every time you change something, so there is no save step and nothing to lose if the power goes.</p>
+<p>The file is sparse: only values that differ from Ashyo's defaults and built-ins are written, and a built-in item you never changed does not appear at all. A missing file simply means the built-in defaults, which is why a first run opens Settings. There is no migration from older layouts.</p>
+<p>Two settings exist only in the file, under a <code>backend</code> key, because almost nobody needs them: <code>connect_timeout</code>, how many seconds to wait for a server to accept a connection (30), and <code>read_timeout</code>, how many seconds of silence end a request (300). A <code>sampler_globals</code> key holds the <strong>Global bans</strong> list that is applied under every text sampler preset, which you can also edit on the <a href="samplers.html#bans">Samplers</a> tab.</p>
+<h3 id="hand-editing">Editing it by hand</h3>
+<p>You can, but quit Ashyo first: the app rewrites the file on every change, and it would overwrite your edit. Ashyo is strict when it reads the file back. A key it does not know, a duplicate name, a persona or character naming a lore book or regex script that does not exist, a value out of range or of the wrong type: any of these stops startup with a message that names the problem and where it is, such as "missing required config key at …" or "duplicate config name "Ada" at …". Nothing is repaired or dropped for you. Fix the file, or move it aside to start fresh.</p>
+<div class="callout warn">
+<span class="label">Heads up</span>
+<p>The settings file is the only place your library exists. A character you delete in the Library is gone from the file at the next write, and there is no undo. Copy <code>ashyo.json</code> somewhere safe before a big reorganization, or export the items you care about as <a href="import-export.html#ashyo-items">Ashyo item files</a>.</p>
+</div>
+
+<h2 id="auth">Accounts and keys</h2>
+<p>Credentials are kept apart from everything else in <code>auth.json</code>, so you can share or back up your settings file without handing out your keys. The file lists your accounts per provider, each holding either an API key, a login for OpenAI Codex, or nothing. A missing file means no accounts. You never edit it: keys are pasted and logins run from the <a href="connections.html#accounts">Connection</a> settings, and the file is written for you with permissions that keep it private.</p>
+<p>Ashyo refuses to read a credentials file that anyone else could: it must be a regular file, not a symlink, and must not be readable by the group or by others. The folder around it is created private as well. If you copied the file over and the permissions came along too loose, Ashyo tells you, "permissions 0644 expose credentials; require 0600", and the fix is <code>chmod 600 ~/.local/share/ashyo/auth.json</code>.</p>
+<p>Account names have their spaces collapsed, must not be empty, and must be unique within a provider. They are listed alphabetically, ignoring case. Removing the last account of a provider removes that provider's section; logging out or clearing a key leaves the account in place with no credential. Renaming or removing an account carries through to every preset, the defaults and every chat that named it.</p>
+
+<h2 id="chat-files">Chat files</h2>
+<p>Each chat is one SQLite file in the <code>chats</code> folder, named from its creation time and the start of its id, for example <code>2026-10-22_14-03-27Z_3f2a1b9c.db</code>. The name never changes, even when you rename the chat inside Ashyo. The file holds the chat's name, settings, draft and every turn and message on every branch, along with the prompt records the <a href="context.html#itemization">itemization</a> reads.</p>
+<p>The chats folder is scanned when Ashyo starts and again whenever you open the picker, so you can drop a chat file from another machine into it and open it. The picker remembers chats it has already seen and only rereads files whose size or modification time changed; a file it cannot read is skipped with a warning in the log. Deleting a chat from the picker deletes its file.</p>
+<p>Ashyo checks a chat before it trusts it. A file written by a different version of the format is refused, naming the version it found and the one this app reads. A file whose contents do not hang together, with a message pointing nowhere or a branch leading in a circle, is refused with "<what> is not valid", for example "a turn's parent is not valid". Chats on disk are never rewritten to repair them.</p>
+
+<h2 id="history">Input history</h2>
+<p>Everything you send from the composer, messages and commands alike, is appended to <code>history.jsonl</code>, newest first in the list Ashyo keeps, so you can recall it with <kbd>↑</kbd> and <kbd>↓</kbd> on an empty composer or search it with <kbd>Alt+H</kbd>. A repeated entry moves to the front rather than appearing twice, blank input is skipped, and the list is capped at 1,000 entries. The file is private to your user. Lines Ashyo cannot read are ignored, and a file cut off mid-line is repaired on the next write.</p>
+<p>If the history cannot be loaded at startup, Ashyo says so once, "input history: …; messages are sent as usual and nothing is recalled", and carries on. A write that fails still updates what you can recall in the running session. See <a href="composer.html#history">Input history</a> for the keys.</p>
+
+<h2 id="log-level">Logging</h2>
+<p>Ashyo keeps a log of what it does in <code>ashyo.log</code>. How much goes in is set by the <strong>Log level</strong> row on the <a href="settings.html#general">General</a> tab of Settings: <strong>off</strong>, <strong>error</strong>, <strong>warn</strong>, <strong>info</strong>, <strong>debug</strong> or <strong>trace</strong>, with info as the default. The row describes itself as "Choose how much Ashyo records in ashyo.log and the log viewer. Off records nothing." A change applies at once, no restart needed.</p>
+<p>The log file is the only place log lines go; nothing is printed to the terminal while Ashyo runs. Each line reads as a UTC time with microseconds, the level, which part of Ashyo wrote it, and the message. Every generation adds one summary line. Things you can correct yourself, such as a refused command, are logged at info; real failures at error. Lines written before the settings file has been read are held back and written once the level is known. Logging from the libraries Ashyo is built on is capped at warn so it does not drown your own lines.</p>
+<p>If the log file cannot be opened at startup, Ashyo does not start unless the level is off. If it becomes unwritable while running, the level you chose is kept, the <a href="#log-viewer">log viewer</a> shows "<path>: <error>" in red on its notice line, and the file is tried again the next time you change the level.</p>
+<p><strong>debug</strong> and <strong>trace</strong> are for when something needs explaining and you want the detail in the log; day to day, info is plenty.</p>
+
+<h2 id="log-viewer">The log viewer</h2>
+<p><code>/log</code> opens the <strong>Log viewer</strong>, a box with two tabs. Switch with <kbd>Tab</kbd> or by clicking a tab name. With logging off, the viewer simply says "Logging is off; set Log level in Settings to turn it on."</p>
+<h3 id="this-session">This session</h3>
+<p>The <strong>This session</strong> tab shows the records of the running session, colored by level, with a list of the parts of Ashyo that have logged something. Every level of every part is kept here regardless of what reached the file; the <strong>Log level</strong> row alone decides what the viewer and the file receive at all.</p>
+<dl>
+<dt><kbd>↑</kbd> / <kbd>↓</kbd></dt><dd>Pick a part in the list.</dd>
+<dt><kbd>←</kbd> / <kbd>→</kbd></dt><dd>Change the level shown for the picked part.</dd>
+<dt><kbd>f</kbd></dt><dd>Show only the picked part.</dd>
+<dt><kbd>Space</kbd></dt><dd>Hide the parts whose level is set to off.</dd>
+<dt><kbd>h</kbd></dt><dd>Hide the list of parts.</dd>
+<dt><kbd>PageUp</kbd> / <kbd>PageDown</kbd></dt><dd>Scroll back through older records.</dd>
+<dt><kbd>Esc</kbd></dt><dd>Leave the scrollback first, then close the viewer.</dd>
+</dl>
+<h3 id="log-file-tab">Log file</h3>
+<p>The <strong>Log file</strong> tab reads the last 10,000 lines of <code>ashyo.log</code> each time you switch to it, and opens at the bottom, noting when the file was cut. A file that cannot be read shows "Could not read ashyo.log: …". Press <kbd>/</kbd> to search, type the query and press <kbd>Enter</kbd>; <kbd>n</kbd> and <kbd>N</kbd> step to the next and previous match, wrapping around, with matches highlighted and the current one in bold. The query survives reloading the tab. <kbd>Ctrl+A</kbd> selects everything, the mouse selects by dragging and the wheel scrolls, and <kbd>Ctrl+C</kbd> copies the selection. The footer reads "/: find, n/N: next/previous match, esc: close".</p>
+
+<h2 id="startup">Starting and stopping</h2>
+<ul>
+<li><strong>First run.</strong> With no settings file, Ashyo opens Settings on the <strong>Connection</strong> tab with "Set up a connection to start chatting." See <a href="index.html#first-run">First run</a>.</li>
+<li><strong>One copy at a time.</strong> Ashyo locks its settings and data folders while it runs. Starting a second copy against the same folders is refused with "Another copy of Ashyo is already running."</li>
+<li><strong>Quitting.</strong> <code>/quit</code> saves every chat and leaves. Closing the terminal, which sends a hangup signal, or a termination signal from the system, does the same, so an accidentally closed window does not lose a chat. See <a href="chats.html#saving">How saving works</a>.</li>
+<li><strong>Errors.</strong> Anything that stops Ashyo from starting or shutting down cleanly prints to the terminal as "ashyo: …" with the full chain of causes, and the process exits with status 1. The screen is always restored first.</li>
+<li><strong>Version.</strong> <code>ashyo --version</code> prints "ashyo 0.1.0 (<commit>)", with "-dirty" after the commit when the build had uncommitted changes. It is the only command line option; anything else is refused with "ashyo: unknown option <arg>" and exit status 2.</li>
+</ul>
+<p>For what the messages mean and what to do about them, see <a href="troubleshooting.html">Troubleshooting</a>.</p>
+{% endraw %}

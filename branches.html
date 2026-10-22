@@ -1,0 +1,82 @@
+---
+layout: default
+title: Swipes and branches
+---
+{% raw %}
+<h1 id="swipes-and-branches">Swipes and branches</h1>
+<p class="lead">Nothing you generate in Ashyo is thrown away. A reply you don't like gets an alternative instead of a replacement, and a chat is not a single line of messages but a tree you can walk back through, label, and fork into new chats. This page covers swipes, continuing a reply, what a branch is, and the turn tree that shows you all of it.</p>
+
+<h2 id="swipes">Swipes</h2>
+<p>A swipe is an alternative version of a reply. When the model's answer misses the mark, you don't delete it; you ask for another one and keep both. Swipes live on the last reply of the chat, and you cycle through them with the arrow keys.</p>
+<ul>
+<li><strong>Swiping.</strong> With the composer empty and nothing generating, press <kbd>←</kbd> or <kbd>→</kbd> to move between the alternatives of the last reply. The same keys work from the transcript when it has focus. Press <kbd>→</kbd> past the last alternative and Ashyo generates a new one.</li>
+<li><strong>The counter.</strong> The header of the last reply shows where you are, for example "‹ 2/3 ›". While a new swipe is generating, the counter already counts it, so you see "‹ 4/4 ›" as it streams.</li>
+<li><strong>Deleting a swipe.</strong> Mark the last reply in the transcript, press <kbd>Tab</kbd> for its actions menu, and choose <strong>Delete swipe</strong>. The item appears only when the turn has more than one alternative.</li>
+<li><strong>Greetings are swipes.</strong> A character with several greetings opens the chat with one reply holding all of them, so you pick your favorite opening with <kbd>←</kbd> and <kbd>→</kbd>. See <a href="characters.html#greetings">Greetings</a>.</li>
+</ul>
+<p>Swiping cycles: past the first alternative you come around to the last. A turn holds at most 65,535 alternatives; after that a swipe is refused with "This turn holds the most swipes it can." When you export a chat, only the SillyTavern JSONL format carries the alternatives; the others keep the one currently showing. See <a href="import-export.html#export-transcripts">Exporting transcripts</a>.</p>
+<div class="callout">
+<span class="label">Tip</span>
+<p>A swipe is planned without the reply it replaces, so the model never sees the alternative it is about to rewrite. If you want the model to pick up where it left off instead of starting over, use <a href="#continue">Continue</a>.</p>
+</div>
+
+<h2 id="continue">Continue</h2>
+<p>Continue asks the model to keep writing from the end of the newest reply, as if the reply had simply not finished yet. The new text streams into the same message rather than a new one. It is in the actions menu of the last reply as <strong>Continue</strong>, and it is offered only when the reply is not blank and the chat uses the Text Completions protocol, where the model can be handed an open reply to finish. Chat Completions providers do not offer it. See <a href="connections.html#protocols">Protocols</a>.</p>
+<p>Before sending, Ashyo trims the whitespace at the end of the reply so the continuation joins cleanly. Everything the model already wrote stays exactly as it was; only the new text is cleaned up and run through your <a href="regex.html">regex scripts</a>. If you continue a reply that another branch also uses, the continuation lands in this branch's own copy and the other branch keeps the original.</p>
+
+<h2 id="branching">How branches work</h2>
+<p>A chat in Ashyo is a tree. Each exchange, your message or the model's reply, is a turn hanging off the turn before it. Most of the time the tree is a straight line and you never notice. It stops being a line when you go back and do something different from an earlier point, and Ashyo's rule for that moment is simple: it never overwrites what was there. It grows a new branch beside the old one.</p>
+<ul>
+<li><strong>The current branch.</strong> The path from the start of the chat to the message you are currently replying to. The transcript shows this path and nothing else. Only the turns on it are sent to the model.</li>
+<li><strong>Deleting messages.</strong> Deleting one message or several makes a new branch without them. The original branch, with the deleted messages still in place, is kept in the tree.</li>
+<li><strong>Moving messages.</strong> <strong>Move up</strong> and <strong>Move down</strong> from the actions menu also build a new branch with the messages in their new order. Ashyo remembers that they were moved, and the <a href="context.html#itemization">prompt itemization</a> says so when you look at one, since the prompt a moved reply came from no longer matches where it sits. Moving something to where it already is does nothing.</li>
+<li><strong>Deleting a swipe.</strong> This too leaves the original branch intact and switches you to a branch without the alternative.</li>
+<li><strong>Your place follows.</strong> When one of these operations copies messages into a new branch, the message you had marked, your selection, your search matches and an open actions menu all follow the copies, so the transcript looks the same, minus the change.</li>
+<li><strong>Replies that arrive late.</strong> If you switch branches while a reply is still streaming, the reply does not land in the branch you moved to. It becomes a sibling branch at the point where it was requested, so you can come back for it.</li>
+<li><strong>Editing is the exception.</strong> Editing a message's text changes it in place rather than making a new branch. If another branch shares that message, that branch keeps the original text. See <a href="transcript.html#inline-editing">Inline editing</a>.</li>
+</ul>
+<p>Every turn can also be switched off without deleting it. A disabled turn stays in the transcript marked "Disabled" and is left out of the prompt. See <a href="composer.html#message-numbers">Message numbers</a> for the <code>/disable</code> and <code>/enable</code> commands.</p>
+
+<h2 id="turn-tree">The turn tree</h2>
+<p>The turn tree is where you see the whole shape of a chat and move around in it. Open it with <kbd>Esc</kbd> on an empty composer, or with <code>/tree</code>. It cannot open while a long chat is still loading its older turns; the command waits until loading is done. The tree remembers how you left it, including which forks you folded, for as long as the chat does not change.</p>
+<pre>chat
+user        Where should we start?
+▼ assistant Let's begin at the harbor...
+└─ user     Actually, the castle.
+   assistant The castle gates loom above you...
+[harbor] user Fine, the harbor.
+assistant   The salt air hits you first...</pre>
+<p>Two tabs sit at the top. <strong>All</strong> draws the entire tree, with the current branch running straight down and the other branches hanging off it on rails. <strong>Active branch</strong> lists only the turns of the current branch, which is handy in a chat with dozens of side branches. Switch with <kbd>Tab</kbd> and <kbd>Shift+Tab</kbd>, or click a tab. Each chat remembers which tab you last used.</p>
+<p>Each row reads, left to right: a fold glyph when the turn is a fork, the rails, the turn's label in brackets if it has one, who spoke, and a one-line excerpt of the message with its whitespace collapsed and cut with "…" when it runs long. A turn with no message yet shows its id in place of the role. Rows on the current branch are drawn in the role's color; rows on other branches are muted. The row the cursor is on gets a highlight band.</p>
+<h3 id="folding">Folding</h3>
+<p>A turn with more than one child is a fork, and so is the end of your current branch when other branches hang from it. Forks fold. A closed fork shows <strong>▶</strong> and hides everything below it; an open one shows <strong>▼</strong>. Press <kbd>→</kbd> to open the fork under the cursor and <kbd>←</kbd> to close it. The footer hint changes with the row: "→ open" on a closed fork, "← close" on an open one. Folds last while the tree is open and come back when you reopen it unchanged.</p>
+<h3 id="moving-and-switching">Moving around and switching branches</h3>
+<p>The cursor opens on the end of your current branch. <kbd>↑</kbd> and <kbd>↓</kbd> move one row, <kbd>Home</kbd> and <kbd>End</kbd> jump to the ends, <kbd>PageUp</kbd> and <kbd>PageDown</kbd> page, and the mouse wheel scrolls. If the chat changes while the tree is open, the cursor stays on the same turn.</p>
+<p>What <kbd>Enter</kbd> does depends on where you are:</p>
+<ul>
+<li><strong>On any other turn</strong>, it switches the current branch to end at that turn. The tree closes and the transcript reloads to show the new branch, scrolled to the bottom. Any edit in progress is cancelled and the mark is cleared.</li>
+<li><strong>On the end of the current branch</strong>, it simply closes the tree. Nothing changes.</li>
+<li><strong>On the root row</strong>, labeled <strong>chat</strong>, it <a href="#restart">restarts the chat</a>.</li>
+</ul>
+<p>Switching branches is ignored while a reply is generating, while a branch operation is still being applied, or while the chat is only partly loaded.</p>
+<p>The footer under the list describes the turn under the cursor: "Created …", then "edited …" if the message was changed, "swipe n/m" when the turn has alternatives, and the provider and model that produced a reply. On the root row it reads "Chat created …". Dates and times follow your locale; see <a href="screen.html#formats">Formats</a>.</p>
+
+<h2 id="labels">Labels</h2>
+<p>A label is a short name you pin to a turn so you can find it again: "the betrayal", "alt ending", "before the time skip". Labels show in brackets at the start of a row and are searchable. Press <kbd>Ctrl+L</kbd> on a turn to open the <strong>Label</strong> field, prefilled with the current label. Type a new one and press <kbd>Enter</kbd>; leave it blank to clear the label.</p>
+<p>A label is trimmed, must fit on one line without control characters, and may be at most 48 columns wide. A label that breaks a rule is refused with the reason shown in the field, for example "Label is 52 columns wide; at most 48 are allowed." Labelling is ignored while the chat is busy.</p>
+
+<h2 id="forking">Forking a chat</h2>
+<p>Sometimes a side branch deserves to become its own chat, with its own name and its own settings going forward. Press <kbd>Ctrl+F</kbd> on a turn and Ashyo creates a new chat from it. The new chat contains the path from the start to that turn as one straight line, and nothing else; the branches you did not pick stay behind. It gets a new id, keeps the same name and settings, and opens at once alongside the original. Rename it with <code>/rename</code> when you want to tell them apart. See <a href="chats.html#naming">Naming chats</a>.</p>
+
+<h2 id="restart">Restarting a chat</h2>
+<p>Press <kbd>Enter</kbd> on the root row, <strong>chat</strong>, and the chat starts over on a fresh, empty branch. If the character has greetings, the new branch opens with them again. Nothing is deleted: every old branch is still in the tree, and you can switch back to any of them. Think of it as a new beginning that keeps the history in the drawer. Restarting is ignored while the chat is busy or still loading.</p>
+
+<h2 id="searching">Searching the tree</h2>
+<p>Start typing while the tree is open and the rows narrow to the turns that match. Every word you type has to appear, in order, in the message text or the label. Words in lowercase match regardless of case; a word with an uppercase letter in it matches case-sensitively, so <code>Harbor</code> finds only the capitalized form while <code>harbor</code> finds both.</p>
+<p>In the <strong>All</strong> tab the results come as a flat list in tree order, with the current branch's turns first. In the <strong>Active branch</strong> tab the list of the path is filtered. A search over a very large chat takes a moment; the tree shows "(searching…)" until it is done, and typing more simply starts over. With no matches it reads "No matches for "x"." Pasted text goes into the search, or into the <strong>Label</strong> field when that is open.</p>
+<p><kbd>Esc</kbd> clears the search if there is one, and closes the tree otherwise. The footer hints follow along: "enter: switch, esc: clear" while a search has results, "esc: clear" when it has none.</p>
+<div class="callout">
+<span class="label">Tip</span>
+<p>The tree's search finds a turn; the transcript's own search, opened with <kbd>/</kbd>, finds a line and highlights it. Use the tree when you want to jump to another branch, and the transcript search when you want to find something on the branch you are reading. See <a href="transcript.html#search">Transcript search</a>.</p>
+</div>
+{% endraw %}

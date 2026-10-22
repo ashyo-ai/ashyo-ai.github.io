@@ -1,0 +1,141 @@
+---
+layout: default
+title: Samplers
+---
+{% raw %}
+<h1 id="samplers">Samplers</h1>
+<p class="lead">A model does not pick its next word with certainty; it weighs every candidate and chooses among the likely ones. Samplers are the knobs on that choice: how adventurous the pick is, how many candidates stay in the running, how hard repetition is punished, where the reply must stop. Ashyo keeps them in presets so a setup you like follows you from chat to chat.</p>
+
+<h2 id="presets">Where samplers live</h2>
+<p>Samplers are on the <strong>Samplers</strong> tab of Settings (<code>/settings</code>). The tab appears once your connection has a protocol; until a provider is chosen it only says "Select a provider to set its samplers." Because <a href="connections.html#protocols">Chat Completions and Text Completions</a> accept different knobs, there are two kinds of sampler preset, each with its own tab in the <a href="library.html">Library</a>: <strong>Sampler presets (chat)</strong> and <strong>Sampler presets (text)</strong>. The chat's protocol decides which kind the tab shows, with the header reading "Preset (Text Completions)" or "Preset (Chat Completions)".</p>
+<p>Ashyo ships no sampler presets. The defaults listed below are built in and never saved, so an empty preset means "use the defaults". When you change a row in a chat, it becomes an override marked "∗ " with a note reading "Default: X" or "Preset: X", and a <strong>Reset</strong> action puts it back. Press <kbd>Tab</kbd> on the preset row for the preset actions:</p>
+<ul>
+<li><strong>Save.</strong> Write the chat's overrides into the selected preset and clear them. Offered only when a preset is selected and something changed.</li>
+<li><strong>Save as.</strong> Make a new preset from the selection plus overrides, named "Untitled" until you rename it, and select it.</li>
+<li><strong>Rename</strong> and <strong>Delete.</strong> Delete asks "Delete preset?" first.</li>
+<li><strong>Reset all.</strong> Drop every override so the chat follows its preset again.</li>
+<li><strong>Neutralize.</strong> Set every sampler back to the built-in default, which is the usual way to get a "clean" baseline before tuning.</li>
+</ul>
+<p>The status bar confirms a save with "saved preset". Switching presets while you have unsaved changes asks whether to <strong>Discard and switch</strong>, <strong>Save then switch</strong>, or <strong>Cancel</strong>. Each row's note shows its default and its limits as "min 0 · max 1 · step 0.01", and the value you see is exactly what will be sent.</p>
+<div class="callout">
+<span class="label">Tip</span>
+<p>You can also edit a preset itself on its Library tab, where every field shows its limits. Chats that select the preset and have no override of their own pick up the change at once.</p>
+</div>
+
+<h2 id="text-completions">Text completions samplers</h2>
+<p>The long list, used with KoboldCPP, llama.cpp and OpenAI-compatible servers in Text Completions mode. Rows are grouped as they appear on the tab. Ranges are the limits Ashyo enforces; a row without one accepts whatever number you type.</p>
+<h3 id="text-output">Output</h3>
+<table>
+<tr><th>Setting</th><th>Default</th><th>Range</th><th>What it does</th></tr>
+<tr><td><strong>Max length</strong></td><td>1024</td><td>1 and up</td><td>The most tokens a reply may contain. It also sets aside room in the context, see <a href="#reserve">below</a>.</td></tr>
+<tr><td><strong>Seed</strong></td><td>−1</td><td>−1 and up</td><td>Fixes the random choices so the same prompt gives the same reply. −1 means random, and is not sent.</td></tr>
+</table>
+<h3 id="text-sampling">Sampling</h3>
+<table>
+<tr><th>Setting</th><th>Default</th><th>Range</th><th>What it does</th></tr>
+<tr><td><strong>Temperature</strong></td><td>1.0</td><td></td><td>How daring the pick is. Lower is more predictable, higher is more varied.</td></tr>
+<tr><td><strong>Min P</strong></td><td>0.01</td><td>0–1</td><td>Drops any candidate less likely than this fraction of the top candidate.</td></tr>
+<tr><td><strong>Top P</strong></td><td>0.95</td><td>0–1</td><td>Keeps only the most likely candidates whose probabilities add up to this much.</td></tr>
+<tr><td><strong>Top K</strong></td><td>0</td><td></td><td>Keeps only this many of the most likely candidates. 0 turns it off.</td></tr>
+<tr><td><strong>Top A</strong></td><td>0</td><td>0–1</td><td>Keeps candidates above a threshold scaled by the top candidate's probability. 0 turns it off.</td></tr>
+<tr><td><strong>Typical P</strong></td><td>1.0</td><td>0–1</td><td>Keeps candidates whose surprise is close to the expected surprise. 1 turns it off.</td></tr>
+<tr><td><strong>TFS</strong></td><td>1.0</td><td>0–1</td><td>Tail free sampling, which trims the long tail of unlikely candidates. 1 turns it off.</td></tr>
+<tr><td><strong>Top N sigma</strong></td><td>0</td><td></td><td>Keeps candidates within this many standard deviations of the best score. 0 turns it off.</td></tr>
+</table>
+<h3 id="text-xtc">XTC</h3>
+<table>
+<tr><th>Setting</th><th>Default</th><th>Range</th><th>What it does</th></tr>
+<tr><td><strong>XTC threshold</strong></td><td>0.1</td><td>0–1</td><td>Exclude Top Choices: candidates above this probability can be removed to avoid the most obvious word.</td></tr>
+<tr><td><strong>XTC probability</strong></td><td>0</td><td>0–1</td><td>How often that removal happens. 0 turns XTC off.</td></tr>
+</table>
+<h3 id="text-dry">DRY</h3>
+<table>
+<tr><th>Setting</th><th>Default</th><th>Range</th><th>What it does</th></tr>
+<tr><td><strong>DRY multiplier</strong></td><td>0</td><td></td><td>Strength of the Don't Repeat Yourself penalty against repeating earlier sequences. 0 turns DRY off.</td></tr>
+<tr><td><strong>DRY base</strong></td><td>1.75</td><td></td><td>How quickly the penalty grows as a repeated sequence gets longer.</td></tr>
+<tr><td><strong>DRY allowed length</strong></td><td>2</td><td></td><td>How many tokens may repeat before the penalty starts.</td></tr>
+<tr><td><strong>DRY penalty last N</strong></td><td>−1</td><td></td><td>How far back to look for repeats. −1 means the whole context.</td></tr>
+<tr><td><strong>DRY sequence breakers</strong></td><td>newline, colon, quote, asterisk</td><td></td><td>Characters that end a sequence, so dialogue punctuation does not count as repetition. Edited as a JSON list.</td></tr>
+</table>
+<h3 id="text-filters">Filters / bans</h3>
+<table>
+<tr><th>Setting</th><th>Default</th><th>Range</th><th>What it does</th></tr>
+<tr><td><strong>Banned tokens/strings</strong></td><td>none</td><td></td><td>Words or phrases the model may never produce, one per line. See <a href="#bans">Bans</a>.</td></tr>
+<tr><td><strong>Logit bias</strong></td><td>none</td><td>±100</td><td>Nudges particular tokens up or down, as a JSON object of token to bias.</td></tr>
+<tr><td><strong>Stop</strong></td><td>none</td><td></td><td>Strings that end the reply the moment they appear, as a JSON list. Ashyo adds its own, see <a href="prompt.html#stop-strings">Stop strings</a>.</td></tr>
+</table>
+<h3 id="text-mirostat">Mirostat</h3>
+<table>
+<tr><th>Setting</th><th>Default</th><th>Range</th><th>What it does</th></tr>
+<tr><td><strong>Mirostat mode</strong></td><td>0</td><td>0–2</td><td>An alternative sampler that steers toward a target surprise. 0 is off; 1 and 2 are its two versions.</td></tr>
+<tr><td><strong>Mirostat tau</strong></td><td>5.0</td><td></td><td>The target surprise. Lower is tamer text.</td></tr>
+<tr><td><strong>Mirostat eta</strong></td><td>0.1</td><td></td><td>How fast Mirostat corrects toward the target.</td></tr>
+</table>
+<h3 id="text-repetition">Repetition</h3>
+<table>
+<tr><th>Setting</th><th>Default</th><th>Range</th><th>What it does</th></tr>
+<tr><td><strong>Repetition penalty</strong></td><td>1.1</td><td></td><td>Makes tokens that already appeared less likely. 1 is no penalty.</td></tr>
+<tr><td><strong>Repetition penalty range</strong></td><td>0</td><td></td><td>How many recent tokens the penalty looks at. 0 means all of them.</td></tr>
+<tr><td><strong>Repetition penalty slope</strong></td><td>1.0</td><td></td><td>Makes the penalty fall off for tokens further back.</td></tr>
+<tr><td><strong>Presence penalty</strong></td><td>0</td><td></td><td>A flat penalty on any token that has appeared at all.</td></tr>
+</table>
+<h3 id="text-smoothing">Smoothing, Adaptive and Dynamic temperature</h3>
+<table>
+<tr><th>Setting</th><th>Default</th><th>Range</th><th>What it does</th></tr>
+<tr><td><strong>Smoothing factor</strong></td><td>0</td><td></td><td>Quadratic sampling, which flattens the gap between top candidates. 0 turns it off.</td></tr>
+<tr><td><strong>Smoothing curve</strong></td><td>1.0</td><td></td><td>The shape of that flattening.</td></tr>
+<tr><td><strong>Adaptive target</strong></td><td>−0.01</td><td>up to 1</td><td>Adaptive sampling's target. A negative value turns it off and the adaptive fields are left out.</td></tr>
+<tr><td><strong>Adaptive decay</strong></td><td>0.9</td><td>0–1</td><td>How quickly adaptive sampling forgets.</td></tr>
+<tr><td><strong>Dynamic temperature range</strong></td><td>0</td><td>0 and up</td><td>Lets the temperature swing this far either side of its setting depending on how sure the model is. 0 turns it off.</td></tr>
+<tr><td><strong>Dynamic temperature exponent</strong></td><td>1.0</td><td></td><td>The curve of that swing.</td></tr>
+</table>
+<h3 id="text-eos">EOS token and Grammar</h3>
+<table>
+<tr><th>Setting</th><th>Default</th><th>Range</th><th>What it does</th></tr>
+<tr><td><strong>Ban EOS token</strong></td><td>off</td><td></td><td>Forbids the end-of-text token, so the model keeps writing until Max length.</td></tr>
+<tr><td><strong>Ignore EOS token</strong></td><td>off</td><td></td><td>Lets the model produce the end token but carries on generating anyway.</td></tr>
+<tr><td><strong>Grammar</strong></td><td>empty</td><td></td><td>A grammar, in the format your server understands, that constrains the shape of the output. Empty is not sent.</td></tr>
+<tr><td><strong>Grammar retain state</strong></td><td>off</td><td></td><td>Keeps the grammar's state between requests.</td></tr>
+</table>
+<p>Two more values travel with every text request but have no row: render special (off) and trim stop (on), which keep special tokens out of the reply and cut the stop string off its end.</p>
+
+<h2 id="sampler-order">Sampler order</h2>
+<p>With Text Completions, the <strong>Sampler order</strong> row decides the sequence in which seven samplers apply: Top K, Top A, Top P, TFS, Typical P, Temperature and Repetition penalty. It shows as "Repetition penalty &gt; Top K &gt; Top A &gt; TFS &gt; Typical P &gt; Top P &gt; Temperature" by default, which applies temperature last. The row is edited as a JSON list of the seven positions numbered 0 to 6 in the order above, so the default is <code>[6, 0, 1, 3, 4, 2, 5]</code>. A number you leave out is appended at the end; duplicates and unknown numbers are dropped.</p>
+
+<h2 id="chat-completions">Chat completions samplers</h2>
+<p>The shorter list, used with OpenRouter, OpenAI Codex and OpenAI-compatible servers in Chat Completions mode. Most rows here can be <strong>Unset</strong>, and an unset row is simply left out of the request so the service applies its own default.</p>
+<table>
+<tr><th>Setting</th><th>Default</th><th>Range</th><th>What it does</th></tr>
+<tr><td><strong>Max tokens</strong></td><td>1024</td><td>1 and up</td><td>The most tokens a reply may contain, and the room set aside for it in the context, see <a href="#reserve">below</a>.</td></tr>
+<tr><td><strong>Seed</strong></td><td>−1</td><td>−1 and up</td><td>Fixes random choices for repeatable replies. −1 means random, and is not sent.</td></tr>
+<tr><td><strong>Min P</strong></td><td>unset</td><td>0–1</td><td>Drops candidates less likely than this fraction of the top candidate.</td></tr>
+<tr><td><strong>Temperature</strong></td><td>1.0</td><td>0–2</td><td>How daring the pick is.</td></tr>
+<tr><td><strong>Top A</strong></td><td>unset</td><td>0–1</td><td>Keeps candidates above a threshold scaled by the top candidate's probability.</td></tr>
+<tr><td><strong>Top K</strong></td><td>unset</td><td>0 and up</td><td>Keeps only this many of the most likely candidates.</td></tr>
+<tr><td><strong>Top P</strong></td><td>1.0</td><td>0–1</td><td>Keeps the most likely candidates whose probabilities add up to this much.</td></tr>
+<tr><td><strong>Frequency penalty</strong></td><td>0</td><td>−2 to 2</td><td>Penalizes tokens in proportion to how often they have appeared.</td></tr>
+<tr><td><strong>Presence penalty</strong></td><td>0</td><td>−2 to 2</td><td>Penalizes any token that has appeared at all.</td></tr>
+<tr><td><strong>Repetition penalty</strong></td><td>unset</td><td>0–2</td><td>Makes repeated tokens less likely, where the service supports it.</td></tr>
+<tr><td><strong>Reasoning effort</strong></td><td>unset</td><td>none, minimal, low, medium, high, xhigh</td><td>How much a reasoning model may think before answering. "none" asks it not to reason at all.</td></tr>
+<tr><td><strong>Verbosity</strong></td><td>unset</td><td>low, medium, high</td><td>How long-winded the reply should be, where the service supports it.</td></tr>
+<tr><td><strong>Logit bias</strong></td><td>none</td><td></td><td>Nudges particular tokens up or down, as a JSON object.</td></tr>
+<tr><td><strong>Stop</strong></td><td>none</td><td></td><td>Strings that end the reply the moment they appear, as a JSON list.</td></tr>
+</table>
+
+<h2 id="reserve">Max tokens and the context budget</h2>
+<p>Whatever you call it, <strong>Max length</strong> or <strong>Max tokens</strong> does double duty. Besides capping the reply, it is the generation reserve: the part of the context window Ashyo keeps free so the reply has room to land. A larger value leaves less room for chat history. The arithmetic is in <a href="context.html#budget">Context and budget</a>. This holds even for a provider that ignores the value itself.</p>
+
+<h2 id="bans">Bans</h2>
+<p><strong>Banned tokens/strings</strong> takes one entry per line and forbids each from appearing in a reply. Beneath it sits a second row, <strong>Global bans</strong>, "applied under every text-completions sampler preset": a list that goes out ahead of the preset's own bans on every Text Completions request, whichever preset the chat uses. It is the place for the handful of phrases you never want to see from any model. The global list is stored in the config file as <code>sampler_globals</code>, see <a href="files.html#config-file">the config file</a>.</p>
+<p><strong>Stop</strong> strings end a reply the moment they appear, and Ashyo combines yours with the ones its templates imply, such as the next speaker's name. The full recipe is under <a href="prompt.html#stop-strings">Stop strings</a>.</p>
+
+<h2 id="sent">What gets sent</h2>
+<p>Ashyo sends only the samplers a provider supports for the protocol in use, under the names that provider expects, and always as the right kind of number. Anything unset, an empty stop or ban list, an empty grammar, an empty logit bias and a negative seed are left out rather than sent as blanks. What each provider does with the list:</p>
+<ul>
+<li><strong>KoboldCPP.</strong> Takes the whole text-completions list, including Sampler order, Grammar, Mirostat and the EOS switches.</li>
+<li><strong>llama.cpp</strong> and <strong>OpenAI-compatible</strong> in Text Completions. Take most of the list with a few translations. Banned tokens are sent as banned strings. Dynamic temperature range becomes a low and high temperature either side of your Temperature. DRY sequence breakers are dropped when the DRY multiplier is 0 or less, and the Adaptive fields when the Adaptive target is negative. Either EOS switch becomes a single "ignore end of text" flag. Grammar retain state, Repetition penalty slope, Sampler order and the two hidden values are skipped, since these servers have no equivalent.</li>
+<li><strong>OpenRouter.</strong> Takes the chat-completions list. Reasoning effort is passed along, and "none" turns reasoning off.</li>
+<li><strong>OpenAI Codex.</strong> Takes only <strong>Reasoning effort</strong> and <strong>Verbosity</strong>. Temperature, Top P, Top K, Top A, Min P, the penalties, Logit bias, Max tokens, Seed and Stop are all dropped. Max tokens still shapes the context budget, as described above.</li>
+</ul>
+<p>The value shown on the Samplers tab is the value that goes out, already converted to what the provider expects. The prompt that accompanied a reply, though not its samplers, can be inspected afterwards through <a href="context.html#itemization">Prompt itemization</a>.</p>
+{% endraw %}

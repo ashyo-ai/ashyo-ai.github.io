@@ -1,0 +1,123 @@
+---
+layout: default
+title: Transcript
+---
+{% raw %}
+<h1 id="transcript">Transcript</h1>
+<p class="lead">The transcript is the conversation itself: your messages, the character's replies and any system messages, in order, on the branch you are currently on. It renders markdown, folds the model's reasoning out of the way, and lets you mark messages to edit, move, copy or delete them. This page is about reading and working with messages; for alternatives and branches see <a href="branches.html">Swipes and branches</a>.</p>
+
+<h2 id="scrolling">Scrolling</h2>
+<p>The transcript stays pinned to the bottom while new text arrives, so a streaming reply is always in view. Scroll up and it unpins; scroll back to the bottom and it pins again. A scrollbar on the right edge shows where you are.</p>
+<ul>
+<li>The <strong>mouse wheel</strong> scrolls three rows per notch.</li>
+<li><kbd>PageUp</kbd> and <kbd>PageDown</kbd> scroll by a screen, as long as the composer has not overflowed and no message is marked. With a mark set they move the mark by a screen instead.</li>
+<li><kbd>Ctrl+Home</kbd> and <kbd>Ctrl+End</kbd> jump to the top and the bottom.</li>
+<li><kbd>Home</kbd> and <kbd>End</kbd>, with the transcript focused, scroll to either end as well.</li>
+</ul>
+<p>The view follows what you are working on: a mark moved off screen is placed a quarter of the way down, a message taller than the screen shows from its top, and an edit cursor, a moved message or the message a menu is open for are kept in view.</p>
+
+<h2 id="mark">Marking messages</h2>
+<p>Most things you do to a message start by marking it. Press <kbd>Ctrl+↑</kbd> to move focus into the transcript, then <kbd>↑</kbd> and <kbd>↓</kbd> to step the mark from message to message. An accent-colored <code>┃</code> runs down the left gutter beside the marked message while the transcript has focus. Clicking a message marks it too, and <code>/goto &lt;n&gt;</code> marks message <em>n</em> from the composer. When you switch to a chat with the transcript focused, the last message is marked.</p>
+<p>To act on several messages at once, hold <kbd>Shift</kbd> with <kbd>↑</kbd> or <kbd>↓</kbd> to select a <strong>range</strong>; once a range exists, plain <kbd>↑</kbd> and <kbd>↓</kbd> extend it, and <kbd>Home</kbd> and <kbd>End</kbd> extend it to the first or last message. The status bar shows "N selected". <kbd>Esc</kbd> clears the range or the mark.</p>
+<table>
+<tr><th>Key</th><th>With the transcript focused</th></tr>
+<tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Move the mark, or extend a range.</td></tr>
+<tr><td><kbd>Shift+↑</kbd> / <kbd>Shift+↓</kbd></td><td>Start a range from the mark.</td></tr>
+<tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>Scroll to either end, extend a range to it, or move the mark there.</td></tr>
+<tr><td><kbd>PageUp</kbd> / <kbd>PageDown</kbd></td><td>Move the mark by a screen.</td></tr>
+<tr><td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td><td>Open the <a href="#actions-menu">actions menu</a> for the marked message or range.</td></tr>
+<tr><td><kbd>Delete</kbd></td><td>Ask to delete the marked messages, unless the chat is busy.</td></tr>
+<tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Swipe the last reply while nothing is generating. See <a href="branches.html#swipes">Swipes</a>.</td></tr>
+<tr><td><kbd>/</kbd></td><td>Open the <a href="#search">search</a>.</td></tr>
+<tr><td><kbd>n</kbd> / <kbd>N</kbd></td><td>Jump to the next or previous search match, wrapping around.</td></tr>
+<tr><td><kbd>c</kbd></td><td>Jump to where the last prompt's history began. See <a href="#message-cards">the context marker</a>.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Clear the range or mark; with none, stop a generation; with nothing running, open the turn tree.</td></tr>
+</table>
+<p>Search, <kbd>n</kbd>, <kbd>N</kbd> and <kbd>c</kbd> wait until a long chat has finished loading. Other <kbd>Ctrl</kbd> and <kbd>Alt</kbd> combinations are ignored in the transcript, apart from the <a href="composer.html#focus">global keys</a>.</p>
+
+<h2 id="message-cards">Message cards</h2>
+<p>Every message is a card: a header line, the text, and a blank row after it. The header carries what you have asked for on the <strong>Appearance</strong> tab of Settings.</p>
+<pre>#12  Seraphina  10:42:07 am  koboldcpp · llama-3-8b  128t  4s  edited
+"Welcome, traveler," she says, lowering her hood. *She studies you.*</pre>
+<ul>
+<li><strong>#N</strong>, the <a href="composer.html#message-numbers">message number</a>, with <strong>Show message indices</strong> (on by default).</li>
+<li>The <strong>speaker's name</strong> in the color of its role: your persona's display name, the character's display name, or "System".</li>
+<li>The <strong>time</strong> the message was written, or the time it was last edited, with <strong>Show message timestamps</strong> (on). An edited message also says "edited".</li>
+<li>The <strong>provider and model</strong> that wrote a reply, as "provider · model".</li>
+<li>The <strong>token count</strong> as "128t", with <strong>Show message token count</strong> (off). A count is shown only while the text is unchanged since it was counted.</li>
+<li>The <strong>generation time</strong>, with <strong>Show message duration</strong> (off).</li>
+<li>"Disabled" in the warning color on a message that has been <a href="#actions-menu">disabled</a>, which keeps it in the transcript but out of the prompt.</li>
+</ul>
+<p>Set <strong>Message timing</strong> to <strong>Under header</strong> to add timing lines under each reply: when the generation was queued, when the reply was received, time to first token, generation time, thinking time and token rate. The default, <strong>Hidden</strong>, shows none of these.</p>
+<p>A few more things you will see in the transcript:</p>
+<ul>
+<li>The last reply shows a swipe counter such as "‹ 2/3 ›" when it has alternatives. See <a href="branches.html#swipes">Swipes</a>.</li>
+<li>A centered divider reading "last prompt starts here" marks where the model's view of the history began on the last generation; everything above it was not sent. Press <kbd>c</kbd> to jump to it. <strong>Show context marker</strong> (on) controls it, and <a href="context.html">Context and budget</a> explains why the model sees less than you do.</li>
+<li>A failed generation leaves a red "error: …" note after the message being generated. Notes line up with the <a href="screen.html#reading-format">reading page</a>.</li>
+<li>An empty slot reads "(no message)", and an empty chat "No messages yet."</li>
+<li>Code blocks and tables are never wrapped. A line too wide for the page is cut with "…", and in a reading format narrower than the window, a wide block is centered on the full window instead. Code blocks have a filled background across the full width.</li>
+</ul>
+
+<h2 id="reasoning">Reasoning</h2>
+<p>Models that think before they answer send that thinking separately, and Ashyo keeps it out of your way. A reply with reasoning shows a muted italic toggle line above its text: "▼ Thought for 12 seconds" when unfolded, "▶ Thought for some time" when folded, and "Thinking..." while it is still arriving. Unfolded reasoning is muted and indented two columns.</p>
+<p>The <strong>Reasoning display</strong> row on the Appearance tab sets the default: <strong>Always collapsed</strong> (the default), <strong>Always expanded</strong>, or <strong>Only last expanded</strong>, which keeps the newest reply's reasoning open and folds the rest. Changing it resets the folds in every open chat. On top of that, <strong>Fold reasoning</strong> and <strong>Unfold reasoning</strong> in the <a href="#actions-menu">actions menu</a> toggle one message, and <kbd>Ctrl+O</kbd> folds or unfolds every block at once, dropping the per-message choices. The menu also offers <strong>Edit reasoning</strong>, <strong>Copy reasoning</strong> and <strong>Remove reasoning</strong>.</p>
+
+<h2 id="streaming">Streaming</h2>
+<p>A reply streams into a live card under the last message as the model produces it; a <a href="branches.html#continue">Continue</a> streams into the existing message instead. The header names the character, or "System" when <code>/sysgen</code> is writing a system message, and a swipe in progress already counts in the swipe counter, as "‹ 4/4 ›". Markdown is rendered as the text arrives, but <a href="regex.html#modes">display-only regex rules</a> wait until the reply is finished.</p>
+<p>Until the first token arrives the card stays blank for three seconds, then reads "Waiting for model... (Ns)", from eight seconds "Still waiting for first response... (Ns)", and from thirty "Provider is taking unusually long... (Ns)". The activity line above the composer shows a spinner and "Generating… 12s" the whole time.</p>
+<p>Press <kbd>Esc</kbd> to stop. A reply that has text keeps it and is marked as stopped; a reply that has received nothing is discarded, and so is a reply that finishes empty. Chats you have switched away from keep streaming in the background, and their failures land in their own transcript. If a reply fails because the prompt was too long for the model, Ashyo trims the prompt and tries once more on its own; see <a href="context.html#eviction">Eviction</a>.</p>
+
+<h2 id="actions-menu">The actions menu</h2>
+<p>With a message marked, <kbd>Tab</kbd> or <kbd>Shift+Tab</kbd> pops up a menu beside it. Only the items that apply right now are shown, and the menu closes by itself if nothing applies any more. <kbd>Tab</kbd> or <kbd>↓</kbd> moves down, <kbd>↑</kbd> moves up, <kbd>Enter</kbd> chooses, <kbd>Esc</kbd> closes.</p>
+<table>
+<tr><th>Item</th><th>Does</th></tr>
+<tr><td><strong>Disable</strong> / <strong>Enable</strong></td><td>Keeps the message in the transcript but leaves it out of the prompt, or puts it back. A disabled message is labeled "Disabled".</td></tr>
+<tr><td><strong>Delete</strong></td><td>Asks "Delete?" or "Delete N messages?", then removes the message or range from this branch. The original branch is kept in the <a href="branches.html#branching">turn tree</a>, so nothing is lost.</td></tr>
+<tr><td><strong>Move up</strong> / <strong>Move down</strong></td><td>Swaps the message or range with its neighbor. Offered only when the selection is not already at the edge. This too builds a new branch rather than rewriting the old one.</td></tr>
+<tr><td><strong>Copy</strong></td><td>Copies the message's text, or a range as a plain transcript.</td></tr>
+<tr><td><strong>Edit</strong></td><td>Opens the message for <a href="#inline-editing">editing in place</a>.</td></tr>
+<tr><td><strong>Edit reasoning</strong></td><td>Edits a reply's reasoning in place.</td></tr>
+<tr><td><strong>Fold reasoning</strong> / <strong>Unfold reasoning</strong></td><td>Toggles this reply's reasoning block.</td></tr>
+<tr><td><strong>Copy reasoning</strong></td><td>Copies a reply's reasoning.</td></tr>
+<tr><td><strong>Remove reasoning</strong></td><td>Asks "Remove reasoning?" with <strong>Keep</strong> and <strong>Remove</strong>, then drops the reasoning from a reply for good.</td></tr>
+<tr><td><strong>Copy code</strong></td><td>Copies a fenced code block. With one block it copies straight away; with several it lists them as "language · first line" to pick from.</td></tr>
+<tr><td><strong>Itemization</strong></td><td>Shows exactly what prompt produced this reply and what it cost in tokens. One reply at a time, once the chat has loaded. See <a href="context.html#itemization">Itemization</a>.</td></tr>
+<tr><td><strong>Delete swipe</strong></td><td>Removes the current alternative of the last reply, when it has more than one. See <a href="branches.html#swipes">Swipes</a>.</td></tr>
+<tr><td><strong>Continue</strong></td><td>Asks the model to carry on from the end of the last reply. Text completions only, and only when the reply is not blank. See <a href="branches.html#continue">Continue</a>.</td></tr>
+</table>
+<p>For a range, the menu offers enable or disable, delete, move and copy. While the chat is busy only the copy items, the reasoning fold and copy items, and itemization remain, and the message that is streaming right now has no menu at all. Backing out of a "Delete?" or "Remove reasoning?" question with <kbd>Esc</kbd> returns you to the menu on the same item.</p>
+
+<h2 id="inline-editing">Editing a message</h2>
+<p>Choose <strong>Edit</strong> and the message's text is swapped for an editor right where it sits, with the hint "editing (enter: save, esc: cancel)". It takes the same keys as the <a href="composer.html#editing">composer</a>, apart from <kbd>Tab</kbd>, which does nothing here. <kbd>Enter</kbd> saves and <kbd>Esc</kbd> cancels. <strong>Edit reasoning</strong> works the same way, indented two columns like the reasoning itself.</p>
+<p>An edit changes the message in place; it does not start a new branch. On save, any <a href="regex.html#modes">regex scripts</a> set to run on edit rewrite the text, the context template's <a href="prompt.html#formatting">formatting</a> applies, and the header shows the edit time with "edited". If you try to <code>/quit</code> with an edit open, Ashyo asks first.</p>
+
+<h2 id="search">Searching the transcript</h2>
+<p>With the transcript focused, press <kbd>/</kbd>. A "🔍 query" line appears over the top row of the transcript as you type; the status bar stays as it was. <kbd>Enter</kbd> runs the search, <kbd>Esc</kbd> cancels it, and <kbd>Ctrl+V</kbd> pastes into it. The field has no undo.</p>
+<p>The search ignores case, including accented and non-Latin letters, and looks at the text as it is shown rather than the raw markdown. The current match is bold in the accent color and the others are drawn in the search colors; the status bar reads "3/17", or "no matches". <kbd>n</kbd> and <kbd>N</kbd> step to the next and previous match, wrapping around and scrolling the line into view; if the chat has changed since you searched, they search again first. Messages being edited or swiped, and blank ones, are skipped, and highlights stop at the "…" of a cut line.</p>
+<div class="callout">
+<span class="label">Tip</span>
+<p>If the <a href="files.html#log-viewer">log viewer</a> is open on its file tab, <kbd>/</kbd> searches the log instead of the transcript.</p>
+</div>
+
+<h2 id="copying">Copying from the transcript</h2>
+<p>Drag with the mouse across any text in the transcript and let go: the selection is copied the moment you release the button, and the status bar says "copied". A plain click, or a drag over empty space, copies nothing. The selection is highlighted from its start to its end column across rows while you hold the button, and dragging past the bottom scrolls the view. <kbd>Ctrl+C</kbd> does nothing in the transcript; use the <a href="#actions-menu">actions menu</a> for keyboard copying.</p>
+<p>What you get is the message's markdown source, not the characters on the screen, so a copied code block comes with its fence lines restored and a copied list keeps its markers. Several messages copied together are separated by a blank line. See <a href="screen.html#clipboard">Copy and paste</a> for how copying reaches your clipboard.</p>
+
+<h2 id="markdown">Markdown and highlighting</h2>
+<p>Messages are rendered as markdown while <strong>Render markdown</strong> (Appearance tab, on by default) is on. Turn it off and text is shown as written, paragraphs split on blank lines and line breaks kept.</p>
+<table>
+<tr><th>Markdown</th><th>Shown as</th></tr>
+<tr><td>*emphasis*, **strong**, ~~strikethrough~~</td><td>Italic, bold and struck-through text.</td></tr>
+<tr><td>`inline code`</td><td>Text in the code color.</td></tr>
+<tr><td>Links and images</td><td>Underlined link text, with the address in parentheses when it differs from the text. An image shows its alt text as a link. A link whose address is still arriving is shown without it.</td></tr>
+<tr><td># Headings</td><td>Bold, with the <code>#</code> in the markup color.</td></tr>
+<tr><td>&gt; Quotes</td><td>Each line prefixed with "┃ ".</td></tr>
+<tr><td>Lists</td><td>Bullets as •, ◦ and ▪ by depth; numbered lists keep their numbers; both with a hanging indent. Task lists show "[✓]" and "[ ]".</td></tr>
+<tr><td>---</td><td>A horizontal rule of "─".</td></tr>
+<tr><td>```code blocks```</td><td>A filled background with a one-space pad, syntax highlighted by the language on the fence while <strong>Code block syntax highlighting</strong> is on. Bold and italic inside are kept.</td></tr>
+<tr><td>Tables</td><td>Box borders, a bold header row, and left, center or right alignment as written.</td></tr>
+<tr><td>HTML, footnote references</td><td>Shown as plain text.</td></tr>
+</table>
+<p>Roleplay text has its own highlighting. With <strong>Highlight dialogue</strong> on (the default), speech inside double quotes is drawn in the accent color, and <code>*actions*</code> between asterisks are drawn italic and dim in the action color. Emphasis inside speech stays speech, in italics; emphasis outside speech is an action. A quote only counts as opening speech when a closing quote follows it.</p>
+<p><a href="regex.html#modes">Regex scripts</a> set to <strong>Display only</strong> or <strong>Display and prompt</strong> change what a message shows without touching what is stored, and can be limited by how far from the end of the chat a message is. The reply that is streaming right now is always shown raw until it finishes.</p>
+{% endraw %}

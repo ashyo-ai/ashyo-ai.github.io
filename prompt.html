@@ -1,0 +1,186 @@
+---
+layout: default
+title: Prompt building
+---
+{% raw %}
+<h1 id="prompt-building">Prompt building</h1>
+<p class="lead">Every reply starts with a prompt Ashyo builds for the model: the system prompt, your persona, the character, whatever lore fired, and the chat so far. Three presets shape it. The <strong>system prompt</strong> is the instructions, the <strong>context template</strong> decides which pieces go in, in what order and how they are cleaned up, and the <strong>instruct template</strong> turns it all into the exact text a text-completions model expects. This page explains each piece and what happens between pressing <kbd>Enter</kbd> and seeing a reply.</p>
+
+<h2 id="overview">What goes into a prompt</h2>
+<p>A prompt is assembled from items. Empty items are simply left out, so a character with no scenario does not produce an empty section.</p>
+<ul>
+<li><strong>System prompt.</strong> The chat's system prompt preset, or the card's own when it wins. See <a href="#system-prompt">The system prompt</a>.</li>
+<li><strong>Persona.</strong> Your persona's description.</li>
+<li><strong>Character.</strong> The description and personality, then the example messages. See <a href="characters.html">Personas and characters</a>.</li>
+<li><strong>Scenario.</strong> The character's scenario.</li>
+<li><strong>Lore.</strong> Entries that fired, each at its position: early, late, before or after the examples, at a depth inside the history, or in an outlet. See <a href="lore.html#positions">Lore books</a>.</li>
+<li><strong>Chat history.</strong> The current swipe of every enabled turn on the branch you are on, oldest first. Disabled messages are skipped. See <a href="branches.html">Swipes and branches</a>.</li>
+<li><strong>Post-history instructions.</strong> Only when the card has them and you prefer them; placed after the history.</li>
+<li><strong>User filler message.</strong> Text completions only; see <a href="#text-completions">Text completions</a>.</li>
+<li><strong>The /sysgen prompt.</strong> Only on a <code>/sysgen</code> generation; see <a href="#sysgen">Generating a system message</a>.</li>
+</ul>
+<p>The system prompt, persona, character, scenario and the early and late lore come from the <strong>context template</strong>'s rows and sit at the top of the prompt in row order. The history follows, with lore at depth slotted into it, and then anything that goes after the history. How that list becomes a request depends on the connection's <a href="connections.html#protocols">protocol</a>. With <strong>chat completions</strong> the model receives a list of messages, each with a role. With <strong>text completions</strong> it receives one string, and the instruct template writes it. The presets are chosen on the <a href="settings.html#prompt">Prompt tab of Settings</a> and edited in the <a href="library.html">Library</a>.</p>
+<div class="callout">
+<span class="label">Tip</span>
+<p>Turn on <code>/inspector</code> and every send pauses to show you the finished prompt before it leaves. Once a reply has arrived, <strong>Itemization</strong> in its message menu breaks the prompt it came from into items with token counts. See <a href="context.html#inspector">Context and budget</a>.</p>
+</div>
+
+<h2 id="generation">What happens when you press Enter</h2>
+<p>There are four kinds of generation. <strong>Send</strong> is what <kbd>Enter</kbd> does with text in the composer. <strong>Swipe</strong> asks for an alternative to the last reply. <strong>Continue</strong> extends the last reply. <strong>/sysgen</strong> generates a system message from a prompt you type. For a send, the steps are:</p>
+<ol>
+<li>Your text goes through your <a href="regex.html">regex scripts</a> that target <strong>Your messages</strong>, then <a href="macros.html">macros</a> expand, then the <a href="#formatting">context formatting</a> switches apply. What you see in the transcript is this finished text.</li>
+<li>It is added to the chat as a new user turn. An empty send skips this step and just asks for a reply.</li>
+<li>Ashyo checks the connection has what it needs: credentials and a reachable address. If the context size is not known yet it is fetched now, and a send fails with "unknown context size" if the server cannot say.</li>
+<li>The prompt is planned against the <a href="context.html#budget">budget</a>: lore is activated, items are gathered, and older history is evicted until it fits. If the inspector is on, this is where you see the prompt and press <kbd>Enter</kbd> to approve it; what you approved is sent unchanged.</li>
+<li>The reply streams into the transcript. When it is done the chat's context usage on the status bar updates, and the reply remembers which provider and model answered.</li>
+</ol>
+<p>A <strong>swipe</strong> adds an alternative to the last turn. It is refused when the turn already holds as many swipes as it can, and only the last turn can be swiped. A <strong>continue</strong> works on text completions only: trailing whitespace is trimmed off the newest reply and the model is asked to carry on from there, so the new text lands in the same message. If that reply is shared with another branch, your branch gets its own copy and the continue writes into that.</p>
+
+<h3 id="reply-processing">How replies are cleaned up</h3>
+<p>Text streams in raw, and a few things happen to it on the way:</p>
+<ul>
+<li><strong>Reasoning is split off.</strong> A chat-completions server sends reasoning separately. For text completions, the instruct template's <strong>Reasoning prefix</strong> and <strong>Reasoning suffix</strong> mark where reasoning ends and the reply begins, and Ashyo separates the two even when a marker arrives in pieces.</li>
+<li><strong>Strip the character's name from replies</strong> (on by default). A reply that begins with the character's name and a colon loses that label. Ashyo holds the first few characters back until it can tell.</li>
+<li><strong>End replies where the persona speaks</strong> (on). If the model starts a line with your persona's name and a colon, the reply ends right there and the server is told to stop. A continue keeps the text it started from but still ends at such a line.</li>
+<li><strong>Regex scripts</strong> targeting <strong>Replies</strong> and <strong>Reasoning</strong> run once the reply is complete. On a continue only the new text is rewritten.</li>
+<li><strong>Output cleanup.</strong> The context template's <strong>Normalize whitespace</strong>, <strong>Trim spaces</strong> and <strong>Trim incomplete sentences</strong> apply to the finished reply. See <a href="#formatting">Context formatting</a>.</li>
+</ul>
+<p>The reply also records when its first token arrived, how long the reply and the reasoning took, and how many tokens the server counted; a continue adds to the earlier figures. The <a href="transcript.html#message-cards">message card</a> can show all of that.</p>
+
+<h3 id="stopping">Stopping a reply</h3>
+<p>Press <kbd>Esc</kbd> while a reply is streaming to stop it. If any text had arrived it is kept as the reply. If nothing had arrived yet, there is nothing to keep and the reply is discarded, as is a reply the model finished without saying anything. Deleting a chat or discarding a temporary chat stops its stream first. Closing a chat is refused while it is streaming.</p>
+<p>One retry happens without you: if the server reports that the prompt was too long, Ashyo plans it again with a little more room and sends once more. See <a href="context.html#eviction">Eviction</a>.</p>
+
+<h3 id="frozen">Settings are frozen at send time</h3>
+<p>The moment a generation starts, it takes a copy of everything it needs: provider, model, protocol, samplers, routing, base URL, extra request fields, the instruct template, the context template's rows, separators, squash and post-processing choices, and the display names of your persona and character. Changing a setting while a reply streams affects the next generation, not the one in flight.</p>
+
+<h2 id="system-prompt">The system prompt</h2>
+<p>The system prompt is the standing instruction at the top of the prompt. Each chat selects a <strong>System prompt</strong> preset from the Library, and you can edit the text for this chat alone on the Prompt tab, which shows "Preset: N characters" once you have. The built-in preset named <strong>Default</strong> is empty, so a fresh install sends no system prompt until you write one. See <a href="library.html#system-prompts">System prompts in the Library</a>.</p>
+<p>A character card can carry its own system prompt and post-history instructions. Turn on <strong>Prefer the card's system prompt</strong> for the character and, as long as the card's prompt is not blank, it replaces the chat's. The Prompt tab then notes "The character's card supplies the system prompt; this one is not used." Write <code>{{original}}</code> inside the card's prompt to drop the chat's prompt in at that spot, and the note changes to "The character's card supplies the system prompt; this one is used only where the card writes {{original}}." <strong>Prefer the card's post-history instructions</strong> works the same way for the text placed after the chat history. Both switches live on the character and can be overridden per chat. See <a href="characters.html#card-prompts">A card's own prompts</a>.</p>
+
+<h2 id="context-template">The context template</h2>
+<p>The context template decides what sits above the chat history and how the whole prompt is tidied. Its <strong>Rows</strong> are a checkbox list you can reorder with <strong>Move up</strong> and <strong>Move down</strong>; each row has a prefix you set with <strong>Edit prefix</strong>, text placed in front of that row's content, with macros expanded. The built-in template named <strong>Default</strong> has the six rows below in this order and no prefixes.</p>
+<table>
+<tr><th>Row</th><th>What it adds</th></tr>
+<tr><td><strong>System prompt</strong></td><td>The system prompt described above.</td></tr>
+<tr><td><strong>Lore (early)</strong></td><td>Lore entries positioned <strong>Before character</strong>. Always on.</td></tr>
+<tr><td><strong>Persona</strong></td><td>Your persona's description.</td></tr>
+<tr><td><strong>Character</strong></td><td>The character's description, then personality, then the example messages with any lore positioned around them.</td></tr>
+<tr><td><strong>Scenario</strong></td><td>The character's scenario.</td></tr>
+<tr><td><strong>Lore (late)</strong></td><td>Lore entries positioned <strong>After character</strong>. Always on.</td></tr>
+</table>
+<p>The two lore rows cannot be turned off; every other row can. Each section appears once no matter how many rows name it. Templates are edited in place, so a change to one applies to every chat that uses it.</p>
+
+<h3 id="examples">Example messages</h3>
+<p>A character's example messages show the model how a conversation with it should sound. Each example is a block, and inside a block a line that starts with your persona's name and a colon begins a message from you, while a line starting with the character's name and a colon begins a message from the character. Write them as <code>{{user}}:</code> and <code>{{char}}:</code> and the macros become the right names. Lines that follow without a speaker join the message above. A block with no speaker lines at all is sent as one system message. Lore entries positioned <strong>Before examples</strong> or <strong>After examples</strong> are split into blocks the same way wherever their content contains <code>&lt;START&gt;</code>.</p>
+<pre>{{user}}: Do you ever leave the forest?
+{{char}}: *She tilts her head, considering.* "Leave? The forest is not a place
+I am in. It is a thing I am." She smiles. "But I do like to hear about elsewhere."</pre>
+<p>In chat completions each speaker line becomes its own message with the matching role. In text completions each block is preceded by the <strong>Example separator</strong>. Examples are the first thing to go when the prompt is over budget, so a long chat may not include them. See <a href="context.html#eviction">Eviction</a>.</p>
+
+<h3 id="template-fields">The other template fields</h3>
+<ul>
+<li><strong>Squash system messages</strong> (on). Chat completions only. Consecutive system messages are joined into one with a blank line between them, so the rows above the history arrive as a single system message. Example messages are never squashed.</li>
+<li><strong>Prompt post-processing</strong> (None). Chat completions only; see <a href="#post-processing">Post-processing</a>.</li>
+<li><strong>Example separator</strong> and <strong>Chat start</strong>. Text completions only. The first goes before each example block, the second before the first message of the history.</li>
+<li><strong>Separators as stop strings</strong> (off) and <strong>Names as stop strings</strong> (on). Text completions only; see <a href="#stop-strings">Stop strings</a>.</li>
+<li><strong>Strip the character's name from replies</strong> (on) and <strong>End replies where the persona speaks</strong> (on). See <a href="#reply-processing">How replies are cleaned up</a>.</li>
+<li><strong>Normalize whitespace</strong> (off), <strong>Trim spaces</strong> (on) and <strong>Trim incomplete sentences</strong> (off). See <a href="#formatting">Context formatting</a>.</li>
+</ul>
+
+<h2 id="chat-completions">Chat completions</h2>
+<p>With a chat-completions connection the prompt is a list of messages, each tagged <strong>system</strong>, <strong>user</strong> or <strong>assistant</strong>. The template rows become system messages at the top, with a row's prefix placed in front of its first item. Example messages become user and assistant messages (or a system message for a block without speakers). The history follows with its own roles, and lore <strong>At depth</strong> is slotted in between the messages with the role you gave it. Here is the shape of one, before squashing:</p>
+<pre>system     You are a storyteller. Write {{char}}'s next reply…      System prompt row
+system     The Vale is a cold northern valley…                      Lore (early)
+system     Ada is a wandering cartographer…                         Persona
+system     Seraphina is a guardian of the forest…                   Character
+system     The two meet at the edge of the Vale.                    Scenario
+user       Hello? Is anyone there?                                  history
+assistant  "Welcome, traveler."                                     history
+system     A storm is rolling in from the north.                    lore at depth 1
+user       Is there shelter nearby?                                 newest message</pre>
+<p>With <strong>Squash system messages</strong> on, the five system messages at the top travel as one. A <code>/sysgen</code> prompt is a system message after the history, and post-history instructions go there too.</p>
+
+<h3 id="post-processing">Post-processing</h3>
+<p>Some servers are strict about which roles may follow which. <strong>Prompt post-processing</strong> reshapes the finished list to suit them:</p>
+<table>
+<tr><th>Mode</th><th>What it does</th></tr>
+<tr><td><strong>None</strong> (default)</td><td>The list is sent as built.</td></tr>
+<tr><td><strong>Merge consecutive</strong></td><td>Neighboring messages with the same role are joined into one.</td></tr>
+<tr><td><strong>Semi-strict</strong></td><td>Merge, then every system message after the first becomes a user message, then merge again.</td></tr>
+<tr><td><strong>Strict</strong></td><td>Semi-strict, and if the leading system message is not followed by a user message, a user message reading "[Start a new chat]" is inserted.</td></tr>
+<tr><td><strong>Single user message</strong></td><td>Everything is folded into one user message, each part labeled "Name: " with its speaker.</td></tr>
+</table>
+
+<h2 id="text-completions">Text completions</h2>
+<p>A text-completions model receives one block of text and continues it, so the prompt has to spell out who is speaking with the markers that model was trained on. That is the instruct template's job. The pieces go in this order:</p>
+<ol>
+<li>The <strong>story string</strong>: the <strong>Story string prefix</strong>, then every template row's prefix and content joined by line breaks, then the <strong>Story string suffix</strong>. If there is nothing to put in it, the whole story string is omitted.</li>
+<li>The example messages, each block preceded by the <strong>Example separator</strong>, with any lore placed around them.</li>
+<li>The <strong>Chat start</strong> text, then the history. Each message is wrapped in its role's prefix and suffix sequences.</li>
+<li>Anything placed after the history, such as post-history instructions or a <code>/sysgen</code> prompt.</li>
+<li>The <strong>generation prefix</strong>, which opens the model's turn and leaves it unfinished for the model to complete.</li>
+</ol>
+<p>With the built-in <strong>ChatML</strong> template, which wraps its sequences in line breaks, a short chat renders like this:</p>
+<pre>&lt;|im_start|&gt;system
+You are a storyteller. Write Seraphina's next reply…
+Ada is a wandering cartographer…
+Seraphina is a guardian of the forest…
+The two meet at the edge of the Vale.&lt;|im_end|&gt;
+&lt;|im_start|&gt;user
+Hello? Is anyone there?&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+"Welcome, traveler."&lt;|im_end|&gt;
+&lt;|im_start|&gt;user
+Is there shelter nearby?&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+</pre>
+<p>A few rules fill in the details. Reply content is trimmed of surrounding whitespace. Speaker names are the name recorded on each message, or failing that the current persona, the character, or "System". The <strong>User filler message</strong>, when the template has one, is a user turn inserted where the history would otherwise open with the model speaking: at the start of the history, or before the <code>/sysgen</code> prompt, or at the very end when there are no messages. Some models refuse to begin with their own turn, and the filler gives them a user turn to answer.</p>
+<p>The generation prefix is the <strong>Assistant prefix for turn end</strong> if the template has one, otherwise the <strong>Assistant prefix</strong>. With <strong>Emit empty reasoning at turn end</strong> on, an empty reasoning block (the reasoning prefix followed at once by the suffix) is appended so the model skips its thinking. If <strong>Include names</strong> is <strong>Always</strong>, the character's name and a colon follow. On a continue there is no generation prefix at all: the last message is left open with no suffix, and the model carries on from its last word.</p>
+
+<h2 id="instruct-template">The instruct template</h2>
+<p>Instruct templates apply to text completions only; a chat-completions server does its own formatting. Ashyo ships templates for the common model families, listed under <a href="library.html#built-ins">Built-ins</a>, and <strong>Raw role labels</strong> is the default, writing plain "User:", "Assistant:" and "System:" labels. The fields:</p>
+<table>
+<tr><th>Field</th><th>Default</th><th>What it does</th></tr>
+<tr><td><strong>Sequences as stop strings</strong></td><td>on</td><td>Send the user, assistant and system prefixes as stop strings, so the model stops when it starts someone else's turn.</td></tr>
+<tr><td><strong>Wrap sequences in newlines</strong></td><td>off</td><td>Put a line break after every prefix, and use a line break where a suffix is empty.</td></tr>
+<tr><td><strong>Include names</strong></td><td>Past participants</td><td>Whether "Name: " precedes each message. <strong>Always</strong>, <strong>Never</strong>, or <strong>Past participants</strong>: only speakers other than your current persona and character, which keeps old names straight after you switch character or persona.</td></tr>
+<tr><td><strong>System uses the same format as user</strong></td><td>off</td><td>Wrap system messages in the user prefix and suffix instead of the system ones.</td></tr>
+<tr><td><strong>User prefix</strong>, <strong>User suffix</strong></td><td>empty</td><td>The text around each of your messages.</td></tr>
+<tr><td><strong>User filler message</strong></td><td>empty</td><td>A stand-in user turn for a history that would otherwise begin with the model. See above.</td></tr>
+<tr><td><strong>Assistant prefix</strong>, <strong>Assistant suffix</strong></td><td>empty</td><td>The text around each reply.</td></tr>
+<tr><td><strong>Assistant prefix for turn end</strong></td><td>empty</td><td>A different prefix for the generation prefix only, when the model wants its last turn opened differently.</td></tr>
+<tr><td><strong>System prefix</strong>, <strong>System suffix</strong></td><td>empty</td><td>The text around system messages inside the history, such as lore at depth.</td></tr>
+<tr><td><strong>Story string prefix</strong>, <strong>Story string suffix</strong></td><td>empty</td><td>The text around the story string at the top.</td></tr>
+<tr><td><strong>Stop sequence</strong></td><td>empty</td><td>One or more strings that end the reply, on top of those derived from the sequences.</td></tr>
+<tr><td><strong>Reasoning prefix</strong>, <strong>Reasoning suffix</strong></td><td>empty</td><td>The markers a thinking model puts around its reasoning, so Ashyo can split it from the reply.</td></tr>
+<tr><td><strong>Emit empty reasoning at turn end</strong></td><td>off</td><td>Append an empty reasoning block to the generation prefix to skip the model's thinking.</td></tr>
+</table>
+<p>SillyTavern instruct presets import as Ashyo instruct templates, including their reasoning markers. See <a href="import-export.html#sillytavern-presets">Import and export</a>.</p>
+
+<h2 id="placement">Where things land in the history</h2>
+<p>Items that are not template rows have one of three placements. <strong>Top</strong> items follow the template's row order. <strong>At depth N</strong> items are inserted before the Nth-newest message, or before the oldest message when the history is shorter than N. <strong>After history</strong> items, and depth 0, go after the newest message. Lore <strong>At depth</strong> uses the second placement; post-history instructions and the <code>/sysgen</code> prompt use the third.</p>
+<p>When several items want the same spot, the deeper ones go first, then assistant, user and system items in that order. In text completions, consecutive placed items with the same placement and role merge into one turn. On a text-completions continue, depth 0 and after-history items are placed before the message being continued, so the model's open turn stays last.</p>
+
+<h2 id="formatting">Context formatting</h2>
+<p>Three switches on the context template tidy text wherever Ashyo formats it: your sends, the model's replies, greetings, lore content and the character and persona fields.</p>
+<ul>
+<li><strong>Normalize whitespace</strong> (off). Runs of blank lines are capped at one blank line, and leading and trailing whitespace is removed.</li>
+<li><strong>Trim spaces</strong> (on). Whitespace at the start and end is removed.</li>
+<li><strong>Trim incomplete sentences</strong> (off). Text is cut after its last sentence end: a period, exclamation mark, question mark or ellipsis, along with any closing quote, bracket or asterisk that follows it. A model that stops mid-sentence at its token limit loses the dangling fragment.</li>
+</ul>
+
+<h2 id="stop-strings">Stop strings</h2>
+<p>A stop string tells the server to end the reply the moment it produces that text. With chat completions, only the <strong>Stop</strong> list from your <a href="samplers.html">samplers</a> is sent. With text completions, Ashyo combines several sources and removes duplicates:</p>
+<ul>
+<li>The samplers' <strong>Stop</strong> list.</li>
+<li>The instruct template's <strong>Stop sequence</strong>.</li>
+<li>With <strong>Sequences as stop strings</strong> on: each line of the <strong>User prefix</strong>, <strong>Assistant prefix</strong>, <strong>Assistant prefix for turn end</strong> and <strong>System prefix</strong>.</li>
+<li>With <strong>Names as stop strings</strong> on: a line break followed by your persona's name and a colon, so the model cannot start speaking for you.</li>
+<li>With <strong>Separators as stop strings</strong> on: a line break followed by the <strong>Chat start</strong> text, and one followed by the <strong>Example separator</strong>, when they are not empty.</li>
+</ul>
+<p>Banned tokens work alongside them: the global bans from the samplers' <strong>Global bans</strong> row go out ahead of the chat's own on every text-completions request. See <a href="samplers.html#bans">Samplers</a>.</p>
+
+<h2 id="sysgen">Generating a system message</h2>
+<p><code>/sysgen &lt;prompt&gt;</code> asks the model to write a system message rather than a reply in character, which is handy for a narrator's summary, a scene change or a note to itself. The prompt you type becomes a system item after the chat history that is never evicted, the model generates as <strong>System</strong> rather than as the character, and the result is added to the chat as a system message. Lore entries can be limited to, or kept out of, these generations with the <strong>/sysgen</strong> generation type. To add a system message you write yourself, use <code>/sys &lt;text&gt;</code> instead; see <a href="composer.html#commands">Composer and commands</a>.</p>
+{% endraw %}

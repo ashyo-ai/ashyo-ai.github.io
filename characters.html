@@ -1,0 +1,83 @@
+---
+layout: default
+title: Personas and characters
+---
+{% raw %}
+<h1 id="personas-and-characters">Personas and characters</h1>
+<p class="lead">A chat in Ashyo has two people in it. The <strong>character</strong> is who the model plays: a name, a description, a personality, a scenario, a greeting or several, and whatever lore and prompt text comes with it. The <strong>persona</strong> is you, or whoever you are playing: a name and a description the model reads so it knows who it is talking to. Both live in the <a href="library.html">Library</a>, and every chat picks one of each.</p>
+
+<h2 id="personas">Personas</h2>
+<p>A persona is short. It tells the model who you are in this story, and its name is what your messages are labeled with in the transcript and what {{user}} expands to in prompts, lore and greetings. You might keep one persona for yourself and a few more for different stories.</p>
+<ul>
+<li><strong>Name.</strong> The display name that appears in chat. It cannot be blank. The persona's Library name, which you set when you create it and change with Rename, identifies the item; the two usually match, and the display name follows a rename while they do.</li>
+<li><strong>Description.</strong> Who you are, in as much or as little detail as you like. Required. It enters the prompt through the Persona row of the <a href="prompt.html#context-template">context template</a>, and lore entries can be set to scan it for their keys.</li>
+<li><strong>Lore books.</strong> Books that are active in every chat where this persona is chosen. Persona books always come first in the lore order; see <a href="#lore-and-scripts">Lore and scripts</a>.</li>
+</ul>
+<p>Ashyo ships one persona, <strong>User</strong>, described as "A curious human." It cannot be deleted, so there is always someone to talk as. Make your own from the Personas tab of the Library with New, then pick it on the Participants tab of Settings.</p>
+
+<h2 id="characters">Characters</h2>
+<p>A character is the card the model plays from. If you have used character cards elsewhere, the fields will look familiar; cards import directly, see <a href="#importing">Importing cards</a>. Ashyo ships one character, <strong>Assistant</strong>, a plain helper with no greeting that cannot be deleted.</p>
+<table>
+<tr><th>Field</th><th>What it is for</th></tr>
+<tr><td><strong>Name</strong></td><td>The display name: what the character's messages are labeled with and what {{char}} expands to. It cannot be blank.</td></tr>
+<tr><td><strong>Description</strong></td><td>Who the character is. Required. Enters the prompt through the Character row of the context template.</td></tr>
+<tr><td><strong>Personality</strong></td><td>A short summary of temperament, sent right after the description.</td></tr>
+<tr><td><strong>Scenario</strong></td><td>The situation the chat opens in. Has its own row in the context template.</td></tr>
+<tr><td><strong>System prompt</strong></td><td>A system prompt the card carries with it. Used only when the flag below is on; see <a href="#card-prompts">Card prompts</a>.</td></tr>
+<tr><td><strong>Prefer the card's system prompt</strong></td><td>Off by default. On, the card's system prompt replaces the chat's.</td></tr>
+<tr><td><strong>Post-history instructions</strong></td><td>Instructions sent after the chat history, closest to where the model starts writing. Used only when the flag below is on.</td></tr>
+<tr><td><strong>Prefer the card's post-history instructions</strong></td><td>Off by default. On, the card's post-history instructions are sent.</td></tr>
+<tr><td><strong>Greetings</strong></td><td>The character's opening lines. See <a href="#greetings">Greetings</a>.</td></tr>
+<tr><td><strong>Example messages</strong></td><td>Sample exchanges that show the model how the character talks. See <a href="#examples">Example messages</a>.</td></tr>
+<tr><td><strong>Lore books</strong></td><td>Books active whenever this character is in the chat.</td></tr>
+<tr><td><strong>Regex scripts</strong></td><td>Scripts that run in this character's chats, in the order listed. Reorder them with Move up and Move down.</td></tr>
+</table>
+<p>Description, Personality, Scenario and the two prompts are long texts, so <kbd>Enter</kbd> on them opens the full-screen editor. All of them can use <a href="macros.html">macros</a>, so a card written with {{user}} and {{char}} works with any persona and survives a rename.</p>
+
+<h2 id="greetings">Greetings</h2>
+<p>A greeting is the character's first message, written by you or by the card's author, so the chat does not open on a blank screen. A character can have as many as it likes, each with a checkbox that enables it. On the Characters tab the list shows them as "Greeting 1", "Greeting 2" and so on; <kbd>Tab</kbd> on one offers <strong>Edit text</strong> and <strong>Delete</strong>, and the blank row at the bottom adds a new one.</p>
+<p>Here is what happens in a chat:</p>
+<ul>
+<li>When you pick a character for a chat that has no messages yet, Ashyo inserts one message from the character holding every enabled, non-blank greeting as a <a href="branches.html#swipes">swipe</a>. The first is shown; press <kbd>←</kbd> and <kbd>→</kbd> to browse the others. Each greeting has had the character's regex scripts, macros and formatting applied, so {{user}} already reads as your persona's name.</li>
+<li>If you change the character while the chat is still only that greeting, the greeting is removed and the new character's greetings take its place. A greeting that already has a branch hanging from it is kept.</li>
+<li>If you change your persona while the chat is still an unedited lone greeting, the greeting is rebuilt with the new names, keeping the swipe you were on, its label and whether it was enabled.</li>
+<li>Choosing the character that is already selected on the Participants tab reapplies it, unlike every other preset, where choosing the current one does nothing.</li>
+</ul>
+<div class="callout">
+<span class="label">Tip</span>
+<p>Greetings are ordinary messages once they are in the chat. You can edit one, delete it, or add your own opening with <code>/sendas</code> instead. A character with no enabled greetings simply starts with your message.</p>
+</div>
+
+<h2 id="examples">Example messages</h2>
+<p>Example messages are a few lines of dialogue showing the model how the character sounds. They are the first thing dropped when the context runs short, so they shape the voice early in a chat without costing room later. The Characters tab lists them as separate text blocks: <kbd>Tab</kbd> on a block offers <strong>Edit text</strong> and <strong>Delete</strong>, and a <strong>New example</strong> row adds one.</p>
+<p>Inside a block, a line that starts with a speaker's name and a colon starts that speaker's message, and lines after it without a name continue the same message. Write the names as macros so they follow your persona and the character:</p>
+<pre>{{user}}: Do you ever sleep?
+{{char}}: *She glances up from the ledger, not quite smiling.*
+Sleep is for people with nothing to count.
+{{user}}: That sounds exhausting.
+{{char}}: It is. Sit down, you're blocking my light.</pre>
+<p>A block with no speaker lines at all is sent as one system message, which is a handy way to add a note about style. Cards from SillyTavern keep several exchanges in one text separated by <code>&lt;START&gt;</code> lines; when such a card is imported, Ashyo splits it into one block per exchange. How the examples are placed and separated in the prompt is in <a href="prompt.html#context-template">Prompt building</a>.</p>
+
+<h2 id="card-prompts">Card prompts</h2>
+<p>Normally the system prompt comes from the chat: the preset you picked on the Prompt tab of Settings, or your override of it. A card can carry its own system prompt and its own post-history instructions, and two flags on the character decide whether they are used.</p>
+<ul>
+<li><strong>Prefer the card's system prompt.</strong> When this is on and the card's prompt is not blank, it replaces the chat's system prompt. If the card's prompt contains {{original}}, the chat's prompt is inserted there, so a card can wrap your instructions rather than discard them. The Prompt tab of Settings tells you which is happening: "The character's card supplies the system prompt; this one is used only where the card writes {{original}}." or "…; this one is not used."</li>
+<li><strong>Prefer the card's post-history instructions.</strong> When this is on, the card's post-history instructions are sent after the chat history, right before the model answers. Only a preferring card provides them; there is no chat-level equivalent, and {{original}} inserts nothing here.</li>
+</ul>
+<p>Both flags are off when you make a character and off when you import a card, so a card never takes over your prompt until you say so. Both can be overridden per chat on the Participants tab.</p>
+
+<h2 id="lore-and-scripts">Lore and scripts</h2>
+<p>Personas and characters each carry a list of <strong>Lore books</strong>, and characters also carry a list of <strong>Regex scripts</strong>. Attaching things this way means they travel with the card: pick the character in any chat and its lore and scripts come along.</p>
+<ul>
+<li>In a chat, lore comes from the persona's books, the character's books and the chat's own books (the Lore tab of Settings). The persona's books always come first; the order of the other two is the <strong>Lore insertion strategy</strong> setting. A book attached in two places is used once. See <a href="lore.html#books">Lore books</a>.</li>
+<li>Regex scripts marked <strong>Global</strong> run in every chat first, in name order. Then the character's listed scripts run in the order you gave them. Each script runs once. See <a href="regex.html#order">Regex scripts</a>.</li>
+<li>Renaming a lore book or script in the Library updates every persona and character that lists it, and deleting one removes it from them. Renaming a character updates the lore entries whose character filter names it.</li>
+</ul>
+
+<h2 id="importing">Importing cards</h2>
+<p>You do not have to type a character in. From the Characters tab of the Library, <kbd>Tab</kbd> then <strong>Import</strong> opens the file dialog; pick a PNG character card or a JSON card and the character appears with its description, personality, scenario, prompts, greetings and example messages filled in. A card that carries a lore book brings it along as a new book linked to the character, and a card with regex scripts asks whether to keep them. What is imported, what is dropped and what the notices mean is in <a href="import-export.html#cards">Character cards</a>.</p>
+
+<h2 id="choosing">Choosing who is in a chat</h2>
+<p>Open Settings with <code>/settings</code> and go to the <strong>Participants</strong> tab. The <strong>Preset</strong> row under Persona picks your persona and the one under Character picks the character. Below each, the <strong>Description</strong> can be edited for this chat alone, and the character's two "prefer" flags can be flipped for this chat alone; such a change is marked with ∗ and a note reading "Preset: X", and <kbd>Tab</kbd> then <strong>Reset</strong> puts it back. Switching to a different persona or character drops those overrides. With no chat open, the same tab sets the persona and character that new chats start with. See <a href="settings.html#participants">Settings</a>.</p>
+<p>A new chat always starts with each kind's default, so set your own persona as the default once and forget about it. Deleting a persona or character from the Library asks first, warning "Chats using this persona will switch to User." (or "…this character will switch to Assistant."), and that is exactly what happens to every chat that used it.</p>
+{% endraw %}

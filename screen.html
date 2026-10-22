@@ -1,0 +1,115 @@
+---
+layout: default
+title: The screen
+---
+{% raw %}
+<h1 id="the-screen">The screen</h1>
+<p class="lead">Ashyo takes over your terminal window and divides it into a few fixed parts: the conversation on top, the line you type into near the bottom, and a status bar under everything. Screens that need more room, such as Settings or the chat picker, open as boxes over the conversation. This page walks through each part, then covers colors, the mouse, the clipboard and how Ashyo writes dates and sizes.</p>
+
+<h2 id="layout">Layout</h2>
+<p>From top to bottom, the window holds these rows. Only the transcript, the composer and the status bar are always there; the rest appear when they have something to say.</p>
+<pre>┃ #1  User · 10:42 am                                  ┐
+┃ Hello there.                                         │
+┃                                                      │ transcript
+┃ #2  Seraphina · 10:42 am · koboldcpp · llama-3-8b    │
+┃ "Welcome, traveler," she says, lowering her hood.    ┘
+  ⠹ Generating… 12s                                    activity line, while a reply streams
+  no message #9; the chat has 2 messages               notice line
+──────────────────────────────────────────────────────
+❯ What brings you here?                                composer
+──────────────────────────────────────────────────────
+  /model      Open the model picker…                   completion dock, while typing a command
+My chat · koboldcpp/llama-3-8b      ███▍░░░░░░ 3.1k / 8.2k (38%)   status bar</pre>
+<ul>
+<li><strong>Transcript.</strong> The conversation. It always keeps at least five rows, however much the other parts grow. A two-column gutter on its left holds the focus bar, and message numbers push the text further right. See <a href="transcript.html">Transcript</a>.</li>
+<li><strong>Activity line.</strong> Two rows that appear while a reply is generating, with a spinner and a timer. See <a href="#notice-line">below</a>.</li>
+<li><strong>Quit question.</strong> Docked above the notice line when you ask to quit while something is still running. It takes at most 40% of the window.</li>
+<li><strong>Notice line.</strong> One row for refusals, failures and progress messages.</li>
+<li><strong>Composer.</strong> Where you type, between two rules. It grows as you write, up to half the window's rows counting its two rules, then scrolls. While a box is open it shrinks to one row showing your draft. See <a href="composer.html">Composer and commands</a>.</li>
+<li><strong>Completion dock.</strong> Opens under the composer while you type a command, and takes whatever rows are left over. It closes itself when no rows remain or a box opens.</li>
+<li><strong>Status bar.</strong> The last row. See <a href="#status-bar">below</a>.</li>
+</ul>
+<p>Focus is either on the transcript or on the composer. Press <kbd>Ctrl+↑</kbd> or <kbd>Ctrl+↓</kbd> to move it, or click the part you want. The <code>❯</code> at the start of the composer is drawn in the accent color while the composer has focus, and an accent bar runs down the transcript's gutter beside the marked message while the transcript has it.</p>
+<p>Ashyo sets the window title to <code>ashyo</code>. It needs a window of at least 24 columns by 12 rows; below that it shows a centered red "Terminal too small" notice saying what it needs, and holds every key until you resize. While a chat is being saved on the way out, or opened, the empty transcript area reads "Saving <em>name</em>…" or "Opening <em>name</em>…".</p>
+<div class="callout">
+<span class="label">Tip</span>
+<p>Everything is undone when Ashyo exits, including after a crash, so your terminal comes back the way it was: no leftover alternate screen, no stuck mouse reporting.</p>
+</div>
+
+<h2 id="status-bar">Status bar</h2>
+<p>The bottom row tells you where you are and how full the model's context is. Reading from the left, separated by " · ":</p>
+<ul>
+<li>The <strong>chat name</strong> in the accent color. A chat you have not named shows its file name without the <code>.db</code> ending. A temporary chat adds "(temp)".</li>
+<li>The <strong>provider and model</strong> of the chat's connection, as <code>provider/model</code>, in the accent color.</li>
+<li>"inspect" in the warning color when the <a href="context.html#inspector">prompt inspector</a> is on for this chat.</li>
+<li>"N selected" while a <a href="transcript.html#mark">range</a> of messages is selected, and "3/17" or "no matches" while a <a href="transcript.html#search">search</a> is active.</li>
+<li>Short confirmations that stay for three seconds: "copied", "deleted N messages" and "saved preset". When no chat is shown, these appear alone.</li>
+</ul>
+<p>On the right is a <strong>context usage bar</strong> of up to 24 cells, drawn in eighth blocks: green while the context is under half full, the accent color up to 80%, red above that. Next to it, "used / size (pct%)" gives the numbers, with counts shortened to forms like <code>12.3k</code> and <code>1.25m</code>. On a narrow window the bar moves to the front. What counts as used, and what the size is, is explained in <a href="context.html#budget">Context and budget</a>.</p>
+<pre>Seraphina's garden · koboldcpp/llama-3-8b · 3/17 · copied         ██████▎░░░░░░░░░░░░░░░░░  3.1k / 8.2k (38%)</pre>
+<p>While you type a transcript or log search, a "🔍 query" line appears over the top row of what you are searching, and the status bar itself is unchanged. It shows up as soon as you press <kbd>/</kbd>, even while empty, and stays until <kbd>Enter</kbd> or <kbd>Esc</kbd>.</p>
+
+<h2 id="notice-line">Notice, activity and quit lines</h2>
+<p>The <strong>notice line</strong> shows one message at a time, picking the most urgent when several apply: a command refusal in red, then a failure in red, then a plain notice in the muted color, then a board's resting notice, a branch-loading failure, and finally loading progress such as "loading 1.2k/3k messages" or "loading other branches". Any key clears it. When a box is open, failures and notices that would otherwise be written into the transcript as notes go here instead, and a refusal from a field inside a box shows inside that box.</p>
+<p>The <strong>activity line</strong> appears while a reply is generating. It shows a spinner and "Generating… 12s", switching to minutes and seconds and then hours and minutes as time goes on, aligned to the <a href="#reading-format">reading page</a>. Press <kbd>Esc</kbd> to stop the generation; see <a href="transcript.html#streaming">Streaming</a> for what is kept.</p>
+<p>The <strong>quit question</strong> appears when you <code>/quit</code> while a reply is generating or a message edit is open. It asks "A generation is running. Quit anyway? [y/N]", "A message edit is open. Quit anyway? [y/N]", or the combined version, with the hint "y: quit   n / esc: keep working". <kbd>y</kbd> quits and <kbd>n</kbd> or <kbd>Esc</kbd> keeps working, with focus returning to the pane it was on. A failure to refresh a chat is reported once and not repeated until the message changes.</p>
+
+<h2 id="boxes">Boxes</h2>
+<p>Anything bigger than a line opens as a box over the transcript: the Settings and Library board, the chat picker, the turn tree, the prompt inspector and itemization, the log viewer and the file dialog. Boxes stack, so a file dialog can open over the Library.</p>
+<p>A box is centered at three quarters of the window's width (never narrower than 24 columns) and runs from the second row down to just above the composer, or above the activity line while a reply is generating. It has a rounded border in the accent color, a bold title with a divider under it, a footer rule, up to two rows of notes, and a last line of key hints such as "enter: open, esc: close". The key hints change with what you are doing, so they are the quickest reminder of what a box can do right now; the full list is in the <a href="keys.html">Keyboard reference</a>.</p>
+<ul>
+<li>The mouse wheel acts as <kbd>↑</kbd> and <kbd>↓</kbd> inside a box unless the box has its own scrolling.</li>
+<li>Closing a box refreshes the screen behind it. Opening a box over the Settings or Library board clears whatever filter you had typed there.</li>
+<li>Pasting while a box is open goes into the box's current field.</li>
+</ul>
+<p>Some boxes have a <strong>tab strip</strong> under the title: the turn tree, the itemization and the log viewer. The current tab is bold in the accent color, other available tabs are dim, and tabs that do not apply right now are muted. <kbd>Tab</kbd> and <kbd>Shift+Tab</kbd> move to the next or previous tab, wrapping around and skipping unavailable ones, and a click switches straight to a tab. A strip wider than the box scrolls to keep the current tab in view.</p>
+
+<h2 id="themes">Colors</h2>
+<p>The <strong>Theme colors</strong> row on the <strong>Appearance</strong> tab of Settings offers ten color schemes. While you browse the list the whole screen previews each scheme live, with the hint "↑↓: preview, enter: choose, esc: cancel".</p>
+<table>
+<tr><th>Scheme</th><th>Background</th></tr>
+<tr><td>Ashyo Dark (default), Ashyo Light</td><td>Ashyo's own palette. These two also carry their own colors for markdown (headings, lists, links, quotes, code, markup) and for syntax highlighting in code blocks.</td></tr>
+<tr><td>Blue Graphite, Rose Graphite, Violet Graphite, Graphite</td><td>Dark. The Graphite schemes have no syntax colors, so code blocks show in plain text.</td></tr>
+<tr><td>Blue Mist, Rose Mist, Violet Mist, Mist</td><td>Light. The Mist schemes use the light syntax colors.</td></tr>
+</table>
+<p>Each scheme has a user color, an assistant color and a system color (its accent, success and text colors). These color only the message headers in the transcript, the header of a reply as it streams, and the rows of the turn tree; message text is always the scheme's plain text color, so your chat never turns into a rainbow.</p>
+
+<h2 id="reading-format">Reading format</h2>
+<p>By default the transcript uses the full width of the window. If long lines tire your eyes, the <strong>Reading format</strong> row on the Appearance tab centers the transcript in a narrower page whenever the window is wide enough: <strong>Narrow</strong> at 45 columns, <strong>Classic</strong> at 66, <strong>Accessible</strong> at 80 or <strong>Fast</strong> at 100. The activity line and notes in the transcript line up with the page. Code blocks and tables that are wider than the page are centered on the full window instead of being cut; see <a href="transcript.html#message-cards">Message cards</a>.</p>
+
+<h2 id="mouse">Mouse</h2>
+<p>Ashyo listens for mouse presses and drags when your terminal reports them. You never need the mouse, but it is handy.</p>
+<ul>
+<li><strong>Wheel.</strong> Scrolls whatever is under the pointer: a box, the completion dock, the quit prompt, the composer or the transcript, three rows per notch. In the composer, scrolling drags the cursor along with the view.</li>
+<li><strong>Click.</strong> Gives focus to the part you clicked and clears the notice line and any selection. In the transcript a click marks the message under the pointer and starts a selection; in the composer it places the cursor. Clicking a tab in a tab strip switches to it.</li>
+<li><strong>Drag.</strong> Selects text. In the transcript the view scrolls on when you drag past the bottom, and releasing the button copies the selection; see <a href="transcript.html#copying">Copying from the transcript</a>. In the composer a drag selects for <kbd>Ctrl+C</kbd> or <kbd>Ctrl+X</kbd>.</li>
+</ul>
+<p>The mouse is ignored while a popup menu is open. Resizing the window drops any mouse selection.</p>
+
+<h2 id="clipboard">Copy and paste</h2>
+<p>Copying goes out through your terminal itself (the OSC 52 escape), so it reaches your system clipboard even when Ashyo runs on another machine over SSH, as long as your terminal allows it. Every copy shows "copied" on the status bar for three seconds. Where a copy comes from depends on where you are:</p>
+<ul>
+<li>In the <strong>composer</strong>, the <strong>full-screen text editor</strong>, the <strong>log viewer</strong> and the <strong>prompt inspector</strong>, select text with <kbd>Shift</kbd> and the arrow keys or a mouse drag, then press <kbd>Ctrl+C</kbd> or <kbd>Ctrl+Shift+C</kbd>. The selection is cleared after the copy. <kbd>Ctrl+X</kbd> cuts in the composer and the text editor.</li>
+<li>In the <strong>transcript</strong>, releasing a mouse drag copies at once, and the message menu offers <strong>Copy</strong>, <strong>Copy reasoning</strong> and <strong>Copy code</strong>. <kbd>Ctrl+C</kbd> does nothing there. See <a href="transcript.html#copying">Copying from the transcript</a>.</li>
+</ul>
+<p><kbd>Esc</kbd> clears a selection, unless a search field is open, in which case it closes the search first.</p>
+<p>Pasting works two ways. Your terminal's own paste shortcut (usually <kbd>Ctrl+Shift+V</kbd> or a middle click) is understood everywhere: into a search field, where newlines become spaces, into the topmost box, or into the composer, which takes focus to receive it. It is ignored while the quit question or a popup menu is open. <kbd>Ctrl+V</kbd> instead asks the system clipboard directly, trying <code>pbpaste</code>, <code>wl-paste</code>, <code>xclip</code>, <code>xsel</code> and <code>termux-clipboard-get</code> in turn, then falling back to asking the terminal for its clipboard. If none of that works you see "No clipboard tool is installed."</p>
+<div class="callout warn">
+<span class="label">Heads up</span>
+<p>Some terminals block clipboard access through OSC 52 by default for safety. If "copied" shows but nothing reaches your clipboard, look for a clipboard or OSC 52 setting in your terminal's configuration.</p>
+</div>
+
+<h2 id="alerts">Reply alerts</h2>
+<p>Ashyo can tell you when a reply is in, so you can leave it generating and switch to something else. The <strong>Reply alert</strong> row on the Appearance tab of Settings has three values: <strong>Off</strong>, <strong>When unfocused</strong> (the default, which fires only while your terminal window does not have focus) and <strong>Always</strong>. Alerts go out as desktop notifications titled "Ashyo" through <code>notify-send</code>; if that is not installed, Ashyo rings the terminal bell instead.</p>
+<p>The notification reads "<em>speaker</em> replied in <em>chat</em>", or "<em>speaker</em> sent an empty reply in <em>chat</em>" when the model returned nothing (not when you stopped it yourself), or "Generation failed in <em>chat</em>: <em>reason</em>".</p>
+
+<h2 id="formats">Dates, times, durations and sizes</h2>
+<p>Dates and times follow your locale, read from <code>LC_ALL</code>, then <code>LC_TIME</code>, then <code>LANG</code>. The <code>C</code> locale gives ISO dates. Within that:</p>
+<ul>
+<li><strong>Dates</strong> use your locale's order of day, month and year in numbers, falling back to <code>YYYY-MM-DD</code>.</li>
+<li><strong>Times</strong> are 12-hour with am and pm, with seconds where they matter. A time Ashyo does not know reads "unknown", and a missing time or a zero duration reads "—".</li>
+<li><strong>Durations</strong> start at the largest non-zero unit and pad nothing: "42s", "1h 5m 3s", "1d 0h 0m 4s". Short timings are given in seconds with two decimals.</li>
+<li><strong>Sizes</strong> use B, KiB, MiB and GiB with one decimal. Token counts on the status bar shorten to "12.3k" and "1.25m"; the <a href="context.html#itemization">itemization</a> writes them in full with thousands separators.</li>
+</ul>
+<p>Text that does not fit its space is cut with "…". Wrapped text keeps its leading spaces and breaks a word that is longer than the line.</p>
+{% endraw %}

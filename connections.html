@@ -1,0 +1,113 @@
+---
+layout: default
+title: Connections
+---
+{% raw %}
+<h1 id="connections">Connections</h1>
+<p class="lead">Ashyo does not run a model itself. It talks to one: a server on your own machine, a hosted API, or a subscription. A connection is the handful of settings that say which service that is, how to reach it, who you are to it and which model to ask for. This page walks through setting one up and then explains each provider in turn.</p>
+
+<h2 id="how-it-works">How a connection is set up</h2>
+<p>Everything about a connection lives on the <strong>Connection</strong> tab of Settings (<code>/settings</code>). The tab shows only the rows the chosen provider actually uses, plus the few every provider shares, so it changes shape when you switch providers. From top to bottom you will find:</p>
+<ul>
+<li><strong>Preset.</strong> A saved connection to start from, listed as "name · provider · protocol", or <strong>None</strong>. It reads "No saved presets." until you save one. See <a href="#presets">Presets</a>.</li>
+<li><strong>Provider</strong> and <strong>Protocol</strong>, under <strong>Route</strong>. Which service you are talking to (it reads "No provider selected" until you choose) and whether you talk to it with <strong>Chat Completions</strong> or <strong>Text Completions</strong>. The protocol list only offers what the provider supports.</li>
+<li><strong>Address</strong>, <strong>Port</strong> and <strong>Base URL</strong>, under <strong>Endpoint</strong>. Local servers take an address and a port (1–65535). The OpenAI-compatible provider takes a base URL instead, which must start with http or https and name a host. Hosted services show none of these.</li>
+<li><strong>Account</strong> and a credential row, under <strong>Authentication</strong>. Which of your saved accounts to use, then either an <strong>API key</strong> row or a <strong>Login</strong> row depending on the provider. Local servers skip this section. See <a href="#accounts">Accounts and credentials</a>.</li>
+<li><strong>Model.</strong> A searchable list of what the service offers. See <a href="#model">Choosing a model</a>.</li>
+<li><strong>Extra request fields.</strong> A JSON object merged into every request, for servers that take options Ashyo has no row for. Only llama.cpp and OpenAI-compatible servers show it.</li>
+<li><strong>Model providers</strong>, <strong>Model quantizations</strong> and <strong>Allow fallback providers</strong>, under <strong>Routing</strong>. OpenRouter only. See <a href="#openrouter">OpenRouter</a>.</li>
+<li><strong>Context size</strong> and <strong>Auto-update on connect</strong>. How many tokens the model can read at once. See <a href="#context-size">Context size</a>.</li>
+<li><strong>Connection</strong>, under <strong>Test</strong>. Press <kbd>Enter</kbd> on it to try the connection. See <a href="#test">Testing the connection</a>.</li>
+</ul>
+<p>With a chat open, the tab edits that chat's connection and the header counts your unsaved changes ("No unsaved changes." or "3 unsaved changes."). With no chat open it edits the defaults every new chat starts from. A row you changed away from its preset is marked with "∗ " and offers a <strong>Reset</strong> action. The whole mechanism is explained in <a href="settings.html#how-settings-work">Settings and presets</a>.</p>
+
+<h2 id="providers">The five providers</h2>
+<table>
+<tr><th>Provider</th><th>What it is</th><th>Protocols</th><th>Needs</th></tr>
+<tr><td><strong>KoboldCPP</strong> (default)</td><td>A model server you run yourself</td><td>Text Completions</td><td>Address and port</td></tr>
+<tr><td><strong>llama.cpp</strong></td><td>The llama.cpp server you run yourself</td><td>Text Completions</td><td>Address and port</td></tr>
+<tr><td><strong>OpenAI-compatible</strong></td><td>Any server speaking the OpenAI API, local or hosted</td><td>Chat and Text Completions</td><td>Base URL, often an API key</td></tr>
+<tr><td><strong>OpenRouter</strong></td><td>A hosted gateway to many models</td><td>Chat Completions</td><td>An API key</td></tr>
+<tr><td><strong>OpenAI Codex</strong></td><td>A ChatGPT subscription</td><td>Chat Completions</td><td>A login in your browser</td></tr>
+</table>
+<p>The providers are built in. You cannot add your own, but the OpenAI-compatible provider covers most servers that are not on the list.</p>
+
+<h2 id="protocols">Chat Completions and Text Completions</h2>
+<p>There are two ways to hand a model a conversation, and the protocol row picks which one Ashyo uses.</p>
+<p>With <strong>Chat Completions</strong>, Ashyo sends a list of messages, each tagged as system, user or assistant, and the server wraps them in the model's own format. It is the simpler choice and the only one hosted services offer. How Ashyo arranges the list is described under <a href="prompt.html#chat-completions">Prompt building</a>.</p>
+<p>With <strong>Text Completions</strong>, Ashyo builds the entire prompt as one piece of text and the server continues it. You control the wrapping yourself through an <a href="prompt.html#instruct-template">instruct template</a>, which is why this protocol has a far longer list of <a href="samplers.html#text-completions">samplers</a> and is the only one that can <a href="branches.html#continue">continue</a> a reply mid-sentence. Both local servers speak it.</p>
+<div class="callout">
+<span class="label">Tip</span>
+<p>Samplers belong to a protocol, not a provider. Switching between Chat and Text Completions switches which sampler preset applies, and the <strong>Samplers</strong> tab only appears once a protocol is set.</p>
+</div>
+
+<h2 id="koboldcpp">KoboldCPP</h2>
+<p>The default provider. KoboldCPP serves one model at a time from your own machine, so the connection is just an <strong>Address</strong> and <strong>Port</strong>, defaulting to 127.0.0.1 and 5001, with no encryption. There is no model row: Ashyo asks the server what it has loaded and stamps that name on every reply.</p>
+<p>KoboldCPP is also the provider Ashyo knows best. The server reports its true maximum context length, so <a href="#context-size">context size</a> fills itself in, and it counts tokens exactly, so prompt estimates carry no safety margin. Every text-completions sampler is sent under the name KoboldCPP expects, and stopping a reply tells the server to abort generation rather than just closing the connection.</p>
+
+<h2 id="llamacpp">llama.cpp</h2>
+<p>The llama.cpp server, reached by <strong>Address</strong> and <strong>Port</strong> with defaults of 127.0.0.1 and 8080. It speaks Text Completions through its OpenAI-style endpoint, so it shares most of its behavior with the <a href="#openai-compatible">OpenAI-compatible</a> provider, including the sampler translation described under <a href="samplers.html#sent">What gets sent</a>.</p>
+<p>The <strong>Model</strong> list shows a "Loaded model" entry above whatever the server lists. You can leave the row empty: the reply is then stamped with the first model the server names. The context size is read from the server's own settings, and tokens are counted exactly, so there is no estimate margin here either. <strong>Extra request fields</strong> let you pass server options Ashyo has no row for.</p>
+
+<h2 id="openai-compatible">OpenAI-compatible</h2>
+<p>For any server that speaks the OpenAI API, from a local program to a hosted service. There is no default address: you give a <strong>Base URL</strong> such as <code>http://127.0.0.1:1234/v1</code>, and it must start with http or https and name a host. The provider offers both protocols, lists models from the server, and shows an <strong>Extra request fields</strong> row.</p>
+<ul>
+<li><strong>Model.</strong> Pick one from the server's list, or type any name; the list offers your text as "Use &lt;text&gt;". The model is only included in requests when you set one, since many local servers ignore it.</li>
+<li><strong>Extra request fields.</strong> A JSON object merged into every request last, so a key you set here overrides what Ashyo would have generated. Setting a key to <code>null</code> removes it from the request entirely.</li>
+<li><strong>API key.</strong> Many servers need none. If yours does, add an account and paste the key; it goes out as a bearer token.</li>
+</ul>
+<p>Because a generic server cannot be asked how it tokenizes, Ashyo estimates prompt sizes itself and keeps a 500-token margin in reserve, see <a href="context.html#estimation">Token estimation</a>. When the server reports that the prompt was too long, Ashyo trims and resends once. Error messages come from the server as it phrases them.</p>
+
+<h2 id="openrouter">OpenRouter</h2>
+<p>A hosted gateway that routes one request to many underlying model hosts. It is Chat Completions only, always over an encrypted connection, and it is the one provider that insists on a key: a send without one fails with "API key is required." Create a key on the OpenRouter site, then save it under an <a href="#accounts">account</a>.</p>
+<ul>
+<li><strong>Model.</strong> OpenRouter's full catalog with display names and context lengths. Names are matched without regard to case, and a ":variant" suffix is dropped.</li>
+<li><strong>Model providers.</strong> Which hosts may serve the model, one per line, picked from the live list as "name · id". Each entry gets a "Remove &lt;id&gt;" action. Empty means "Any provider".</li>
+<li><strong>Model quantizations.</strong> A multi-select of the quantizations you accept: int4, int8, fp4, mxfp4, nvfp4, fp6, fp8, mxfp8, fp16, bf16, fp32 and unknown.</li>
+<li><strong>Allow fallback providers.</strong> On by default. Lets OpenRouter fall back when your chosen hosts are unavailable.</li>
+</ul>
+<p>The chat-completions <strong>Reasoning effort</strong> sampler is passed through, and setting it to "none" turns reasoning off for the request. OpenRouter's own context-compression plugin is switched off on every request so Ashyo stays in charge of what the model reads. If OpenRouter rejects a request for a real model, Ashyo treats that as a context overflow and replans once.</p>
+<div class="callout warn">
+<span class="label">Heads up</span>
+<p>Preferred providers are sent as a strict allow-list, so with hosts listed under <strong>Model providers</strong>, fallback cannot route to a host outside them. See <a href="troubleshooting.html#limitations">Known limitations</a>.</p>
+</div>
+
+<h2 id="openai-codex">OpenAI Codex</h2>
+<p>Talks to a ChatGPT subscription. Instead of an API key you log in with your OpenAI account, either in a browser or with a device code, and Ashyo keeps the resulting login in <code>auth.json</code>. It is Chat Completions only and the only row it adds is <strong>Model</strong>, listed from the service with display names and context windows.</p>
+<p>Codex works differently from the others in two ways. System messages, including your system prompt and lore placed as system, are sent as instructions rather than as messages. And it honors only two samplers, <strong>Reasoning effort</strong> and <strong>Verbosity</strong>; temperature, top-p, penalties, max tokens, seed and stop strings are all dropped, see <a href="samplers.html#sent">What gets sent</a>. Reasoning summaries stream back as the reply's reasoning. When the login expires mid-session, Ashyo refreshes it and resends the request once on its own.</p>
+
+<h2 id="accounts">Accounts and credentials</h2>
+<p>Credentials are kept apart from settings in <code>auth.json</code>, grouped by provider as named accounts. A connection preset or a chat names an account; the account holds the key or the login. That way a preset you export never carries a secret, and several presets can share one login.</p>
+<p>The <strong>Account</strong> row opens a list of the provider's accounts plus <strong>None</strong> and <strong>Add account…</strong>. Account names can be anything non-blank and unique; extra spaces are collapsed. An existing account row offers <strong>Rename account</strong> and <strong>Delete account</strong>, the latter warning that "Presets and chats using this account will have none." Renaming or deleting carries through to every preset, the defaults and every chat, open or saved. With no account chosen the credential row reads <strong>None</strong> with the note "No account is chosen; choose or add one to hold a credential."</p>
+<h3 id="api-keys">API keys</h3>
+<p>For OpenRouter and OpenAI-compatible servers the credential row is <strong>API key</strong>, reading "Saved key" or "No key". Press <kbd>Enter</kbd> and paste the key; it is typed hidden and saved straight to the account. A blank key removes it, as the row's note says. Removing the last account of a provider removes that provider's section from the file.</p>
+<h3 id="login">Logging in to Codex</h3>
+<p>For OpenAI Codex the credential row is <strong>Login</strong>, reading "Logged in", "Not logged in" or "Logging in…". Press <kbd>Enter</kbd> for its actions:</p>
+<ul>
+<li><strong>Log in with the browser.</strong> Ashyo opens the OpenAI login page in your browser and waits for it to call back on localhost (port 1455, or 1457 when that is taken). If no browser can be opened, a notice reads "Open this URL to log in: …" so you can paste it yourself.</li>
+<li><strong>Log in with a device code.</strong> For machines without a browser, such as a remote host over SSH. A notice reads "Open https://auth.openai.com/codex/device and enter code …"; do that in any browser and Ashyo picks up the login when it completes. The offer expires after 15 minutes.</li>
+<li><strong>Cancel login</strong> while one is under way. Only one login can run at a time: "Nothing to start while another login is pending."</li>
+<li><strong>Log out.</strong> Ashyo asks OpenAI to revoke the login, then forgets it. If the revocation fails you still end up logged out: "The account is logged out regardless."</li>
+</ul>
+<p>Logins refresh themselves shortly before they expire, so you should rarely see "Not logged in" again. The file holding all of this must be readable by you alone; Ashyo refuses to start otherwise, see <a href="files.html#auth">auth.json</a>.</p>
+
+<h2 id="model">Choosing a model</h2>
+<p>The <strong>Model</strong> row opens a list fetched from the service. Type to filter it by id or name, press <kbd>Esc</kbd> to clear the filter, and <kbd>Enter</kbd> to choose. The list opens on the current model and reads "Loading…" while it fetches and "No models." when the service has none. If fetching fails the reason shows as a note under the row. For providers that accept any name, your typed text is offered as "Use &lt;text&gt;".</p>
+<p>You can also switch a chat's model without opening Settings: press <kbd>Ctrl+P</kbd> on an empty composer or type <code>/model</code>, see <a href="composer.html#model-dock">the model dock</a>.</p>
+
+<h2 id="context-size">Context size</h2>
+<p>The context size is the number of tokens the model can read in one request, and it is the ceiling every prompt is planned against, see <a href="context.html#budget">Context and budget</a>. The row is unset by default. When it is unset, or when <strong>Auto-update on connect</strong> is on, Ashyo asks the provider for the model's maximum whenever a chat opens or a connection is tested, and saves the answer into the chat. Set the row by hand when you want a smaller window than the model allows, or when the provider cannot report one.</p>
+<p>If no size is known at all when you send, the send is refused: "The provider's context window is unknown and could not be retrieved. Test the connection or set a context size."</p>
+
+<h2 id="test">Testing the connection</h2>
+<p>At the bottom of the tab, under <strong>Test</strong>, the <strong>Connection</strong> row shows the state of the connection and runs a test when you press <kbd>Enter</kbd>. The test first checks that credentials are in place, then sends "Reply with OK." asking for a single token, and finally refreshes what Ashyo knows about the service, including the context size. The row reads "Connecting" while it runs, then "Connected" in green or "Disconnected — " followed by the reason. Before any check it reads "Disconnected — not yet checked". Changing a setting clears the result and cancels a running test.</p>
+<p>Ashyo also watches every server address on its own. When a request fails to connect, it probes the address with growing pauses (1, 2, 4, 8, 16 and then 30 seconds) until it answers again, and a generation waits for the server to come back for up to the connect timeout before failing. The reasons you will see are plain: "connection refused" with the question "Is the server running?", "cannot resolve host", "host unreachable", or "no answer" when nothing replies in time. A server that connects but then goes silent is cut off with "no data for N seconds; the request was aborted". What to do about each is in <a href="troubleshooting.html#connecting">Troubleshooting</a>.</p>
+
+<h2 id="network">Timeouts and proxies</h2>
+<p>Two limits are not on any screen but can be edited in the config file under <code>backend</code>: <code>connect_timeout</code>, how long to wait for a server to accept a connection (30 seconds by default), and <code>read_timeout</code>, how long a request may go without sending anything (300 seconds). Raise the second for slow local models that think for minutes before the first token. See <a href="files.html#config-file">the config file</a>.</p>
+<p>Encrypted connections are used wherever the address says https. HTTP CONNECT proxies are honored from the usual proxy environment variables; SOCKS proxies are not supported.</p>
+
+<h2 id="presets">Connection presets</h2>
+<p>A connection you want to reuse is saved as a preset. With the tab filled in, press <kbd>Tab</kbd> on the <strong>Preset</strong> row for <strong>Save</strong> (into the selected preset), <strong>Save as</strong> (a new preset, named "Untitled" until you change it), <strong>Rename</strong> and <strong>Delete</strong>; the status bar confirms with "saved preset". Presets are also edited directly on the <a href="library.html#connection-presets">Library</a>'s <strong>Connection presets</strong> tab, where a preset shows its <strong>Route</strong> plus its provider's field groups with unset fields showing their defaults.</p>
+<p>A preset stores only the fields its provider uses, along with its name, provider, protocol, account and context settings. Changing a preset's provider clears its account. Choosing a preset or a provider in a chat clears that chat's connection overrides, and a chat's empty connection fields fall back to the provider's defaults. Renaming a preset follows through to every chat using it; deleting one leaves those chats with no preset selected. An exported preset leaves out its account, see <a href="import-export.html#ashyo-items">Ashyo item files</a>.</p>
+{% endraw %}

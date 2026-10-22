@@ -1,0 +1,221 @@
+---
+layout: default
+title: Lore books
+---
+{% raw %}
+<h1 id="lore-books">Lore books</h1>
+<p class="lead">A lore book is a collection of facts about your world that the model only sees when they matter. Each entry has a few keywords and a piece of text; when a keyword turns up in the recent conversation, the text slips into the prompt. The castle's history, how magic works, who the rival faction is: all of it can be ready without filling the prompt every turn. If you know SillyTavern's World Info, this is the same idea, and World Info files <a href="import-export.html#world-info">import directly</a>.</p>
+
+<h2 id="what-lore-is">What a lore book does</h2>
+<p>Every time Ashyo builds a prompt, it scans the last few messages of the chat for the keys of every entry in every attached book. An entry whose key appears fires, and its content is placed into the prompt at the position you chose for it. Entries that do not fire cost nothing. A few switches change the basic picture: an entry can be <strong>Constant</strong> and fire every time, it can stay active for a few messages after firing, it can require a second keyword, and it can be held back by a dice roll. All of that is below.</p>
+<p>Books are made and edited on the <strong>Lore books</strong> tab of the <a href="library.html#lore-books">Library</a>. There you can also sort the entry list, filter it by typing, and move or copy entries between books.</p>
+
+<h2 id="books">Which books are in play</h2>
+<p>Three places can attach books to a chat, and all of them count at once:</p>
+<ul>
+<li><strong>Your persona's books.</strong> Set on the persona in the Library. See <a href="characters.html#lore-and-scripts">Personas and characters</a>.</li>
+<li><strong>The character's books.</strong> Set on the character. A character card with an embedded book gets one made for it on import.</li>
+<li><strong>The chat's own books.</strong> The <strong>Lore books</strong> list on the <a href="settings.html#lore">Lore tab of Settings</a>, with <strong>Add lore book</strong>, <strong>Move up</strong>, <strong>Move down</strong> and <strong>Remove</strong>. With no chat open, this list is the default for new chats.</li>
+</ul>
+<p>Persona books are always checked first. <strong>Lore insertion strategy</strong> decides the order of the rest: <strong>Character lore first</strong> (the default), <strong>Chat lore first</strong>, or <strong>Sorted evenly</strong>, which merges them by insertion order. A book attached in two places is used once.</p>
+<p>Within one of those groups, entries are checked from the highest <strong>Insertion order</strong> down (the default is 100). Being checked earlier matters when the <a href="#budget">lore budget</a> runs out, because earlier entries get their share first. An entry can be unchecked in its book's list to disable it without deleting it.</p>
+
+<h2 id="entries">Anatomy of an entry</h2>
+<p>An entry is labeled by its <strong>Comment</strong>, or by its keys when the comment is empty. The parts you will touch most often:</p>
+<ul>
+<li><strong>Keys.</strong> The words that make it fire, separated by commas.</li>
+<li><strong>Content.</strong> The text that goes into the prompt. Macros work here, so <code>{{char}}</code> and <code>{{user}}</code> expand. See <a href="macros.html">Macros</a>.</li>
+<li><strong>Position.</strong> Where the content lands in the prompt. See <a href="#positions">Positions</a>.</li>
+<li><strong>Insertion order.</strong> Sorts entries against each other, both for checking and for placement.</li>
+</ul>
+<p>Everything else is optional and explained in the sections that follow. The <a href="#entry-fields">full field reference</a> at the end of this page lists every field with its default.</p>
+
+<h2 id="keys">Keys and matching</h2>
+<p>Keys are trimmed, blank ones are ignored, and macros in them are expanded before matching, so a key of <code>{{user}}</code> matches your persona's name. Two kinds of key exist:</p>
+<ul>
+<li><strong>Plain keys</strong> match as text. <code>dragon, wyrm</code> is two keys; the entry fires when either appears.</li>
+<li><strong>Regex keys</strong> are written <code>/pattern/flags</code> and match the scanned text as a regular expression. A regex key follows only its own flags, so add <code>i</code> yourself if you want it case-insensitive. A key that looks like a regex but does not compile is matched as plain text instead. Commas inside a regex key do not split it.</li>
+</ul>
+<p>Two chat-wide settings decide how plain keys match, and every entry can override them with its own <strong>Case-sensitive</strong> and <strong>Match whole words</strong> fields set to <strong>Yes</strong> or <strong>No</strong> instead of <strong>Default</strong>:</p>
+<ul>
+<li><strong>Case-sensitive keys.</strong> Off by default, so <code>Dragon</code> and <code>dragon</code> both match.</li>
+<li><strong>Match whole words.</strong> On by default, so <code>cat</code> does not fire on "category". Whole-word matching applies only to single-word keys made of ordinary letters, digits and underscores; a key with a space or punctuation always matches wherever it appears.</li>
+</ul>
+
+<h3 id="scan-depth">How far back Ashyo looks</h3>
+<p><strong>Lore scan depth</strong> on the Lore tab sets how many of the newest messages are scanned, two by default. An entry's own <strong>Scan depth</strong> overrides it (0 to 1000). A depth of 0 turns key matching off for that entry, which is useful for an entry that should fire only through <a href="#recursion">recursion</a>, a <a href="#decorators">decorator</a> or <strong>Constant</strong>. Messages are scanned as they would be sent, after your <a href="regex.html">regex scripts</a> have run, newest first.</p>
+<p>With <strong>Scan with names</strong> on (the default), each scanned message is prefixed with its speaker's name, so a key that is a character's or persona's name fires whenever that person speaks.</p>
+<p>An entry can also look beyond the chat. Turn on <strong>Match character description</strong>, <strong>Match character personality</strong>, <strong>Match scenario</strong> or <strong>Match persona description</strong> and its keys are checked against that field too. Each field is scanned on its own, so a key never matches across the boundary between two of them.</p>
+
+<h3 id="secondary-keys">Secondary keys</h3>
+<p>Turn on <strong>Selective</strong> and the entry needs more than a primary key. <strong>Secondary keys</strong> hold the second list, and <strong>Secondary logic</strong> says how they combine with a primary match:</p>
+<table>
+<tr><th>Secondary logic</th><th>Fires when a primary key matches and…</th></tr>
+<tr><td><strong>Any secondary key</strong> (default)</td><td>at least one secondary key also matches.</td></tr>
+<tr><td><strong>All secondary keys</strong></td><td>every secondary key matches.</td></tr>
+<tr><td><strong>No secondary key</strong></td><td>none of the secondary keys match.</td></tr>
+<tr><td><strong>Not all secondary keys</strong></td><td>at least one secondary key is missing.</td></tr>
+</table>
+<p>So an entry about the royal court that should not fire during a tavern scene has <code>king, queen, court</code> as its keys, <code>tavern, inn</code> as its secondary keys and <strong>No secondary key</strong> as its logic.</p>
+
+<h3 id="constant">Constant entries</h3>
+<p>A <strong>Constant</strong> entry fires every time without looking at keys. It still respects the character and generation-type filters, the <a href="#budget">budget</a>, and the <a href="#probability">Trigger %</a> roll, so it is not quite unconditional. Use it for the facts the model should never be without.</p>
+
+<h3 id="decorators">Decorators</h3>
+<p>Lines at the very top of an entry's content that start with <code>@@</code> are decorators, and they are stripped before the content is sent. Two are understood: <code>@@activate</code> forces the entry to fire, and <code>@@dont_activate</code> keeps it from firing. A decorator Ashyo does not know is dropped, and a line starting with <code>@@@</code> right after one is read as the fallback to use in its place. Decorators are checked before <strong>Constant</strong> and before keys, so <code>@@dont_activate</code> wins over both.</p>
+
+<h3 id="activation">Filters and the order of checks</h3>
+<ul>
+<li><strong>Generation types.</strong> Tick any of <strong>Send</strong>, <strong>Swipe</strong>, <strong>Continue</strong> and <strong>/sysgen</strong> to limit the entry to those kinds of generation. With none ticked, shown as "All", it can fire on every kind.</li>
+<li><strong>Characters.</strong> A list of character names the entry is for, built with <strong>Add character</strong>. Empty means "All characters". Turn on <strong>Exclude listed characters</strong> to flip it and fire for everyone except those listed.</li>
+</ul>
+<p>Putting it all together, the checks run in this order: the entry is enabled, the generation type passes, the character filter passes, then decorators, then <strong>Constant</strong>, then an active <a href="#timed">sticky</a>, and only then the keys.</p>
+
+<h2 id="recursion">Recursion</h2>
+<p>With <strong>Recursive scan</strong> on (the default), the content of every entry that fired is itself scanned for keys in a further pass, so an entry about the castle can wake an entry about the castle's ghost even if the chat never mentioned the ghost. Passes repeat until nothing new fires. Two entry fields shape this:</p>
+<ul>
+<li><strong>Prevent further recursion.</strong> This entry's content is not scanned, so it cannot wake others.</li>
+<li><strong>Non-recursable.</strong> This entry cannot be woken by another entry; only the chat itself can fire it.</li>
+</ul>
+<p><strong>Maximum recursion steps</strong> on the Lore tab caps the number of passes, counting the first one; 0 means no limit and the range is 0 to 10. An entry with <strong>Delay until recursion</strong> set to N waits until recursion reaches level N before it can fire. Once ordinary recursion has run out of new matches, the delayed levels run one after another in ascending order. An entry whose level is never reached is reported as skipped in the <a href="#debugging">itemization</a>.</p>
+
+<h2 id="minimum-activations">Minimum activations</h2>
+<p>If fewer entries fire than <strong>Minimum activations</strong> asks for, Ashyo widens the scan one older message at a time, rechecking the keys, until enough entries fire or it reaches <strong>Minimum activations depth</strong> messages back. A depth of 0 lets it go up to 1,000 messages. Entries that already fired, failed their roll, lost their group or are on cooldown or delay are not reconsidered during the widening. Both rows default to 0, which turns the feature off.</p>
+<div class="callout warn">
+<span class="label">Heads up</span>
+<p><strong>Minimum activations</strong> and <strong>Maximum recursion steps</strong> exclude each other. Setting one above zero resets the other to zero.</p>
+</div>
+
+<h2 id="groups">Inclusion groups</h2>
+<p>Give several entries the same <strong>Inclusion group</strong> name and only one of them fires per pass, which is how you make variants: three descriptions of the weather, one chosen each turn. An entry can belong to several groups by separating the names with commas. The winner is picked like this:</p>
+<ol>
+<li>A member that is <a href="#timed">sticky</a> wins outright.</li>
+<li>With <strong>Group scoring</strong> on, only the members that matched the most keys stay in the running. It can be turned on for the whole chat on the Lore tab or per entry with the entry's own <strong>Group scoring</strong> set to <strong>Yes</strong> or <strong>No</strong>; the default is off.</li>
+<li>If any remaining member has <strong>Prioritize</strong> on, the one with the highest insertion order among those wins.</li>
+<li>Otherwise one is drawn at random, weighted by <strong>Group weight</strong> (1 to 10000, default 100).</li>
+</ol>
+<p>A winner of one group also wins every other group it belongs to, and a group that was already won in an earlier pass makes later members lose. The losers are listed with their winner in the <a href="#debugging">itemization</a>.</p>
+
+<h2 id="probability">Trigger %</h2>
+<p><strong>Trigger %</strong> gives an entry a chance to fire instead of a certainty. Every time it would otherwise fire, Ashyo rolls 1 to 100 and the entry needs the roll to land within its percentage; the default of 100 always passes. Sticky entries skip the roll, and nothing rolls once the <a href="#budget">budget</a> has closed. When a prompt has to be re-planned during one generation, for example because the server reported it was too long, the same rolls and group picks are reused, so the lore does not reshuffle under you.</p>
+
+<h2 id="timed">Sticky, cooldown and delay</h2>
+<p>Three fields give an entry a sense of time, counted in messages of the chat as it is sent:</p>
+<ul>
+<li><strong>Sticky</strong> N keeps an entry active for N more messages after it fires, even if its keys are gone.</li>
+<li><strong>Cooldown</strong> N blocks an entry for N messages after it fires, or after its sticky period ends.</li>
+<li><strong>Delay</strong> N keeps an entry from firing until the chat has at least N messages.</li>
+</ul>
+<p>Say an entry called "Thunderstorm" has the key <code>storm</code>, <strong>Sticky</strong> 3 and <strong>Cooldown</strong> 5. The word appears in message 10, so the entry fires. It stays in the prompt for messages 11, 12 and 13 whether or not anyone mentions the weather. Then its cooldown runs for messages 14 through 18, and even a chat full of storms will not bring it back. From message 19 it can fire again. Give it <strong>Delay</strong> 20 as well and none of this starts before the chat is twenty messages long.</p>
+<p>An active sticky wins over a cooldown. Setting a length to 0 ends an effect that is running, and a deleted entry's effect simply runs out. If you rewind the chat to a point at or before an effect began, by switching branches or deleting messages, the effect is dropped, except for a cooldown that followed a sticky, which stays. A cooldown or delay only shows up in the itemization when the entry would otherwise have fired, so you are never told about blocked entries that would not have fired anyway.</p>
+
+<h2 id="budget">The lore budget</h2>
+<p>Lore shares the context with the chat, so it gets an allowance. <strong>Lore budget (%)</strong>, 25 by default, is a share of the context size minus the generation reserve (your max tokens), never less than one token. <strong>Lore budget cap</strong> puts a hard ceiling on it in tokens; 0 means no cap. Entries are charged their estimated size in the order they are checked. The first entry that would reach the budget closes it, and once the current pass finishes no more entries fire. An entry with <strong>Ignore budget</strong> on fires regardless, though its size still counts against the budget for everyone after it.</p>
+<p>There is no lore budget when the chat has no books, or when the context size is unknown, in which case everything that fires goes in. The budget decides what fires; whether the prompt as a whole fits is a separate question answered in <a href="context.html#budget">Context and budget</a>.</p>
+
+<h2 id="positions">Positions</h2>
+<p><strong>Position</strong> says where a fired entry's content lands. The two rows named here are the lore rows of the <a href="prompt.html#context-template">context template</a>, which are always on.</p>
+<table>
+<tr><th>Position</th><th>Where the content goes</th></tr>
+<tr><td><strong>Before character</strong> (default)</td><td>The <strong>Lore (early)</strong> row of the context template, which in the default template comes right after the system prompt.</td></tr>
+<tr><td><strong>After character</strong></td><td>The <strong>Lore (late)</strong> row, which in the default template comes after the scenario.</td></tr>
+<tr><td><strong>Before examples</strong></td><td>Just before the character's example messages. Content containing <code>&lt;START&gt;</code> is split into example blocks like the examples themselves.</td></tr>
+<tr><td><strong>After examples</strong></td><td>Just after the example messages, split the same way.</td></tr>
+<tr><td><strong>At depth</strong></td><td>Inside the chat history, <strong>Depth</strong> messages from the end (default 4, 0 to 9999), as a message with the chosen <strong>Role</strong>: <strong>System</strong> (default), <strong>User</strong> or <strong>Assistant</strong>. Depth 0 goes after the newest message.</td></tr>
+<tr><td><strong>Outlet</strong></td><td>Wherever you write <code>{{outlet::name}}</code>, with the entry's <strong>Outlet name</strong>. See <a href="#outlets">Outlets</a>.</td></tr>
+</table>
+<p>Entries sharing a position are placed from the lowest <strong>Insertion order</strong> up, except <strong>Before examples</strong>, which is reversed so that on both sides of the examples the lowest order sits closest to them. Content is macro-expanded, run through the <a href="prompt.html#formatting">context formatting</a> switches and through regex scripts targeting <strong>Lore content</strong>. An entry with empty content still fires, which matters for recursion and groups, but adds nothing to the prompt. The <strong>Before examples</strong> and <strong>After examples</strong> positions need the example messages to be in the prompt; when the examples are left out, so is that lore.</p>
+<p><strong>Priority</strong> has one job: when the prompt is over budget and lore has to be evicted, lower priority goes first. Unset counts as 0. See <a href="context.html#eviction">Eviction</a>.</p>
+
+<h2 id="outlets">Outlets</h2>
+<p>An outlet lets lore fill a slot you place by hand. Give an entry the position <strong>Outlet</strong> and an <strong>Outlet name</strong>, then write <code>{{outlet::name}}</code> wherever the content should appear: in the system prompt, the persona description, the character's description, personality, scenario or example messages, the post-history instructions, a context template row prefix or a <code>/sysgen</code> prompt. All the fired entries sharing that name are joined with line breaks, highest insertion order first, and dropped in. A slot nobody fills expands to nothing.</p>
+<pre>You are {{char}}. Keep these notes in mind:
+{{outlet::Notes}}</pre>
+<p>An outlet written in a row prefix fills only when that row has content of its own, so an empty row does not leave a stray prefix behind. Outlets do not nest: an outlet's content is not searched for further <code>{{outlet}}</code> slots.</p>
+
+<h2 id="settings">Lore settings for the chat</h2>
+<p>The <strong>Lore</strong> tab of <a href="settings.html#lore">Settings</a> holds the chat's books and these activation settings. Like every per-chat setting they can be saved into the defaults new chats start from.</p>
+<table>
+<tr><th>Setting</th><th>Default</th><th>What it does</th></tr>
+<tr><td><strong>Lore scan depth</strong></td><td>2</td><td>How many of the newest messages are scanned for keys, 0 to 1000. See <a href="#scan-depth">How far back Ashyo looks</a>.</td></tr>
+<tr><td><strong>Lore budget (%)</strong></td><td>25</td><td>The share of the context, after the generation reserve, that lore may use, 1 to 100.</td></tr>
+<tr><td><strong>Lore budget cap</strong></td><td>0</td><td>A ceiling on the budget in tokens, 0 to 65536; 0 is no cap.</td></tr>
+<tr><td><strong>Minimum activations</strong></td><td>0</td><td>Widen the scan until this many entries fire, 0 to 100; 0 is off.</td></tr>
+<tr><td><strong>Minimum activations depth</strong></td><td>0</td><td>How far the widening may go, 0 to 100 messages; 0 allows up to 1,000.</td></tr>
+<tr><td><strong>Recursive scan</strong></td><td>on</td><td>Scan fired entries' content for more keys.</td></tr>
+<tr><td><strong>Maximum recursion steps</strong></td><td>0</td><td>Cap on scanning passes including the first, 0 to 10; 0 is unlimited.</td></tr>
+<tr><td><strong>Lore insertion strategy</strong></td><td>Character lore first</td><td>Order of the character's and the chat's books after the persona's.</td></tr>
+<tr><td><strong>Scan with names</strong></td><td>on</td><td>Prefix each scanned message with its speaker's name.</td></tr>
+<tr><td><strong>Case-sensitive keys</strong></td><td>off</td><td>Plain keys match case exactly, unless an entry overrides it.</td></tr>
+<tr><td><strong>Match whole words</strong></td><td>on</td><td>Single-word plain keys match whole words only, unless an entry overrides it.</td></tr>
+<tr><td><strong>Group scoring</strong></td><td>off</td><td>In an inclusion group, keep only the members matching the most keys.</td></tr>
+</table>
+
+<h2 id="entry-fields">Entry field reference</h2>
+<p>Every field of a lore entry, in the groups the editor shows them.</p>
+<h3 id="fields-basics">Basics</h3>
+<table>
+<tr><th>Field</th><th>Default</th><th>What it does</th></tr>
+<tr><td><strong>Comment</strong></td><td>empty</td><td>The entry's label in lists. Not sent to the model.</td></tr>
+<tr><td><strong>Keys</strong></td><td>empty</td><td>Comma-separated words or <code>/regex/</code> patterns that fire the entry.</td></tr>
+<tr><td><strong>Secondary keys</strong></td><td>empty</td><td>A second list, used when <strong>Selective</strong> is on.</td></tr>
+<tr><td><strong>Selective</strong></td><td>off</td><td>Require the secondary keys as well.</td></tr>
+<tr><td><strong>Secondary logic</strong></td><td>Any secondary key</td><td>How the secondary keys combine; shown only when <strong>Selective</strong> is on.</td></tr>
+<tr><td><strong>Constant</strong></td><td>off</td><td>Fire without a key match.</td></tr>
+<tr><td><strong>Enabled</strong></td><td>on</td><td>A disabled entry is never checked.</td></tr>
+<tr><td><strong>Insertion order</strong></td><td>100</td><td>Sorts entries for checking (highest first) and placement (lowest first).</td></tr>
+<tr><td><strong>Priority</strong></td><td>unset</td><td>Eviction order when the prompt is over budget; lower goes first.</td></tr>
+<tr><td><strong>Trigger %</strong></td><td>100</td><td>The chance the entry fires when it otherwise would, 0 to 100.</td></tr>
+</table>
+<h3 id="fields-recursion">Recursion and groups</h3>
+<table>
+<tr><th>Field</th><th>Default</th><th>What it does</th></tr>
+<tr><td><strong>Non-recursable</strong></td><td>off</td><td>Cannot be fired by another entry's content.</td></tr>
+<tr><td><strong>Prevent further recursion</strong></td><td>off</td><td>Its own content is not scanned for keys.</td></tr>
+<tr><td><strong>Delay until recursion</strong></td><td>0</td><td>Hold the entry until recursion reaches this level.</td></tr>
+<tr><td><strong>Inclusion group</strong></td><td>empty</td><td>Group names, comma-separated; one winner per group.</td></tr>
+<tr><td><strong>Prioritize</strong></td><td>off</td><td>Win the group by insertion order instead of by weight.</td></tr>
+<tr><td><strong>Group weight</strong></td><td>100</td><td>Weight in the random pick, 1 to 10000.</td></tr>
+<tr><td><strong>Group scoring</strong></td><td>Default</td><td><strong>Yes</strong> or <strong>No</strong> overrides the chat's setting.</td></tr>
+</table>
+<h3 id="fields-timing">Timing and budget</h3>
+<table>
+<tr><th>Field</th><th>Default</th><th>What it does</th></tr>
+<tr><td><strong>Sticky</strong></td><td>0</td><td>Stay active this many messages after firing.</td></tr>
+<tr><td><strong>Cooldown</strong></td><td>0</td><td>Stay blocked this many messages after firing or after sticky ends.</td></tr>
+<tr><td><strong>Delay</strong></td><td>0</td><td>Do not fire before the chat has this many messages.</td></tr>
+<tr><td><strong>Ignore budget</strong></td><td>off</td><td>Fire even after the lore budget has closed.</td></tr>
+</table>
+<h3 id="fields-placement">Placement</h3>
+<table>
+<tr><th>Field</th><th>Default</th><th>What it does</th></tr>
+<tr><td><strong>Position</strong></td><td>Before character</td><td>Where the content goes. See <a href="#positions">Positions</a>.</td></tr>
+<tr><td><strong>Depth</strong></td><td>4</td><td>Messages from the end, 0 to 9999; only for <strong>At depth</strong>.</td></tr>
+<tr><td><strong>Role</strong></td><td>System</td><td>The role of the inserted message; only for <strong>At depth</strong>.</td></tr>
+<tr><td><strong>Outlet name</strong></td><td>empty</td><td>The slot this entry fills; only for <strong>Outlet</strong>.</td></tr>
+</table>
+<h3 id="fields-matching">Matching</h3>
+<table>
+<tr><th>Field</th><th>Default</th><th>What it does</th></tr>
+<tr><td><strong>Scan depth</strong></td><td>Default</td><td>Messages to scan for this entry, 0 to 1000; unset uses the chat's.</td></tr>
+<tr><td><strong>Case-sensitive</strong></td><td>Default</td><td><strong>Yes</strong> or <strong>No</strong> overrides the chat's setting.</td></tr>
+<tr><td><strong>Match whole words</strong></td><td>Default</td><td><strong>Yes</strong> or <strong>No</strong> overrides the chat's setting.</td></tr>
+<tr><td><strong>Match character description</strong></td><td>off</td><td>Also check keys against the character's description.</td></tr>
+<tr><td><strong>Match character personality</strong></td><td>off</td><td>Also check the personality.</td></tr>
+<tr><td><strong>Match scenario</strong></td><td>off</td><td>Also check the scenario.</td></tr>
+<tr><td><strong>Match persona description</strong></td><td>off</td><td>Also check your persona's description.</td></tr>
+</table>
+<h3 id="fields-filters">Filters and content</h3>
+<table>
+<tr><th>Field</th><th>Default</th><th>What it does</th></tr>
+<tr><td><strong>Characters</strong></td><td>All characters</td><td>Fire only for these characters, or with <strong>Exclude listed characters</strong>, for every other one.</td></tr>
+<tr><td><strong>Generation types</strong></td><td>All</td><td>Fire only on the ticked kinds: <strong>Send</strong>, <strong>Swipe</strong>, <strong>Continue</strong>, <strong>/sysgen</strong>.</td></tr>
+<tr><td><strong>Automation ID</strong></td><td>empty</td><td>Stored with the entry and kept through import, but nothing in Ashyo acts on it today.</td></tr>
+<tr><td><strong>Content</strong></td><td>empty</td><td>The text that enters the prompt. Opens in the full text editor.</td></tr>
+</table>
+
+<h2 id="debugging">Seeing why an entry did or did not fire</h2>
+<p>Lore is the part of a prompt most likely to surprise you, so every reply keeps a record of what its lore did. Mark the reply in the transcript, press <kbd>Tab</kbd> and choose <strong>Itemization</strong>. The <a href="context.html#itemization">itemization</a> shows each lore entry that made it into the prompt with the reason it fired, and lists the entries that were skipped with the reason they were not.</p>
+<p>A fired entry is labeled with its trigger: <strong>Always included</strong>, <strong>Constant</strong>, <strong>Decorator @@activate</strong>, or <strong>Matched "key"</strong> followed by where the match was found when it was not the chat (in the scenario, for example) and by the secondary clause that applied. A sticky entry reads <strong>Sticky N more</strong>. An entry that won its group says how: most keys, prioritized, weighted pick, kept by group, or sticky. One that passed its roll shows "rolled X of Y%".</p>
+<p>A skipped entry gives one of these reasons: over budget, delayed until recursion, failed roll, lost group (naming the winner), on cooldown, delayed, outlet unused, no outlet name, or examples not in prompt. If you are debugging a book, the <a href="context.html#inspector">prompt inspector</a> is the other tool worth knowing: turn it on with <code>/inspector</code> and every send shows you the finished prompt before it leaves.</p>
+{% endraw %}

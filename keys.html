@@ -1,0 +1,242 @@
+---
+layout: default
+title: Keyboard reference
+---
+{% raw %}
+<h1 id="keyboard-reference">Keyboard reference</h1>
+<p class="lead">Every key Ashyo understands, grouped by where you are when you press it. Keybindings are fixed and there is no key help inside the app, so this is the page to keep open while you learn. Each box's last line shows the hints that matter right now, such as "enter: open, esc: close", and the mouse wheel scrolls whatever is under the pointer everywhere.</p>
+
+<h2 id="global">Anywhere in the chat screen</h2>
+<p>These work whether the composer or the transcript has focus, as long as no box is open. Explained in <a href="composer.html#focus">Focus and global keys</a>.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>Ctrl+↑</kbd> / <kbd>Ctrl+↓</kbd></td><td>Move focus to the transcript or the composer.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Clear the mark or range; otherwise stop a generation; otherwise, on an empty composer, open the turn tree.</td></tr>
+<tr><td><kbd>Ctrl+S</kbd></td><td>Open the chat picker.</td></tr>
+<tr><td><kbd>Ctrl+P</kbd></td><td>Open the model dock (empty composer).</td></tr>
+<tr><td><kbd>Alt+H</kbd></td><td>Open the history dock.</td></tr>
+<tr><td><kbd>Ctrl+O</kbd></td><td>Fold or unfold every reasoning block.</td></tr>
+<tr><td><kbd>PageUp</kbd> / <kbd>PageDown</kbd></td><td>Scroll an overflowing composer; else move the mark by a screen; else scroll the transcript.</td></tr>
+<tr><td><kbd>Ctrl+Home</kbd> / <kbd>Ctrl+End</kbd></td><td>Jump the transcript to its top or bottom.</td></tr>
+<tr><td><kbd>Ctrl+V</kbd></td><td>Paste from the system clipboard.</td></tr>
+<tr><td><kbd>y</kbd>, <kbd>n</kbd>, <kbd>Esc</kbd></td><td>Answer the quit question: quit, or keep working.</td></tr>
+</table>
+
+<h2 id="composer">Composer</h2>
+<p>Explained in <a href="composer.html">Composer and commands</a>.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>Enter</kbd></td><td>Send; on an empty composer, ask for a reply without a message.</td></tr>
+<tr><td><kbd>Alt+Enter</kbd>, <kbd>Shift+Enter</kbd>, <kbd>Ctrl+J</kbd></td><td>Insert a newline.</td></tr>
+<tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Move by a character; on an empty, idle chat, swipe the last reply.</td></tr>
+<tr><td><kbd>Ctrl+←</kbd> / <kbd>Ctrl+→</kbd>, <kbd>Alt+←</kbd> / <kbd>Alt+→</kbd></td><td>Move by a word.</td></tr>
+<tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Move by a wrapped row; on an empty composer, recall older or newer input.</td></tr>
+<tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>Start or end of the line.</td></tr>
+<tr><td><kbd>Shift</kbd> + movement</td><td>Extend the selection.</td></tr>
+<tr><td><kbd>Ctrl+A</kbd></td><td>Select all.</td></tr>
+<tr><td><kbd>Backspace</kbd>, <kbd>Ctrl+H</kbd></td><td>Delete the previous character.</td></tr>
+<tr><td><kbd>Ctrl+Backspace</kbd>, <kbd>Alt+Backspace</kbd></td><td>Delete the previous word, or back to the previous <code>/</code> in a path argument.</td></tr>
+<tr><td><kbd>Delete</kbd></td><td>Delete the next character.</td></tr>
+<tr><td><kbd>Ctrl+Delete</kbd>, <kbd>Alt+Delete</kbd></td><td>Delete the next word.</td></tr>
+<tr><td><kbd>Ctrl+C</kbd></td><td>Copy the selection.</td></tr>
+<tr><td><kbd>Ctrl+X</kbd></td><td>Cut the selection.</td></tr>
+<tr><td><kbd>Ctrl+Z</kbd></td><td>Undo.</td></tr>
+<tr><td><kbd>Ctrl+Shift+Z</kbd>, <kbd>Ctrl+R</kbd></td><td>Redo.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Dismiss a refusal shown above the composer.</td></tr>
+</table>
+<h3 id="docks">Completion, history and model docks</h3>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>/</kbd> as the first character</td><td>Open the completion dock.</td></tr>
+<tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Move the highlight.</td></tr>
+<tr><td><kbd>PageUp</kbd> / <kbd>PageDown</kbd></td><td>Scroll the list.</td></tr>
+<tr><td><kbd>Tab</kbd></td><td>Accept the highlighted command (adding a space when it takes an argument), or put the highlighted history entry in the composer.</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>Accept and run a command; put a history entry in the composer; set the highlighted model.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Close the dock.</td></tr>
+</table>
+
+<h2 id="transcript">Transcript</h2>
+<p>With the transcript focused. Explained in <a href="transcript.html#mark">Marking messages</a>.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Move the mark from message to message, or extend a range.</td></tr>
+<tr><td><kbd>Shift+↑</kbd> / <kbd>Shift+↓</kbd></td><td>Select a range from the mark.</td></tr>
+<tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>Scroll to either end, extend the range to it, or move the mark there.</td></tr>
+<tr><td><kbd>PageUp</kbd> / <kbd>PageDown</kbd></td><td>Move the mark by a screen.</td></tr>
+<tr><td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td><td>Open the actions menu for the marked message or range.</td></tr>
+<tr><td><kbd>Delete</kbd></td><td>Ask to delete the marked messages.</td></tr>
+<tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Swipe the last reply while idle.</td></tr>
+<tr><td><kbd>/</kbd></td><td>Open the search.</td></tr>
+<tr><td><kbd>n</kbd> / <kbd>N</kbd></td><td>Next or previous search match.</td></tr>
+<tr><td><kbd>c</kbd></td><td>Jump to the "last prompt starts here" marker.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Clear the range or mark.</td></tr>
+<tr><td>mouse drag, release</td><td>Select text and copy it on release.</td></tr>
+</table>
+<h3 id="actions-menu">Actions menu and other popups</h3>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>Tab</kbd>, <kbd>↓</kbd></td><td>Next item, wrapping.</td></tr>
+<tr><td><kbd>↑</kbd></td><td>Previous item, wrapping.</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>Choose the item, or submit a one-line field.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Back out; from a confirmation, back to the menu on the same item.</td></tr>
+<tr><td><kbd>Ctrl+Z</kbd>, <kbd>Ctrl+Shift+Z</kbd> or <kbd>Ctrl+R</kbd></td><td>Undo and redo in a one-line field.</td></tr>
+</table>
+<h3 id="inline-editing">Editing a message in place</h3>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>Enter</kbd></td><td>Save the edit.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Cancel the edit.</td></tr>
+<tr><td>everything else</td><td>As in the composer; <kbd>Tab</kbd> does nothing.</td></tr>
+</table>
+
+<h2 id="search">Search and filter fields</h2>
+<p>The transcript search, the log viewer's find, and the filter line that appears over a list when you type. Explained in <a href="transcript.html#search">Searching the transcript</a>.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td>printable characters</td><td>Type into the field; in a list, start filtering.</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>Run the search.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Cancel the search, or clear the filter.</td></tr>
+<tr><td><kbd>Ctrl+V</kbd></td><td>Paste into the transcript search.</td></tr>
+<tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>PageUp</kbd> <kbd>PageDown</kbd></td><td>Always go to the list behind a filter, not the field.</td></tr>
+</table>
+<p>Filter fields have no undo, so <kbd>Ctrl+Z</kbd>, <kbd>Ctrl+Shift+Z</kbd> and <kbd>Ctrl+R</kbd> do nothing in them.</p>
+
+<h2 id="boxes">Boxes in general</h2>
+<p>Explained in <a href="screen.html#boxes">Boxes</a>. Each box adds its own keys below.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>Esc</kbd></td><td>Step back: close an open entry, clear a filter or search, then close the box.</td></tr>
+<tr><td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td><td>Next or previous tab in a box with a tab strip (turn tree, itemization, log viewer), wrapping and skipping unavailable tabs.</td></tr>
+<tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>PageUp</kbd> <kbd>PageDown</kbd> <kbd>Home</kbd> <kbd>End</kbd></td><td>Scroll a read-only pane or move in a list.</td></tr>
+<tr><td><kbd>Ctrl+A</kbd></td><td>Select all in a read-only text pane.</td></tr>
+<tr><td><kbd>Ctrl+C</kbd>, <kbd>Ctrl+Shift+C</kbd></td><td>Copy the selection in a text pane and clear it.</td></tr>
+<tr><td>mouse wheel</td><td>Acts as <kbd>↑</kbd> and <kbd>↓</kbd> unless the box scrolls itself.</td></tr>
+<tr><td>mouse drag</td><td>Select text in a read-only pane.</td></tr>
+</table>
+
+<h2 id="lists">Lists and choice lists</h2>
+<p>Choice lists open from a Settings or Library row; the color scheme list previews as you move. Explained in <a href="settings.html#board">Using the board</a>.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Move the cursor, skipping rows that cannot be chosen.</td></tr>
+<tr><td><kbd>PageUp</kbd> / <kbd>PageDown</kbd></td><td>Page the list.</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>Choose, toggle a checkbox row, or add from an "add" row.</td></tr>
+<tr><td>printable characters</td><td>Filter a model or lore book list by label or description.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Clear the filter first, then cancel.</td></tr>
+</table>
+
+<h2 id="picker">Chat picker</h2>
+<p>Explained in <a href="chats.html#picker">The chat picker</a>.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td>printable characters</td><td>Filter chats by name.</td></tr>
+<tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Move the cursor, skipping the rule between open and saved chats.</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>Open the highlighted chat.</td></tr>
+<tr><td><kbd>Tab</kbd></td><td>Actions for a saved chat: Details, Rename, Export…, Delete.</td></tr>
+<tr><td><kbd>Alt+I</kbd></td><td>Import a transcript.</td></tr>
+<tr><td><kbd>Alt+S</kbd></td><td>Cycle the sort key (Name, Created, Modified, Turns, Duration, Size).</td></tr>
+<tr><td><kbd>Alt+&lt;</kbd> / <kbd>Alt+&gt;</kbd></td><td>Sort ascending or descending.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Clear the filter; otherwise close. In Details, go back.</td></tr>
+</table>
+
+<h2 id="tree">Turn tree</h2>
+<p>Explained in <a href="branches.html#turn-tree">The turn tree</a>.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td><td>Switch between the All and Active branch views.</td></tr>
+<tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Home</kbd> <kbd>End</kbd> <kbd>PageUp</kbd> <kbd>PageDown</kbd></td><td>Move the cursor.</td></tr>
+<tr><td><kbd>→</kbd> / <kbd>←</kbd></td><td>Open or close a fold at a fork.</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>Switch to the selected turn's branch; on the root row, restart the chat; on the current leaf, close.</td></tr>
+<tr><td><kbd>Ctrl+L</kbd></td><td>Label the selected turn (blank clears).</td></tr>
+<tr><td><kbd>Ctrl+F</kbd></td><td>Fork a new chat from the selected turn.</td></tr>
+<tr><td>printable characters</td><td>Search message text and labels; an uppercase word is case-sensitive.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Clear the search; otherwise close.</td></tr>
+</table>
+
+<h2 id="board">Settings and Library</h2>
+<p>Both share one layout: a list of categories on the left and rows on the right. Explained in <a href="settings.html#board">Using the board</a>.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Switch between the category pane and the rows.</td></tr>
+<tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Move in the current pane, skipping headings and categories that do not apply.</td></tr>
+<tr><td><kbd>PageUp</kbd> / <kbd>PageDown</kbd></td><td>Page the rows.</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>Change the row: flip a checkbox, open a choice list, open a text editor, edit a value in place, or run an action row.</td></tr>
+<tr><td><kbd>Tab</kbd></td><td>Open the row's actions (Save, Save as, Rename, Delete, Reset and so on).</td></tr>
+<tr><td><kbd>Alt+S</kbd></td><td>Cycle the sort key of a sortable list such as lore entries.</td></tr>
+<tr><td><kbd>Alt+&lt;</kbd> / <kbd>Alt+&gt;</kbd></td><td>Sort ascending or descending.</td></tr>
+<tr><td>printable characters</td><td>Filter rows where a filter is offered, such as lore entries.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Close an open entry; otherwise clear the filter; otherwise close the board.</td></tr>
+</table>
+<h3 id="fields">Editing a value in place</h3>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>Enter</kbd></td><td>Save the value after checking it.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Cancel.</td></tr>
+<tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Step a number by its step size.</td></tr>
+</table>
+
+<h2 id="text-editor">Full-screen text editor</h2>
+<p>Opens from long text rows such as a description or system prompt. Explained in <a href="settings.html#board">Using the board</a>.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>Enter</kbd></td><td>Insert a newline.</td></tr>
+<tr><td><kbd>Ctrl+S</kbd></td><td>Save.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Close at once if unchanged; otherwise ask Discard and close, Save then close, or Cancel. With text selected, clear the selection first.</td></tr>
+<tr><td><kbd>Ctrl+Z</kbd></td><td>Undo.</td></tr>
+<tr><td><kbd>Ctrl+Shift+Z</kbd>, <kbd>Ctrl+R</kbd></td><td>Redo.</td></tr>
+<tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>Start or end of the line.</td></tr>
+<tr><td><kbd>Ctrl+Home</kbd> / <kbd>Ctrl+End</kbd></td><td>Start or end of the text.</td></tr>
+<tr><td><kbd>PageUp</kbd> / <kbd>PageDown</kbd></td><td>Move by a page; with <kbd>Shift</kbd>, select.</td></tr>
+<tr><td><kbd>Shift</kbd> + movement</td><td>Extend the selection.</td></tr>
+<tr><td><kbd>Ctrl+C</kbd></td><td>Copy the selection.</td></tr>
+<tr><td><kbd>Ctrl+X</kbd></td><td>Cut the selection.</td></tr>
+<tr><td>mouse click, drag, wheel</td><td>Place the cursor, select, scroll.</td></tr>
+</table>
+
+<h2 id="file-dialog">File dialog</h2>
+<p>Explained in <a href="import-export.html#file-dialog">The file dialog</a>.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Home</kbd> <kbd>End</kbd> <kbd>PageUp</kbd> <kbd>PageDown</kbd></td><td>Move the cursor.</td></tr>
+<tr><td><kbd>Enter</kbd>, <kbd>→</kbd></td><td>Enter the highlighted folder; <kbd>Enter</kbd> on "../" goes up.</td></tr>
+<tr><td><kbd>Enter</kbd> on a file</td><td>Import it, or when exporting, ask for a name prefilled with that file's name.</td></tr>
+<tr><td><kbd>Ctrl+S</kbd></td><td>When exporting, ask for a name in this folder, prefilled from the item or chat.</td></tr>
+<tr><td><kbd>←</kbd>, <kbd>Backspace</kbd></td><td>Go to the parent folder, with the cursor on the folder you left.</td></tr>
+<tr><td><kbd>Alt+H</kbd></td><td>Show or hide hidden files.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Back.</td></tr>
+</table>
+
+<h2 id="logs">Log viewer</h2>
+<p>Explained in <a href="files.html#log-viewer">The log viewer</a>.</p>
+<table>
+<tr><th>Key</th><th>This session tab</th></tr>
+<tr><td><kbd>Tab</kbd></td><td>Switch between "This session" and "Log file".</td></tr>
+<tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Pick a target in the list.</td></tr>
+<tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Lower or raise the picked target's level.</td></tr>
+<tr><td><kbd>f</kbd></td><td>Show only the picked target.</td></tr>
+<tr><td><kbd>Space</kbd></td><td>Hide targets set to off.</td></tr>
+<tr><td><kbd>h</kbd></td><td>Hide the target list.</td></tr>
+<tr><td><kbd>PageUp</kbd> / <kbd>PageDown</kbd></td><td>Scroll back through earlier records.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Leave scrollback; otherwise close.</td></tr>
+</table>
+<table>
+<tr><th>Key</th><th>Log file tab</th></tr>
+<tr><td><kbd>/</kbd></td><td>Find.</td></tr>
+<tr><td><kbd>n</kbd> / <kbd>N</kbd></td><td>Next or previous match, wrapping.</td></tr>
+<tr><td><kbd>Ctrl+A</kbd></td><td>Select all.</td></tr>
+<tr><td>mouse drag</td><td>Select; <kbd>Ctrl+C</kbd> copies.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Close.</td></tr>
+</table>
+
+<h2 id="inspector">Prompt inspector and itemization</h2>
+<p>Explained in <a href="context.html#inspector">The prompt inspector</a> and <a href="context.html#itemization">Itemization</a>.</p>
+<table>
+<tr><th>Key</th><th>Does</th></tr>
+<tr><td><kbd>Enter</kbd></td><td>Inspector: send the prompt as shown. Itemization's Breakdown tab: expand the selected row.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Inspector: cancel the send. Itemization: close.</td></tr>
+<tr><td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td><td>Itemization: switch between Overview, Breakdown and Prompt as sent.</td></tr>
+<tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Breakdown: select a row. Elsewhere, scroll.</td></tr>
+<tr><td><kbd>Ctrl+A</kbd></td><td>Prompt as sent: select all.</td></tr>
+<tr><td>mouse drag</td><td>Prompt as sent: select; <kbd>Ctrl+C</kbd> copies.</td></tr>
+</table>
+{% endraw %}
